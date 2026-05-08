@@ -200,8 +200,11 @@ class MessagingAPITest(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_ably_token_no_key(self):
-        response = self.renter_client.post('/api/v1/threads/token/')
-        self.assertEqual(response.status_code, 503)
+        from unittest.mock import patch
+        with patch('messaging.services.settings') as mock_settings:
+            mock_settings.ABLY_API_KEY = ''
+            response = self.renter_client.post('/api/v1/threads/token/')
+            self.assertEqual(response.status_code, 503)
 
     def test_booking_creates_thread(self):
         """When a booking is created via API, a thread is automatically created."""

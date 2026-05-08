@@ -1,4 +1,3 @@
-import uuid
 from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.db import models

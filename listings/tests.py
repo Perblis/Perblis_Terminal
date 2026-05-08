@@ -8,7 +8,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Listing, ListingMedia, ListingReport, ResourceType, ListingStatus
+from .models import Listing, ListingMedia, ResourceType, ListingStatus
 
 User = get_user_model()
 
