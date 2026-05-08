@@ -3,12 +3,12 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APITestCase
 
-from .models import OTPCode, UserDocument
+from .models import OTPCode
 
 User = get_user_model()
 
@@ -426,7 +426,7 @@ class PasswordResetTests(APITestCase):
         self.assertTrue(response.json()['success'])
 
     def test_password_reset_confirm_success(self):
-        otp = OTPCode.objects.create(
+        OTPCode.objects.create(
             user=self.user,
             code='654321',
             otp_type=OTPCode.OTP_TYPE_PASSWORD_RESET,
@@ -674,7 +674,7 @@ class HealthCheckTests(APITestCase):
     def test_health_check(self):
         response = self.client.get('/health/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {'status': 'ok'})
+        self.assertEqual(response.json(), {'status': 'ok', 'service': 'Terminal API'})
 
 
 class APISchemaTests(APITestCase):

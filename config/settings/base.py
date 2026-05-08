@@ -46,6 +46,59 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+# Django Unfold Admin configuration
+UNFOLD = {
+    "SITE_TITLE": "Terminal Admin",
+    "SITE_HEADER": "Terminal",
+    "SITE_SUBHEADER": "Heavy Asset Leasing Platform",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "COLORS": {
+        "primary": {
+            "50": "240 249 255",
+            "100": "224 242 254",
+            "200": "186 230 253",
+            "300": "125 211 252",
+            "400": "56 189 248",
+            "500": "14 165 233",
+            "600": "2 132 199",
+            "700": "3 105 161",
+            "800": "7 89 133",
+            "900": "12 74 110",
+            "950": "8 47 73",
+        },
+    },
+    "TABS": [
+        {
+            "models": ["accounts.user"],
+            "items": [
+                {"title": "All Users", "link": "/admin/accounts/user/"},
+                {"title": "Documents", "link": "/admin/accounts/userdocument/"},
+            ],
+        },
+        {
+            "models": ["listings.listing"],
+            "items": [
+                {"title": "All Listings", "link": "/admin/listings/listing/"},
+                {"title": "Reports", "link": "/admin/listings/listingreport/"},
+            ],
+        },
+        {
+            "models": ["bookings.booking"],
+            "items": [
+                {"title": "All Bookings", "link": "/admin/bookings/booking/"},
+            ],
+        },
+        {
+            "models": ["messaging.thread"],
+            "items": [
+                {"title": "Threads", "link": "/admin/messaging/thread/"},
+            ],
+        },
+    ],
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',

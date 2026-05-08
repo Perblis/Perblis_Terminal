@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["gdal", "geos", "proj", "python311"]
+
+[phases.install]
+cmds = ["pip install -r requirements/production.txt"]
+
+[phases.build]
+cmds = ["python manage.py collectstatic --noinput"]
+
+[start]
+cmd = "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"

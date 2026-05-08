@@ -22,8 +22,16 @@ def me(request):
     user = request.user
 
     if request.method == 'GET':
+        from messaging.models import Message
+        unread_count = Message.objects.filter(
+            thread__participants=user,
+            is_read=False,
+        ).exclude(sender=user).count()
+
         serializer = UserProfileSerializer(user)
-        return Response({'success': True, 'data': serializer.data})
+        data = serializer.data
+        data['unread_messages'] = unread_count
+        return Response({'success': True, 'data': data})
 
     serializer = UpdateProfileSerializer(user, data=request.data, partial=True)
     serializer.is_valid(raise_exception=True)

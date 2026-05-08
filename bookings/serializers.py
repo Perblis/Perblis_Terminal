@@ -66,6 +66,7 @@ class BookingSerializer(serializers.ModelSerializer):
     listing_title = serializers.CharField(source='listing.title', read_only=True)
     listing_id = serializers.UUIDField(source='listing.id', read_only=True)
     duration_days = serializers.ReadOnlyField()
+    thread_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -74,9 +75,15 @@ class BookingSerializer(serializers.ModelSerializer):
             'start_date', 'end_date', 'duration_type', 'duration_days',
             'gross_amount', 'commission_rate', 'commission_amount', 'owner_payout_amount',
             'renter_note', 'status', 'payment_status',
-            'cancellation_reason', 'created_at', 'updated_at',
+            'cancellation_reason', 'thread_id', 'created_at', 'updated_at',
         ]
         read_only_fields = fields
+
+    def get_thread_id(self, obj):
+        try:
+            return str(obj.thread.id)
+        except Exception:
+            return None
 
 
 class CreateBookingSerializer(serializers.Serializer):
