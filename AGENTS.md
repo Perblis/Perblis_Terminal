@@ -51,9 +51,14 @@ sudo apt-get install -y postgresql postgresql-contrib postgis postgresql-16-post
 - The `.env` file in project root is read by django-environ
 - `AUTH_USER_MODEL` is `accounts.User` (email-based, not username)
 
+### Mobile WAVE Files
+
+The repo contains `MOBILE_WAVE_0{0..4}_*.md` files — step-by-step agent task files for building the Terminal React Native (Expo) mobile app. They reference the design system at `https://github.com/Nwabukin/Terminal-Mobile.git`. Each wave builds on the previous one and contains exact code, API contracts, and a Definition of Done checklist.
+
 ### Gotchas
 
 - PostgreSQL must be started before running any Django management commands (migrations, server, etc.)
 - The User model uses email as `USERNAME_FIELD`, not username. Use `--email` flag with `createsuperuser`.
 - The project uses `django.contrib.gis` (GeoDjango), which requires PostGIS and system GIS libraries.
 - Virtual environment is at `/workspace/venv/` — always activate before running commands.
+- Test accounts (password `test1234!`): `owner1@test.com`, `owner2@test.com`, `renter1@test.com`, `renter2@test.com`, `dual@test.com`. Run `python manage.py shell < scripts/seed.py` to create them.
