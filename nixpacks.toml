@@ -2,10 +2,14 @@
 nixPkgs = ["gdal", "geos", "proj", "python311"]
 
 [phases.install]
-cmds = ["python -m ensurepip --upgrade", "python -m pip install -r requirements/production.txt"]
+cmds = [
+    "python -m venv /opt/venv",
+    "/opt/venv/bin/pip install --upgrade pip",
+    "/opt/venv/bin/pip install -r requirements/production.txt",
+]
 
 [phases.build]
-cmds = ["python manage.py collectstatic --noinput"]
+cmds = ["/opt/venv/bin/python manage.py collectstatic --noinput"]
 
 [start]
-cmd = "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+cmd = "/opt/venv/bin/python manage.py migrate && /opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
