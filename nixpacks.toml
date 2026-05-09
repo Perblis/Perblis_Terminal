@@ -2,7 +2,7 @@
 nixPkgs = ["gdal", "geos", "proj", "python311"]
 
 [phases.install]
-cmds = ["pip install -r requirements/production.txt"]
+cmds = ["python -m ensurepip --upgrade && python -m pip install -r requirements/production.txt"]
 
 [phases.build]
 cmds = ["python manage.py collectstatic --noinput"]
