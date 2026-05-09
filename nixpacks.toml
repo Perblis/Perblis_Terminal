@@ -1,5 +1,6 @@
 [phases.setup]
 nixPkgs = ["gdal", "geos", "proj", "python311"]
+nixLibs = ["gdal", "geos", "proj"]
 
 [phases.install]
 cmds = [
