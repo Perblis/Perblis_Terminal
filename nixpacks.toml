@@ -13,4 +13,4 @@ cmds = [
 cmds = ["DJANGO_SETTINGS_MODULE=config.settings.build /opt/venv/bin/python manage.py collectstatic --noinput"]
 
 [start]
-cmd = "/opt/venv/bin/python manage.py migrate && /opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+cmd = "/opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
