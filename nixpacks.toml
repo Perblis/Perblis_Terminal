@@ -9,7 +9,7 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["/opt/venv/bin/python manage.py collectstatic --noinput"]
+cmds = ["DJANGO_SETTINGS_MODULE=config.settings.development /opt/venv/bin/python manage.py collectstatic --noinput"]
 
 [start]
 cmd = "/opt/venv/bin/python manage.py migrate && /opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
