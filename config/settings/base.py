@@ -189,10 +189,10 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 
-# Storage - Cloudflare R2
+# Storage - Cloudflare R2 (S3-compatible)
 AWS_ACCESS_KEY_ID = env('R2_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = env('R2_SECRET_ACCESS_KEY', default='')
-AWS_STORAGE_BUCKET_NAME = env('R2_BUCKET_NAME', default='terminal-uploads')
+AWS_STORAGE_BUCKET_NAME = env('R2_BUCKET_NAME', default='terminal-uploads').lower()
 AWS_S3_ENDPOINT_URL = env('R2_ENDPOINT_URL', default='')
 AWS_S3_CUSTOM_DOMAIN = env('R2_CUSTOM_DOMAIN', default='')
 AWS_DEFAULT_ACL = 'public-read'
