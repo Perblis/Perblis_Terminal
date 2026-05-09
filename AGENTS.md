@@ -58,7 +58,7 @@ The repo contains `MOBILE_WAVE_0{0..4}_*.md` files — step-by-step agent task f
 ### Gotchas
 
 - PostgreSQL must be started before running any Django management commands (migrations, server, etc.)
-- The User model uses email as `USERNAME_FIELD`, not username. Use `--email` flag with `createsuperuser`.
+- The User model uses email as `USERNAME_FIELD`, not username. Use `--email` flag with `createsuperuser`. With `--noinput`, you must also pass `--phone` and `--first_name`.
 - The project uses `django.contrib.gis` (GeoDjango), which requires PostGIS and system GIS libraries.
 - Virtual environment is at `/workspace/venv/` — always activate before running commands.
 - Test accounts (password `test1234!`): `owner1@test.com`, `owner2@test.com`, `renter1@test.com`, `renter2@test.com`, `dual@test.com`. Run `python manage.py shell < scripts/seed.py` to create them.
