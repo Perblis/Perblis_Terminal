@@ -1,18 +1,33 @@
+import glob
+
 from .base import *
 
 DEBUG = False
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT', default='5432'),
+if env('DATABASE_URL', default=''):
+    DATABASES = {
+        'default': env.db_url('DATABASE_URL', engine='django.contrib.gis.db.backends.postgis'),
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
+            'HOST': env('DB_HOST'),
+            'PORT': env('DB_PORT', default='5432'),
+        }
+    }
+
+_gdal = glob.glob('/nix/store/*/lib/libgdal.so')
+if _gdal:
+    GDAL_LIBRARY_PATH = _gdal[0]
+
+_geos = glob.glob('/nix/store/*/lib/libgeos_c.so')
+if _geos:
+    GEOS_LIBRARY_PATH = _geos[0]
 
 # ── Static files (whitenoise) ──────────────────────────────────────────
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
