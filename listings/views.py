@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from .filters import ListingFilter
@@ -69,7 +69,7 @@ def listing_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def listing_detail(request, listing_id):
     """
     GET: Public listing detail (increments view count).
@@ -129,7 +129,12 @@ def listing_status(request, listing_id):
 @parser_classes([MultiPartParser, FormParser])
 def upload_media(request, listing_id):
     """Upload a photo to a listing. Owner only."""
-    listing = get_object_or_404(Listing, id=listing_id, owner=request.user)
+    listing = get_object_or_404(Listing, id=listing_id)
+    if listing.owner != request.user:
+        return Response(
+            {'success': False, 'errors': 'You do not have permission to upload to this listing.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     if 'file' not in request.FILES:
         return Response(
