@@ -241,6 +241,33 @@ for listing_data in SEED_LISTINGS:
     else:
         print(f"  Skipped (exists): {title}")
 
+# ── Owner Profiles ─────────────────────────────────────────────────────────
+
+from accounts.models import OwnerProfile
+
+for owner_user in [owner1, owner2, dual]:
+    profile, created = OwnerProfile.objects.get_or_create(user=owner_user)
+    if created or not profile.business_name:
+        if owner_user == owner1:
+            profile.business_name = 'Okafor Heavy Equipment Ltd'
+            profile.business_description = 'Lagos-based crane and excavator fleet operator with 15 years experience.'
+            profile.bank_name = 'First Bank'
+            profile.bank_account_number = '3012345678'
+            profile.bank_account_name = 'OKAFOR HEAVY EQUIPMENT LTD'
+        elif owner_user == owner2:
+            profile.business_name = 'Adeleke Logistics & Storage'
+            profile.business_description = 'Warehouse and transport solutions across Lagos and Port Harcourt.'
+            profile.bank_name = 'GTBank'
+            profile.bank_account_number = '0123456789'
+            profile.bank_account_name = 'ADELEKE LOGISTICS AND STORAGE'
+        else:
+            profile.business_name = 'Eze Multi-Resources'
+            profile.bank_name = 'Zenith Bank'
+            profile.bank_account_number = '2012345678'
+            profile.bank_account_name = 'CHIDI EZE'
+        profile.save()
+        print(f"  Created owner profile: {profile.business_name}")
+
 print("\nSeed complete.")
 print("  Users created: 5 (owner1, owner2, renter1, renter2, dual)")
 print(f"  Listings created: {created_count}")
