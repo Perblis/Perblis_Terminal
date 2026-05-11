@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/v1/search/', include('search.urls')),
     path('api/v1/bookings/', include('bookings.urls')),
     path('api/v1/threads/', include('messaging.urls')),
+    path('api/v1/owner/', include('owner.urls')),
 ]
 
 if settings.DEBUG:
