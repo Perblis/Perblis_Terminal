@@ -24,19 +24,38 @@ from .services import (
 @permission_classes([IsAuthenticated])
 def thread_list_create(request):
     """
-    GET: List all threads the user is a participant in.
+    GET: List all threads the user is a participant in,
+         with filtering and pagination.
     POST: Start an inquiry thread from a listing page.
     """
+    from .filters import ThreadFilter
+    from core.pagination import StandardPagination
+
     if request.method == 'GET':
-        threads = (
+        queryset = (
             Thread.objects
             .filter(participants=request.user)
             .prefetch_related('participants', 'messages')
             .select_related('listing', 'booking')
             .order_by('-updated_at')
         )
-        serializer = ThreadSerializer(threads, many=True, context={'request': request})
-        return Response({'success': True, 'data': serializer.data})
+
+        filterset = ThreadFilter(
+            request.query_params,
+            queryset=queryset,
+            request=request,
+        )
+        if not filterset.is_valid():
+            return Response(
+                {'success': False, 'errors': filterset.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        queryset = filterset.qs
+
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = ThreadSerializer(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     # POST — start an inquiry thread
     serializer = CreateInquiryThreadSerializer(data=request.data)
@@ -47,7 +66,6 @@ def thread_list_create(request):
 
     listing = get_object_or_404(Listing, id=listing_id, status='active')
 
-    # Cannot message yourself
     if listing.owner == request.user:
         return Response(
             {'success': False, 'errors': 'You cannot send an inquiry to your own listing.'},
@@ -56,17 +74,14 @@ def thread_list_create(request):
 
     thread, created = get_or_create_inquiry_thread(listing, request.user)
 
-    # Send the initial message
     message = Message.objects.create(
         thread=thread,
         sender=request.user,
         body=initial_message,
     )
 
-    # Update thread's updated_at
-    Thread.objects.filter(id=thread.id).update(updated_at=message.created_at)
+    Thread.objects.filter(id=thread.id).update(updated_at=timezone.now())
 
-    # Publish to Ably
     publish_to_ably(str(thread.id), {
         'id': str(message.id),
         'body': message.body,
@@ -162,3 +177,24 @@ def get_messaging_token(request):
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     return Response({'success': True, 'token': token})
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def mark_thread_read(request, thread_id):
+    """Mark all messages in a thread as read for the current user."""
+    thread = get_object_or_404(
+        Thread,
+        id=thread_id,
+        participants=request.user,
+    )
+
+    updated_count = Message.objects.filter(
+        thread=thread,
+        is_read=False,
+    ).exclude(sender=request.user).update(is_read=True)
+
+    return Response({
+        'success': True,
+        'messages_marked_read': updated_count,
+    })

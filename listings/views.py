@@ -2,9 +2,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from .filters import ListingFilter
 from .models import Listing, ListingMedia, ListingReport
 from .serializers import (
     ListingSerializer,
@@ -12,19 +13,44 @@ from .serializers import (
     UpdateListingStatusSerializer,
     ListingReportSerializer,
 )
+from core.pagination import StandardPagination
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def listing_list_create(request):
     """
-    GET: Return the authenticated owner's own listings.
+    GET: Return the authenticated owner's own listings with filtering,
+         ordering, and pagination.
     POST: Create a new listing (owner role required).
     """
     if request.method == 'GET':
-        listings = Listing.objects.filter(owner=request.user).prefetch_related('media')
-        serializer = ListingSerializer(listings, many=True, context={'request': request})
-        return Response({'success': True, 'data': serializer.data})
+        queryset = Listing.objects.filter(
+            owner=request.user
+        ).prefetch_related('media').order_by('-created_at')
+
+        filterset = ListingFilter(request.query_params, queryset=queryset)
+        if not filterset.is_valid():
+            return Response(
+                {'success': False, 'errors': filterset.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        queryset = filterset.qs
+
+        ordering = request.query_params.get('ordering', '-created_at')
+        allowed_orderings = [
+            'created_at', '-created_at',
+            'view_count', '-view_count',
+            'price_daily', '-price_daily',
+            'title', '-title',
+        ]
+        if ordering in allowed_orderings:
+            queryset = queryset.order_by(ordering)
+
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = ListingSerializer(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     if not request.user.is_owner:
         return Response(
@@ -43,7 +69,7 @@ def listing_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def listing_detail(request, listing_id):
     """
     GET: Public listing detail (increments view count).
@@ -103,7 +129,12 @@ def listing_status(request, listing_id):
 @parser_classes([MultiPartParser, FormParser])
 def upload_media(request, listing_id):
     """Upload a photo to a listing. Owner only."""
-    listing = get_object_or_404(Listing, id=listing_id, owner=request.user)
+    listing = get_object_or_404(Listing, id=listing_id)
+    if listing.owner != request.user:
+        return Response(
+            {'success': False, 'errors': 'You do not have permission to upload to this listing.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     if 'file' not in request.FILES:
         return Response(

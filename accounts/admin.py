@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from .models import User, OTPCode, UserDocument
+from .models import User, OTPCode, UserDocument, OwnerProfile
 
 
 @admin.register(User)
@@ -59,3 +59,10 @@ class UserDocumentAdmin(ModelAdmin):
     list_display = ['user', 'document_type', 'status', 'created_at']
     list_filter = ['document_type', 'status']
     search_fields = ['user__email']
+
+
+@admin.register(OwnerProfile)
+class OwnerProfileAdmin(ModelAdmin):
+    list_display = ['user', 'business_name', 'bank_name', 'created_at']
+    search_fields = ['user__email', 'business_name']
+    readonly_fields = ['id', 'created_at', 'updated_at']

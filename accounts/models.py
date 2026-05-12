@@ -112,3 +112,34 @@ class UserDocument(models.Model):
 
     def __str__(self):
         return f"{self.document_type} for {self.user.email} — {self.status}"
+
+
+class OwnerProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='owner_profile',
+    )
+
+    business_name = models.CharField(max_length=200, blank=True, default='')
+    business_description = models.TextField(blank=True, default='')
+    business_logo = models.ImageField(upload_to='business_logos/', blank=True, null=True)
+
+    bank_name = models.CharField(max_length=100, blank=True, default='')
+    bank_account_number = models.CharField(max_length=20, blank=True, default='')
+    bank_account_name = models.CharField(max_length=200, blank=True, default='')
+
+    notify_new_booking_request = models.BooleanField(default=True)
+    notify_booking_confirmed = models.BooleanField(default=True)
+    notify_new_message = models.BooleanField(default=True)
+    notify_booking_cancelled = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'owner_profiles'
+
+    def __str__(self):
+        return f"OwnerProfile: {self.user.email}"

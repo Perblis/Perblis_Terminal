@@ -19,32 +19,51 @@ from messaging.services import get_or_create_booking_thread
 @permission_classes([IsAuthenticated])
 def booking_list_create(request):
     """
-    GET: Return user's bookings (as renter or owner, or both).
+    GET: Return user's bookings with filtering, ordering, and pagination.
     POST: Create a booking request (renter role required).
     """
+    from .filters import BookingFilter
+    from core.pagination import StandardPagination
+
     if request.method == 'GET':
         role = request.query_params.get('role', 'renter')
 
         if role == 'owner':
-            bookings = Booking.objects.filter(owner=request.user).select_related(
-                'renter', 'owner', 'listing'
-            )
+            queryset = Booking.objects.filter(
+                owner=request.user
+            ).select_related('renter', 'owner', 'listing')
         elif role == 'both':
-            bookings = Booking.objects.filter(
+            from django.db.models import Q
+            queryset = Booking.objects.filter(
                 Q(renter=request.user) | Q(owner=request.user)
             ).select_related('renter', 'owner', 'listing')
         else:
-            bookings = Booking.objects.filter(renter=request.user).select_related(
-                'renter', 'owner', 'listing'
+            queryset = Booking.objects.filter(
+                renter=request.user
+            ).select_related('renter', 'owner', 'listing')
+
+        filterset = BookingFilter(request.query_params, queryset=queryset)
+        if not filterset.is_valid():
+            return Response(
+                {'success': False, 'errors': filterset.errors},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        queryset = filterset.qs
 
-        # Optional status filter
-        booking_status = request.query_params.get('status')
-        if booking_status:
-            bookings = bookings.filter(status=booking_status)
+        ordering = request.query_params.get('ordering', '-created_at')
+        allowed_orderings = [
+            'created_at', '-created_at',
+            'start_date', '-start_date',
+            'end_date', '-end_date',
+            'gross_amount', '-gross_amount',
+        ]
+        if ordering in allowed_orderings:
+            queryset = queryset.order_by(ordering)
 
-        serializer = BookingSerializer(bookings, many=True)
-        return Response({'success': True, 'count': bookings.count(), 'data': serializer.data})
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = BookingSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     # POST — create booking request
     if not request.user.is_renter:
@@ -75,7 +94,6 @@ def booking_list_create(request):
         status=BookingStatus.PENDING,
     )
 
-    # Automatically create a messaging thread for this booking
     get_or_create_booking_thread(booking)
 
     return Response(
