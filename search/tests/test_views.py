@@ -165,3 +165,86 @@ class TestMapSearch:
         )
         assert response.status_code == 200
         assert response.data['radius_km'] == 500
+
+    def test_q_param_filters_by_title(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(
+            owner=owner_user, status='active', title='Mobile Crane Lagos',
+            category='Mobile Crane',
+            location=Point(3.3800, 6.5250, srid=4326),
+        )
+        ListingFactory(
+            owner=owner_user, status='active', title='Flatbed Truck',
+            category='Flatbed Truck',
+            location=Point(3.3810, 6.5260, srid=4326),
+        )
+        response = api_client.get(
+            f'{self.URL}?lat={self.LAGOS_LAT}&lng={self.LAGOS_LNG}&q=crane'
+        )
+        assert response.status_code == 200
+        assert response.data['count'] == 1
+        assert response.data['q'] == 'crane'
+        assert 'Crane' in response.data['data'][0]['title']
+
+    def test_search_param_alias_works(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(
+            owner=owner_user, status='active', title='Mobile Crane Lagos',
+            location=Point(3.3800, 6.5250, srid=4326),
+        )
+        response = api_client.get(
+            f'{self.URL}?lat={self.LAGOS_LAT}&lng={self.LAGOS_LNG}&search=crane'
+        )
+        assert response.status_code == 200
+        assert response.data['count'] == 1
+
+    def test_q_filters_by_category(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(
+            owner=owner_user, status='active', category='Mobile Crane',
+            location=Point(3.3800, 6.5250, srid=4326),
+        )
+        ListingFactory(
+            owner=owner_user, status='active', category='Flatbed Truck',
+            location=Point(3.3810, 6.5260, srid=4326),
+        )
+        response = api_client.get(
+            f'{self.URL}?lat={self.LAGOS_LAT}&lng={self.LAGOS_LNG}&q=flatbed'
+        )
+        assert response.data['count'] == 1
+
+    def test_q_filters_by_city(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(
+            owner=owner_user, status='active', location_city='Kano',
+            location=Point(8.5167, 12.0022, srid=4326),
+        )
+        ListingFactory(
+            owner=owner_user, status='active', location_city='Lagos',
+            location=Point(3.3800, 6.5250, srid=4326),
+        )
+        response = api_client.get(
+            f'{self.URL}?lat=10&lng=8&radius=500&q=kano'
+        )
+        assert response.data['count'] == 1
+
+    def test_empty_q_returns_all(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(owner=owner_user, status='active', location=Point(3.3800, 6.5250, srid=4326))
+        ListingFactory(owner=owner_user, status='active', location=Point(3.3810, 6.5260, srid=4326))
+        response = api_client.get(
+            f'{self.URL}?lat={self.LAGOS_LAT}&lng={self.LAGOS_LNG}&q='
+        )
+        assert response.data['count'] == 2
+        assert response.data['q'] is None
+
+    def test_q_is_case_insensitive(self, api_client, owner_user):
+        from tests.factories import ListingFactory
+        ListingFactory(
+            owner=owner_user, status='active', title='TOWER CRANE HEAVY',
+            location=Point(3.3800, 6.5250, srid=4326),
+        )
+        response = api_client.get(
+            f'{self.URL}?lat={self.LAGOS_LAT}&lng={self.LAGOS_LNG}&q=tower+crane'
+        )
+        assert response.data['count'] == 1

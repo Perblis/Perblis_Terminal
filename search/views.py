@@ -1,6 +1,7 @@
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
+from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -52,6 +53,10 @@ def map_search(request):
     except ValueError:
         radius_km = 50
 
+    # Accept both 'q' (our convention) and 'search' (DRF SearchFilter convention)
+    # so the mobile client can send either without another backend change.
+    q = (request.query_params.get('q') or request.query_params.get('search') or '').strip()
+
     resource_type = request.query_params.get('resource_type')
     available_param = request.query_params.get('available', 'true').lower()
     filter_available = available_param == 'true'
@@ -75,6 +80,13 @@ def map_search(request):
             )
         queryset = queryset.filter(resource_type=resource_type)
 
+    if q:
+        queryset = queryset.filter(
+            Q(title__icontains=q) |
+            Q(category__icontains=q) |
+            Q(location_city__icontains=q)
+        )
+
     queryset = (
         queryset
         .filter(location__distance_lte=(user_location, D(km=radius_km)))
@@ -92,5 +104,6 @@ def map_search(request):
         'success': True,
         'count': queryset.count(),
         'radius_km': radius_km,
+        'q': q or None,
         'data': serializer.data,
     })
