@@ -100,8 +100,7 @@ function PendingRequestsPanel({
       ) : (
         <div className="space-y-2">
           {requests.slice(0, 5).map((r) => {
-            const isNew =
-              nowMs - new Date(r.created_at).getTime() < NEW_REQUEST_THRESHOLD_MS;
+            const isNew = nowMs - new Date(r.created_at).getTime() < NEW_REQUEST_THRESHOLD_MS;
             return (
               <Link key={r.id} href={`/bookings/${r.id}`} className="block focus:outline-none">
                 <Card

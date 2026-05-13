@@ -9,6 +9,7 @@ const colorMap = {
   completed: "bg-text-tertiary",
   paused: "bg-text-tertiary",
   draft: "bg-text-tertiary",
+  archived: "bg-text-tertiary",
   cancelled: "bg-alert",
   maintenance: "bg-amber",
 } as const;
