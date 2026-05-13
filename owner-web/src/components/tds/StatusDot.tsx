@@ -1,30 +1,34 @@
 import { cn } from "@/lib/cn";
 
-/**
- * Status indicator dot. Color encodes a state token (not a category).
- *
- * Per TDS: status uses color sparingly — typically pair with a label
- * so the dot is supplementary, not the only signal.
- */
-type StatusTone = "clear" | "signal" | "alert" | "amber" | "neutral" | "forge";
+const colorMap = {
+  active: "bg-forge",
+  available: "bg-clear",
+  pending: "bg-amber",
+  declined: "bg-alert",
+  confirmed: "bg-signal",
+  completed: "bg-text-tertiary",
+  paused: "bg-text-tertiary",
+  draft: "bg-text-tertiary",
+  cancelled: "bg-alert",
+  maintenance: "bg-amber",
+} as const;
 
-const TONE: Record<StatusTone, string> = {
-  clear: "bg-clear",
-  signal: "bg-signal",
-  alert: "bg-alert",
-  amber: "bg-amber",
-  forge: "bg-forge",
-  neutral: "bg-border-active",
-};
+export type StatusDotStatus = keyof typeof colorMap;
 
 export function StatusDot({
-  tone = "neutral",
+  status,
+  size = 8,
   className,
 }: {
-  tone?: StatusTone;
+  status: StatusDotStatus;
+  size?: number;
   className?: string;
 }) {
   return (
-    <span aria-hidden className={cn("rounded-pill inline-block size-2", TONE[tone], className)} />
+    <span
+      aria-hidden
+      style={{ width: size, height: size }}
+      className={cn("inline-block shrink-0 rounded-full", colorMap[status], className)}
+    />
   );
 }

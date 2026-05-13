@@ -16,10 +16,19 @@ type TokenStore = {
 };
 
 const memoryTokens: TokenStore = { access: null, refresh: null };
+let hydrated = false;
+
+function hydrateTokensOnce() {
+  if (hydrated || typeof window === "undefined") return;
+  memoryTokens.access = localStorage.getItem("tw_access");
+  memoryTokens.refresh = localStorage.getItem("tw_refresh");
+  hydrated = true;
+}
 
 export function setTokens(access: string | null, refresh: string | null) {
   memoryTokens.access = access;
   memoryTokens.refresh = refresh;
+  hydrated = true;
   if (typeof window !== "undefined") {
     if (access) localStorage.setItem("tw_access", access);
     else localStorage.removeItem("tw_access");
@@ -29,12 +38,12 @@ export function setTokens(access: string | null, refresh: string | null) {
 }
 
 export function loadTokensFromStorage() {
-  if (typeof window === "undefined") return;
-  memoryTokens.access = localStorage.getItem("tw_access");
-  memoryTokens.refresh = localStorage.getItem("tw_refresh");
+  hydrated = false;
+  hydrateTokensOnce();
 }
 
 export function getAccessToken() {
+  hydrateTokensOnce();
   return memoryTokens.access;
 }
 
@@ -73,6 +82,7 @@ function buildUrl(path: string, query?: RequestOpts["query"]) {
 }
 
 async function doFetch(url: string, init: RequestInit, isMultipart: boolean): Promise<Response> {
+  hydrateTokensOnce();
   const headers = new Headers(init.headers);
   if (!isMultipart && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");

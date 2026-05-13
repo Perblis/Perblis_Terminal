@@ -123,3 +123,10 @@
     scrollbar-width: none;
   }
 }
+
+/* Skeleton shimmer animation used by <Skeleton />. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
