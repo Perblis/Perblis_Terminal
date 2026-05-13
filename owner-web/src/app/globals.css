@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+@config "../../tailwind.config.ts";
+
+/* ============================================================
+ Tailwind v4 @theme bridge.
+ We mirror the TDS token names into Tailwind so utilities like
+ `bg-abyss`, `text-text-primary`, `p-5`, `font-display`, and
+ `rounded-card` resolve as the wave file's DoD expects.
+
+ The companion tailwind.config.ts duplicates the same map so
+ the legacy config remains in version control as documentation
+ and stays loadable via @config above.
+ ============================================================ */
+@theme inline {
+  --color-abyss: var(--abyss);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-high: var(--surface-high);
+  --color-border: var(--border);
+  --color-border-active: var(--border-active);
+
+  --color-forge: var(--forge);
+  --color-forge-light: var(--forge-light);
+  --color-forge-mid: var(--forge-mid);
+  --color-forge-dim: var(--forge-dim);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+
+  --color-clear: var(--clear);
+  --color-clear-soft: var(--clear-soft);
+  --color-clear-dim: var(--clear-dim);
+  --color-signal: var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-dim: var(--signal-dim);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --color-alert-dim: var(--alert-dim);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-on-accent: var(--text-on-accent);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* TDS spacing — replaces Tailwind's default 4px scale.
+     Allowed steps only: 0 1 2 3 4 5 6 8 10 12 16 20 24.
+     If you need p-3.5 or m-7, the design is wrong, not the scale. */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  --radius-sharp: 0;
+  --radius-default: 4px;
+  --radius-sm: 4px;
+  --radius-card: 8px;
+  --radius-sheet: 12px;
+  --radius-pill: 9999px;
+  --radius-full: 9999px;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0.2, 0, 0, 1);
+
+  --duration-fast: 80ms;
+  --duration-default: 200ms;
+  --duration-sheet: 280ms;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: var(--forge-dim);
+    color: var(--text-primary);
+  }
+
+  /* Forge dark scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--abyss);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--surface-high);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-active);
+  }
+}
+
+@layer utilities {
+  .tds-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .tds-no-scrollbar {
+    scrollbar-width: none;
+  }
+}
