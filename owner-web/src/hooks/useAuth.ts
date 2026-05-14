@@ -38,12 +38,12 @@ type LoginRouteResponse = {
 
 export function useLogin() {
   const qc = useQueryClient();
-  const router = useRouter();
 
   return useMutation({
     mutationFn: async (input: LoginInput) => {
       const res = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: input.email, password: input.password }),
       });
@@ -61,8 +61,10 @@ export function useLogin() {
       return { next: input.next ?? "/dashboard", user: ok.user };
     },
     onSuccess: ({ next }) => {
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.me });
-      router.replace(next);
+      void qc.invalidateQueries({ queryKey: QUERY_KEYS.me });
+      // Full navigation so the httpOnly session cookie is always sent on the
+      // first load of protected RSC routes (soft navigation can race the cookie).
+      window.location.assign(next);
     },
   });
 }
