@@ -7,6 +7,7 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { ToasterProvider } from "@/components/ui/Toaster";
 
 export const metadata: Metadata = {
   title: "Terminal — Owner",
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <ToasterProvider>{children}</ToasterProvider>
+        </QueryProvider>
       </body>
     </html>
   );

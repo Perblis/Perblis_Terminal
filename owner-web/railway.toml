@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "npm run start"
+healthcheckPath = "/login"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"

@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/tds/Card";
 import { KpiCard } from "@/components/tds/KpiCard";
 import { Skeleton } from "@/components/tds/LoadingSkeleton";
+import { EmptyState } from "@/components/tds/EmptyState";
 import { ownerAnalyticsApi, type PerformancePeriod } from "@/lib/api/owner";
 import { QUERY_KEYS } from "@/lib/constants";
 import { Badge } from "@/components/tds/Badge";
@@ -52,7 +53,9 @@ export default function PerformancePage() {
 
       {q.isLoading ? (
         <Skeleton className="h-[500px]" />
-      ) : !q.data ? null : (
+      ) : !q.data ? null : q.data.data.by_listing.length === 0 ? (
+        <EmptyState title="No data in this period." />
+      ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <KpiCard label="Views" value={String(q.data.data.total_views)} />
