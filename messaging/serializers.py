@@ -31,6 +31,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     other_participant = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
+    listing_id = serializers.UUIDField(source='listing.id', read_only=True, default=None)
     listing_title = serializers.CharField(source='listing.title', read_only=True, default=None)
     booking_id = serializers.UUIDField(source='booking.id', read_only=True, default=None)
     is_booking_thread = serializers.ReadOnlyField()
@@ -38,7 +39,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thread
         fields = [
-            'id', 'is_booking_thread', 'booking_id', 'listing_title',
+            'id', 'is_booking_thread', 'booking_id', 'listing_id', 'listing_title',
             'other_participant', 'last_message', 'unread_count',
             'created_at', 'updated_at',
         ]
