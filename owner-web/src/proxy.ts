@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import type { SessionPayload } from "@/lib/auth/session";
+import { getSessionCookieName } from "@/lib/auth/sessionCookieName";
 
 /**
  * Edge proxy — routing guard.
@@ -43,7 +44,7 @@ export function proxy(req: NextRequest) {
 
   if (pathname === "/") return NextResponse.next();
 
-  const cookieName = process.env.SESSION_COOKIE_NAME ?? "terminal_session";
+  const cookieName = getSessionCookieName();
   const session = parseSession(req.cookies.get(cookieName)?.value);
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 

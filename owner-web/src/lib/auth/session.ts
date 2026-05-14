@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 
 import type { SessionUser } from "@/lib/api/auth";
+import { getSessionCookieName } from "@/lib/auth/sessionCookieName";
 
-const NAME = process.env.SESSION_COOKIE_NAME ?? "terminal_session";
+const NAME = getSessionCookieName();
 const SECURE = process.env.SESSION_COOKIE_SECURE === "true";
 
 export type SessionPayload = {
