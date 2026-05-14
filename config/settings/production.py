@@ -40,9 +40,21 @@ AWS_S3_REGION_NAME = 'auto'
 AWS_S3_FILE_OVERWRITE = False
 
 # ── CORS (mobile app + web frontend) ──────────────────────────────────
-CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
-CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
+# Browsers cannot use Access-Control-Allow-Origin: * together with credentialed
+# requests (Authorization header, cookies). django-cors-headers therefore
+# requires explicit origins when CORS_ALLOW_CREDENTIALS is True — setting only
+# CORS_ALLOW_ALL_ORIGINS=True in Railway will still produce "blocked by CORS"
+# for owner-web on a different host than the API.
 CORS_ALLOW_CREDENTIALS = True
+
+_cors_origins = list(env.list('CORS_ALLOWED_ORIGINS', default=[]))
+_owner_web = (env('OWNER_WEB_URL', default='') or '').strip().rstrip('/')
+if _owner_web and _owner_web not in _cors_origins:
+    _cors_origins.append(_owner_web)
+
+CORS_ALLOWED_ORIGINS = _cors_origins
+# Wildcard origins are incompatible with CORS_ALLOW_CREDENTIALS=True (see above).
+CORS_ALLOW_ALL_ORIGINS = False
 
 # ── Sentry (error tracking + performance) ─────────────────────────────
 import sentry_sdk

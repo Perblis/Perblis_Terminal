@@ -5,6 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from core.file_urls import absolute_file_field
+from core.pagination import StandardPagination
+
 from .filters import ListingFilter
 from .models import Listing, ListingMedia, ListingReport
 from .serializers import (
@@ -13,10 +16,6 @@ from .serializers import (
     UpdateListingStatusSerializer,
     ListingReportSerializer,
 )
-from core.pagination import StandardPagination
-
-
-@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def listing_list_create(request):
     """
@@ -159,7 +158,7 @@ def upload_media(request, listing_id):
         'success': True,
         'data': {
             'id': str(media.id),
-            'file_url': request.build_absolute_uri(media.file.url),
+            'file_url': absolute_file_field(request, media.file),
             'is_primary': media.is_primary,
         },
     }, status=status.HTTP_201_CREATED)

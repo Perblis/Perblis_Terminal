@@ -57,6 +57,17 @@ export async function POST(req: Request) {
   const loginData = (await upstream.json().catch(() => null)) as LoginUpstream | null;
 
   if (!upstream.ok || !loginData?.access) {
+    if (upstream.status === 404) {
+      return NextResponse.json(
+        {
+          error: {
+            detail:
+              "Owner web could not reach Django at /api/v1/auth/login/ (404). The browser only calls this Next.js app; the server then calls NEXT_PUBLIC_API_BASE_URL. Set that variable on the Next.js Railway service to your API origin with no trailing slash, then redeploy.",
+          },
+        },
+        { status: 404 },
+      );
+    }
     return NextResponse.json(
       { error: loginData ?? { detail: "Sign-in failed." } },
       { status: upstream.status || 502 },
