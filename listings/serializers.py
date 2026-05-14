@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.gis.geos import Point
 
+from core.file_urls import absolute_file_field
+
 from .models import Listing, ListingMedia, ListingReport, ResourceType
 
 
@@ -13,24 +15,26 @@ class ListingMediaSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         request = self.context.get('request')
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
-        return obj.file.url if obj.file else None
+        return absolute_file_field(request, obj.file)
 
 
 class ListingOwnerSerializer(serializers.Serializer):
     """Minimal owner info embedded in listing responses."""
     id = serializers.UUIDField()
     full_name = serializers.CharField()
-    profile_photo = serializers.ImageField()
+    profile_photo = serializers.SerializerMethodField()
     verification_level = serializers.IntegerField()
+
+    def get_profile_photo(self, obj):
+        request = self.context.get('request')
+        return absolute_file_field(request, obj.profile_photo)
 
 
 class ListingSerializer(serializers.ModelSerializer):
     """Full listing detail — used for detail and owner list views."""
     owner = ListingOwnerSerializer(read_only=True)
     media = ListingMediaSerializer(many=True, read_only=True)
-    primary_photo_url = serializers.ReadOnlyField()
+    primary_photo_url = serializers.SerializerMethodField()
     latitude = serializers.ReadOnlyField()
     longitude = serializers.ReadOnlyField()
 
@@ -46,6 +50,16 @@ class ListingSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'owner', 'verification_tier', 'view_count', 'created_at', 'updated_at']
+
+    def get_primary_photo_url(self, obj):
+        request = self.context.get('request')
+        primary = obj.media.filter(is_primary=True).first()
+        if primary:
+            return absolute_file_field(request, primary.file)
+        first = obj.media.first()
+        if first:
+            return absolute_file_field(request, first.file)
+        return None
 
 
 class CreateListingSerializer(serializers.ModelSerializer):
