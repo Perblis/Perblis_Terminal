@@ -34,21 +34,21 @@ MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── File uploads (Cloudflare R2 — S3-compatible) ───────────────────────
-# django-storages reads AWS_* names even when the bucket lives on R2.
-# Required env vars (all must be present in production):
-#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY  R2 API token credentials
-#   AWS_STORAGE_BUCKET_NAME                   R2 bucket name
-#   AWS_S3_ENDPOINT_URL                       https://<account>.r2.cloudflarestorage.com
-#   AWS_S3_CUSTOM_DOMAIN                      public host serving the bucket
-#                                             (r2.dev subdomain or custom CDN domain).
-# Without AWS_S3_CUSTOM_DOMAIN, file.url returns a bare 'listings/...' path
-# that browsers resolve site-relative -> 404 on the Django host.
+# Env vars use the R2_* naming from the Railway R2 plugin, then map to the
+# AWS_* settings django-storages actually reads:
+#   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY  R2 API token credentials
+#   R2_BUCKET                               R2 bucket name
+#   R2_ENDPOINT                             https://<account>.r2.cloudflarestorage.com
+#   R2_PUBLIC_URL                           public host serving the bucket
+#                                           (r2.dev subdomain or custom CDN domain).
+# Without R2_PUBLIC_URL, file.url returns a bare 'listings/...' path that
+# browsers resolve site-relative -> 404 on the Django host.
 _required_r2_env = (
-    'AWS_ACCESS_KEY_ID',
-    'AWS_SECRET_ACCESS_KEY',
-    'AWS_STORAGE_BUCKET_NAME',
-    'AWS_S3_ENDPOINT_URL',
-    'AWS_S3_CUSTOM_DOMAIN',
+    'R2_ACCESS_KEY_ID',
+    'R2_SECRET_ACCESS_KEY',
+    'R2_BUCKET',
+    'R2_ENDPOINT',
+    'R2_PUBLIC_URL',
 )
 _missing_r2_env = [name for name in _required_r2_env if not env(name, default='')]
 if _missing_r2_env:
@@ -59,15 +59,24 @@ if _missing_r2_env:
           'otherwise listing images 404 against the Django host.'
     )
 
+
+def _strip_scheme(url: str) -> str:
+    """AWS_S3_CUSTOM_DOMAIN must be host[:port][/path] without scheme."""
+    for prefix in ('https://', 'http://'):
+        if url.startswith(prefix):
+            return url[len(prefix):].rstrip('/')
+    return url.rstrip('/')
+
+
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_REGION_NAME = 'auto'
 AWS_S3_FILE_OVERWRITE = False
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
-AWS_S3_CUSTOM_DOMAIN = env('AWS_S3_CUSTOM_DOMAIN')
+AWS_ACCESS_KEY_ID = env('R2_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env('R2_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env('R2_BUCKET')
+AWS_S3_ENDPOINT_URL = env('R2_ENDPOINT')
+AWS_S3_CUSTOM_DOMAIN = _strip_scheme(env('R2_PUBLIC_URL'))
 AWS_QUERYSTRING_AUTH = env.bool('AWS_QUERYSTRING_AUTH', default=False)
 
 # ── CORS (mobile app + web frontend) ──────────────────────────────────
