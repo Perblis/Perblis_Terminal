@@ -1,4 +1,4 @@
-"""Production storage policy (no DB): R2 uploads must not use object ACLs."""
+"""Production storage (no DB): Django 5.2 STORAGES + R2 ACL policy."""
 
 from __future__ import annotations
 
@@ -13,10 +13,11 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 @pytest.mark.unit
-def test_production_settings_omit_s3_object_acl_for_r2():
+def test_production_settings_use_s3_storages_and_omit_object_acl():
     """
-    Fresh Django process with production settings: AWS_DEFAULT_ACL must be None
-    so boto3 PutObject does not send x-amz-acl (R2 buckets often reject ACLs).
+    Fresh Django process: STORAGES['default'] must be S3 (Django 5.2 ignores
+    DEFAULT_FILE_STORAGE for default_storage alone). AWS_DEFAULT_ACL must be
+    None so boto3 PutObject does not send x-amz-acl (R2 often rejects ACLs).
     """
     code = r"""
 import os
@@ -34,6 +35,7 @@ import django
 django.setup()
 from django.conf import settings
 assert settings.AWS_DEFAULT_ACL is None, settings.AWS_DEFAULT_ACL
+assert settings.STORAGES["default"]["BACKEND"] == "storages.backends.s3boto3.S3Boto3Storage"
 assert settings.AWS_STORAGE_BUCKET_NAME == "test-bucket"
 assert "r2.cloudflarestorage.com" in settings.AWS_S3_ENDPOINT_URL
 assert settings.AWS_S3_CUSTOM_DOMAIN == "pub-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.r2.dev"

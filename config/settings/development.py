@@ -1,3 +1,5 @@
+from django.conf import global_settings as _django_global_settings
+
 from .base import *
 
 DEBUG = True
@@ -18,6 +20,12 @@ DATABASES = {
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Django 5.2+ uses STORAGES for FileField/default_storage; keep both in sync.
+STORAGES = {
+    **_django_global_settings.STORAGES,
+    'default': {'BACKEND': DEFAULT_FILE_STORAGE},
+}
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
