@@ -1,7 +1,16 @@
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.gis.geos import Point
+from rest_framework.views import APIView
+
 from listings.models import Listing, ListingReport
+from listings.views import listing_list_create
+
+
+def test_listing_list_create_is_drf_api_view():
+    """Without @api_view, JWT auth and permissions do not run; owner filter can 500."""
+    assert hasattr(listing_list_create, 'cls')
+    assert issubclass(listing_list_create.cls, APIView)
 
 
 @pytest.mark.django_db

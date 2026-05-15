@@ -16,6 +16,9 @@ from .serializers import (
     UpdateListingStatusSerializer,
     ListingReportSerializer,
 )
+
+
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def listing_list_create(request):
     """
