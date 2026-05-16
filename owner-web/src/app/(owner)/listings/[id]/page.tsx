@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/tds/LoadingSkeleton";
 import { ResourceIcon } from "@/components/tds/ResourceIcon";
 import { StatusDot } from "@/components/tds/StatusDot";
 import { Button } from "@/components/ui/Button";
+import { SPECS_BY_RESOURCE, labelForSpecKey } from "@/components/listings/listingSpecConfig";
 import { listingsApi } from "@/lib/api/listings";
 import { QUERY_KEYS } from "@/lib/constants";
 import { formatNaira } from "@/lib/format";
@@ -51,6 +52,24 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const l = listing.data;
+
+  const specOrder = SPECS_BY_RESOURCE[l.resource_type].map((f) => f.key);
+  const specEntries = Object.entries(l.specs)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .sort(([a], [b]) => {
+      const ia = specOrder.indexOf(a);
+      const ib = specOrder.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+
+  function formatSpecValue(value: string | number | boolean): string {
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (typeof value === "number") return String(value);
+    return value;
+  }
 
   return (
     <div className="space-y-8">
@@ -101,6 +120,24 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <p className="text-text-secondary text-[14px] whitespace-pre-line">{l.description}</p>
           </Card>
+
+          {specEntries.length > 0 ? (
+            <Card>
+              <div className="text-text-tertiary mb-3 text-[11px] tracking-[0.06em] uppercase">
+                Specifications
+              </div>
+              <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {specEntries.map(([key, value]) => (
+                  <div key={key} className="flex flex-col gap-0.5">
+                    <dt className="text-text-tertiary text-[12px]">
+                      {labelForSpecKey(l.resource_type, key) ?? key}
+                    </dt>
+                    <dd className="text-text-primary font-mono text-[14px]">{formatSpecValue(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
+          ) : null}
         </div>
 
         <div className="space-y-4">

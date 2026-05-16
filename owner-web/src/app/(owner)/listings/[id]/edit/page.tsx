@@ -6,6 +6,7 @@ import { use } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ListingForm, type ListingFormValues } from "@/components/listings/ListingForm";
 import { PhotoUploader } from "@/components/listings/PhotoUploader";
+import { pickSpecsForApi, specsDefaultsForForm, specsFormBaseDefaults } from "@/components/listings/listingSpecConfig";
 import { Skeleton } from "@/components/tds/LoadingSkeleton";
 import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/client";
@@ -21,6 +22,7 @@ function valuesToPatchPayload(v: ListingFormValues): Partial<ListingCreatePayloa
     price_daily: v.price_daily,
     price_weekly: v.price_weekly,
     price_monthly: v.price_monthly,
+    specs: pickSpecsForApi(v.resource_type, v.specs),
     latitude: v.latitude,
     longitude: v.longitude,
     location_address: v.location_address ?? "",
@@ -157,6 +159,10 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
             longitude: l.longitude ?? undefined,
             operator_available: l.operator_available,
             delivery_available: l.delivery_available,
+            specs: {
+              ...specsFormBaseDefaults(l.resource_type),
+              ...specsDefaultsForForm(l.resource_type, l.specs),
+            },
           }}
           submitting={patch.isPending}
           submitLabel="Save"
