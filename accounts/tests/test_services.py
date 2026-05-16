@@ -192,6 +192,23 @@ class TestAuthAPI:
         assert response.status_code == 200
         assert 'access' in response.data
 
+    def test_token_refresh_returns_rotated_refresh_token(self, api_client, renter_user):
+        """Clients must persist the new refresh when rotation + blacklist are enabled."""
+        from rest_framework.test import APIClient
+        login_response = APIClient().post(f'{self.BASE_URL}/login/', {
+            'email': renter_user.email,
+            'password': 'testpass123!',
+        })
+        assert login_response.status_code == 200
+        old_refresh = login_response.data['refresh']
+        refresh_response = api_client.post(f'{self.BASE_URL}/token/refresh/', {
+            'refresh': old_refresh,
+        })
+        assert refresh_response.status_code == 200
+        assert 'access' in refresh_response.data
+        assert 'refresh' in refresh_response.data
+        assert refresh_response.data['refresh'] != old_refresh
+
     def test_login_wrong_password(self, api_client, renter_user):
         response = api_client.post(f'{self.BASE_URL}/login/', {
             'email': renter_user.email,
