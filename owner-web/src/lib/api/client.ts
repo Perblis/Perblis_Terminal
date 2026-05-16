@@ -131,8 +131,15 @@ export const apiClient = {
   get: <T>(path: string, opts: RequestOpts = {}) => api<T>(path, { ...opts, method: "GET" }),
   post: <T>(path: string, body?: unknown, opts: RequestOpts = {}) =>
     api<T>(path, { ...opts, method: "POST", body }),
-  patch: <T>(path: string, body?: unknown, opts: RequestOpts = {}) =>
-    api<T>(path, { ...opts, method: "PATCH", body }),
+  patch: <T>(path: string, body?: unknown, opts: RequestOpts = {}) => {
+    const multipart = typeof FormData !== "undefined" && body instanceof FormData;
+    return api<T>(path, {
+      ...opts,
+      method: "PATCH",
+      body,
+      ...(multipart ? { isMultipart: true } : {}),
+    });
+  },
   put: <T>(path: string, body?: unknown, opts: RequestOpts = {}) =>
     api<T>(path, { ...opts, method: "PUT", body }),
   delete: <T>(path: string, opts: RequestOpts = {}) => api<T>(path, { ...opts, method: "DELETE" }),

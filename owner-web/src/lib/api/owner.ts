@@ -133,11 +133,7 @@ export const ownerSettingsApi = {
 
   patchProfile: (body: FormData | Partial<BusinessProfile>) =>
     body instanceof FormData
-      ? apiClient.upload<{ success: true; data: BusinessProfile }>(
-          "/owner/business-profile/",
-          body,
-          { method: "PATCH" },
-        )
+      ? apiClient.patch<{ success: true; data: BusinessProfile }>("/owner/business-profile/", body)
       : apiClient.patch<{ success: true; data: BusinessProfile }>(
           "/owner/business-profile/",
           body,

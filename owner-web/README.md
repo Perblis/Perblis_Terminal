@@ -56,6 +56,6 @@ npm run e2e:uploads
 
 See `e2e/image-uploads.spec.ts` and fixture `e2e/fixtures/test-upload.png`.
 
-If the **business logo** test fails on production with **HTTP 405** (`Method "POST" not allowed`), redeploy owner-web after this change: multipart business profile updates must use **PATCH**, matching `GET|PUT|PATCH` on `/api/v1/owner/business-profile/`.
+If the **business logo** test fails on production with **HTTP 405**, redeploy owner-web: the business profile logo must be sent as **PATCH** with multipart body (`apiClient.patch` + `FormData`), not POST.
 
 See root `README.md` and `AGENTS.md` for full-stack development.
