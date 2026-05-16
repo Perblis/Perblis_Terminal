@@ -88,8 +88,7 @@ test.describe("image uploads", () => {
     const done = page.waitForResponse(
       (res) => {
         if (!res.url().includes("/api/v1/owner/business-profile/")) return false;
-        const m = res.request().method();
-        return m === "PATCH" || m === "POST";
+        return res.request().method() === "PATCH";
       },
       { timeout: 90_000 },
     );
