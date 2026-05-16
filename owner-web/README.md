@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Terminal Owner Web
 
-## Getting Started
+Next.js 16 (App Router) portal for equipment owners: sign-in, dashboard, listings, bookings, messages, analytics, and settings. It calls the Django API in the repo root (`/api/v1/…`) using JWT stored in `localStorage` and optional BFF routes under `src/app/api/auth/`.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+ (matches `@types/node` in devDependencies)
+- Django API running locally on port **8000** (or set `NEXT_PUBLIC_API_BASE_URL` to your deployed API)
+
+## Setup
 
 ```bash
+cd owner-web
+cp .env.example .env.local
+# Edit .env.local — set NEXT_PUBLIC_API_BASE_URL (no trailing slash), e.g. http://localhost:8000
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Run production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript (`tsc --noEmit`) |
 
-## Learn More
+## Deploy notes (e.g. Railway)
 
-To learn more about Next.js, take a look at the following resources:
+- Set `NEXT_PUBLIC_API_BASE_URL` on the **Next.js** service to your API origin (no trailing slash).
+- For cross-origin browser calls, configure Django `CORS_ALLOWED_ORIGINS` / `OWNER_WEB_URL` in production settings (see root `.env.example`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See root `README.md` and `AGENTS.md` for full-stack development.

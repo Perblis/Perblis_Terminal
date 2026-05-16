@@ -60,9 +60,9 @@ Forgetting this will silently run against the non-local database.
 - The `.env` file in project root is read by django-environ
 - `AUTH_USER_MODEL` is `accounts.User` (email-based, not username)
 
-### Mobile WAVE Files
+### Related repositories
 
-The repo contains `MOBILE_WAVE_0{0..4}_*.md` files — step-by-step agent task files for building the Terminal React Native (Expo) mobile app. They reference the design system at `https://github.com/Nwabukin/Terminal-Mobile.git`. Each wave builds on the previous one and contains exact code, API contracts, and a Definition of Done checklist.
+- **Mobile app (Expo / React Native):** design system and app code live in [Terminal-Mobile](https://github.com/Nwabukin/Terminal-Mobile.git) (separate repo).
 
 ### Gotchas
 
@@ -78,12 +78,11 @@ The repo contains `MOBILE_WAVE_0{0..4}_*.md` files — step-by-step agent task f
 
 ### Owner Web Portal (owner-web/)
 
-The frontend is a Next.js 16 (App Router, Turbopack) app in `/workspace/owner-web/`. Development focus is the `OWNER_WEB_WAVE_0{0..7}` task files.
+Next.js 16 (App Router, Turbopack) owner portal in `/workspace/owner-web/`. It uses JWT from the Django API (see `src/lib/api/client.ts` and BFF routes under `src/app/api/auth/`).
 
 - **Lockfile**: `package-lock.json` → use `npm install`
-- **Lint**: `npm run lint` (ESLint 9 flat config) and `npm run typecheck` (tsc --noEmit)
-- **Dev server**: `cd /workspace/owner-web && npm run dev` (port 3000, requires backend on 8000)
-- **Env**: Copy `.env.example` to `.env.local` for local dev. `NEXT_PUBLIC_API_BASE_URL` must point to the Django API.
-- **Wave 00-04 status (verified)**: All files implemented and working (project setup, auth, shell/dashboard, listings CRUD, bookings). One gap: `src/middleware.ts` (Wave 01) is missing; route guarding uses `(owner)/layout.tsx` server-side `getSession()` instead.
-- **Test accounts**: Same as backend (owner1-4@test.com, renter1-2@test.com, dual@test.com; all password `test1234!`). Seed via Django shell.
-- **Remaining waves**: 05 (Messaging), 06 (Analytics/Settings), 07 (Polish/Deploy) are not yet implemented.
+- **Lint**: `npm run lint` (ESLint 9 flat config) and `npm run typecheck` (`tsc --noEmit`)
+- **Dev server**: `cd /workspace/owner-web && npm run dev` (port 3000; API on 8000)
+- **Env**: Copy `owner-web/.env.example` to `.env.local`. Set `NEXT_PUBLIC_API_BASE_URL` to the API origin with **no trailing slash** (e.g. `http://localhost:8000`). For Railway, set the same on the Next.js service so server-side fetches reach Django.
+- **Auth guarding**: Protected routes use `(owner)/layout.tsx` with server-side `getSession()` (no root `middleware.ts`).
+- **Test accounts**: Same as backend (`owner1@test.com`, etc.; password `test1234!`). Seed via `python manage.py shell < scripts/seed.py`.

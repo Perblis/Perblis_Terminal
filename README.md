@@ -79,6 +79,8 @@ Browse / Search on Map → View Listing → Request Booking → Owner Accepts �
 └──────────────────┘                    └───────────────────┘
 ```
 
+The **`owner-web/`** directory is a Next.js 16 owner portal (separate `npm` app) that consumes the same API. The mobile renter/owner app is developed in a separate repository (see root `AGENTS.md`).
+
 ---
 
 ## Tech Stack
@@ -97,6 +99,7 @@ Browse / Search on Map → View Listing → Request Booking → Owner Accepts �
 | **Error Tracking** | Sentry |
 | **Deployment** | Railway (Nixpacks) |
 | **Linting** | Ruff |
+| **Owner portal** | Next.js 16 (`owner-web/`) |
 
 ---
 
@@ -104,6 +107,8 @@ Browse / Search on Map → View Listing → Request Booking → Owner Accepts �
 
 ```
 terminal/
+├── owner-web/              # Next.js owner portal (separate npm package)
+│   └── src/                # App Router, API routes, UI
 ├── config/                 # Django project configuration
 │   ├── settings/
 │   │   ├── base.py         # Shared settings
@@ -184,7 +189,7 @@ sudo apt-get install -y \
 
 ```bash
 # Clone the repository
-git clone https://github.com/Nwabukin/terminalv2.git
+git clone https://github.com/Nwa-dev/terminalv2.git
 cd terminalv2
 
 # Create and activate virtual environment
@@ -218,11 +223,11 @@ cp .env.example .env
 | `DB_PASSWORD` | Database password | `postgres` |
 | `DB_HOST` | Database host | `localhost` |
 | `DB_PORT` | Database port | `5432` |
-| `R2_ACCESS_KEY_ID` | Cloudflare R2 access key | *(empty = local storage)* |
-| `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret | *(empty = local storage)* |
-| `R2_BUCKET_NAME` | R2 bucket name | `terminal-uploads` |
-| `R2_ENDPOINT_URL` | R2 endpoint URL | *(empty)* |
-| `R2_CUSTOM_DOMAIN` | R2 CDN domain | *(empty)* |
+| `R2_ACCESS_KEY_ID` | Cloudflare R2 access key | *(empty = local filesystem media)* |
+| `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret | *(empty = local filesystem media)* |
+| `R2_BUCKET_NAME` | R2 bucket (development settings) | `terminal-uploads` |
+| `R2_ENDPOINT_URL` | R2 S3 API endpoint (dev) | *(empty)* |
+| `R2_CUSTOM_DOMAIN` | Public hostname for media URLs (dev) | *(empty)* |
 | `ABLY_API_KEY` | Ably realtime API key | *(empty = console fallback)* |
 | `MAPBOX_ACCESS_TOKEN` | Mapbox token | *(empty)* |
 | `SENTRY_DSN` | Sentry DSN for error tracking | *(empty = disabled)* |
@@ -270,6 +275,16 @@ The API will be available at:
 | `http://localhost:8000/api/schema/` | OpenAPI 3 schema (JSON) |
 | `http://localhost:8000/admin/` | Django admin panel |
 
+#### Optional: Owner web (Next.js)
+
+```bash
+cd owner-web
+cp .env.example .env.local   # set NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+npm install && npm run dev
+```
+
+See `owner-web/README.md` for more detail.
+
 #### Optional: Background task worker
 
 ```bash
@@ -309,9 +324,9 @@ All endpoints are prefixed with `/api/v1/`. Authentication uses **Bearer JWT tok
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `GET` | `/api/v1/listings/` | List all active listings | Yes |
+| `GET` | `/api/v1/listings/` | List the authenticated owner's listings (paginated) | Yes |
 | `POST` | `/api/v1/listings/` | Create a new listing | Yes (owner) |
-| `GET` | `/api/v1/listings/{id}/` | Get listing detail (increments view_count) | Yes |
+| `GET` | `/api/v1/listings/{id}/` | Get listing detail (increments view_count) | No |
 | `PUT/PATCH` | `/api/v1/listings/{id}/` | Update listing | Yes (owner) |
 | `PATCH` | `/api/v1/listings/{id}/status/` | Change listing status | Yes (owner) |
 | `POST` | `/api/v1/listings/{id}/media/` | Upload listing photo | Yes (owner) |
@@ -397,24 +412,20 @@ This creates:
 
 ## Testing
 
+The project uses **pytest** with `pytest-django` (see `pytest.ini`). Prefer `pytest` over `python manage.py test`.
+
 ```bash
-# Run the full test suite
-python manage.py test
+# Full suite
+pytest
 
-# Run tests for a specific app
-python manage.py test bookings
-python manage.py test messaging
-python manage.py test accounts
-python manage.py test listings
+# One app
+pytest listings/
 
-# Run with verbose output
-python manage.py test --verbosity=2
-
-# Run a single test
-python manage.py test bookings.tests.BookingAPITest.test_create_booking_success
+# One test node id
+pytest listings/tests/test_views.py::TestListingListCreate::test_owner_gets_own_listings_only -q
 ```
 
-**Test coverage:** 132 tests across all modules covering:
+**Coverage** includes tests across apps for:
 - Model creation and validation
 - API endpoint CRUD operations
 - Permission and access control
@@ -480,8 +491,12 @@ Set these in the Railway dashboard:
 DJANGO_SETTINGS_MODULE=config.settings.production
 SECRET_KEY=<generate-50-char-random-string>
 DEBUG=False
-ALLOWED_HOSTS=<your-app>.railway.app
-CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com
+ALLOWED_HOSTS=<your-api>.railway.app
+
+# CORS: list every browser origin that calls the API (comma-separated).
+# OWNER_WEB_URL is appended automatically when set (e.g. your Next.js URL).
+CORS_ALLOWED_ORIGINS=https://your-owner-web.up.railway.app
+OWNER_WEB_URL=https://your-owner-web.up.railway.app
 
 # Database (PostgreSQL + PostGIS — use Supabase or Railway Postgres)
 DB_NAME=<database_name>
@@ -490,12 +505,12 @@ DB_PASSWORD=<database_password>
 DB_HOST=<database_host>
 DB_PORT=5432
 
-# Cloudflare R2 (file uploads)
+# Cloudflare R2 (production settings expect these names — see config/settings/production.py)
 R2_ACCESS_KEY_ID=<from-cloudflare>
 R2_SECRET_ACCESS_KEY=<from-cloudflare>
-R2_BUCKET_NAME=terminal-uploads
-R2_ENDPOINT_URL=https://<account-id>.r2.cloudflarestorage.com
-R2_CUSTOM_DOMAIN=<optional-cdn-domain>
+R2_BUCKET=terminal-media
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://pub-<id>.r2.dev
 
 # Ably (realtime messaging)
 ABLY_API_KEY=<from-ably-dashboard>
@@ -554,7 +569,7 @@ The MVP uses simulated implementations for features that require third-party int
 1. Create a feature branch from `main`
 2. Make your changes
 3. Ensure `ruff check .` passes with no errors
-4. Ensure `python manage.py test` passes (all 132+ tests)
+4. Ensure `pytest` passes
 5. Ensure `python manage.py check` reports 0 issues
 6. Submit a pull request
 
