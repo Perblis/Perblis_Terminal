@@ -139,8 +139,8 @@ export const apiClient = {
   upload: <T>(path: string, formData: FormData, opts: RequestOpts = {}) =>
     api<T>(path, {
       ...opts,
-      method: "POST",
       body: formData,
       isMultipart: true,
+      method: opts.method ?? "POST",
     }),
 };

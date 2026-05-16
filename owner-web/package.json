@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "gen:api": "./scripts/generate-api-types.sh",
     "e2e": "playwright test",
+    "e2e:uploads": "playwright test e2e/image-uploads.spec.ts",
     "e2e:headed": "playwright test --headed"
   },
   "dependencies": {

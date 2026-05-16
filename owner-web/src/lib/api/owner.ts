@@ -136,6 +136,7 @@ export const ownerSettingsApi = {
       ? apiClient.upload<{ success: true; data: BusinessProfile }>(
           "/owner/business-profile/",
           body,
+          { method: "PATCH" },
         )
       : apiClient.patch<{ success: true; data: BusinessProfile }>(
           "/owner/business-profile/",
