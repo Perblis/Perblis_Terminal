@@ -58,9 +58,10 @@ async function refreshAccess(): Promise<string | null> {
     setTokens(null, null);
     return null;
   }
-  const data = (await res.json()) as { access: string };
-  memoryTokens.access = data.access;
-  if (typeof window !== "undefined") localStorage.setItem("tw_access", data.access);
+  const data = (await res.json()) as { access: string; refresh?: string };
+  // SIMPLE_JWT rotates and blacklists the prior refresh; persist the new one
+  // or the next 401 refresh attempt will fail and clear the session.
+  setTokens(data.access, data.refresh ?? memoryTokens.refresh);
   return data.access;
 }
 

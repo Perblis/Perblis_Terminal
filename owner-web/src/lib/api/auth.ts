@@ -63,7 +63,7 @@ export const authApi = {
     apiClient.post<RegisterResponse>("/auth/register/", payload),
 
   refresh: (refresh: string) =>
-    apiClient.post<{ access: string }>("/auth/token/refresh/", { refresh }),
+    apiClient.post<{ access: string; refresh?: string }>("/auth/token/refresh/", { refresh }),
 
   logout: (refresh?: string) =>
     apiClient.post<{ success: true }>("/auth/logout/", refresh ? { refresh } : undefined),

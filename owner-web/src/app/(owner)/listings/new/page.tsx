@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ListingForm, type ListingFormValues } from "@/components/listings/ListingForm";
+import { pickSpecsForApi } from "@/components/listings/listingSpecConfig";
 import { ApiError } from "@/lib/api/client";
 import { listingsApi, type ListingCreatePayload } from "@/lib/api/listings";
 
@@ -17,6 +18,7 @@ function valuesToPayload(v: ListingFormValues): ListingCreatePayload {
     price_daily: v.price_daily,
     price_weekly: v.price_weekly,
     price_monthly: v.price_monthly,
+    specs: pickSpecsForApi(v.resource_type, v.specs),
     latitude: v.latitude,
     longitude: v.longitude,
     location_address: v.location_address || undefined,
