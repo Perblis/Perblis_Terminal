@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function BusinessProfilePage() {
   const qc = useQueryClient();
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const q = useQuery({
     queryKey: QUERY_KEYS.businessProfile,
     queryFn: () => ownerSettingsApi.getProfile().then((r) => r.data),
@@ -77,20 +78,26 @@ export default function BusinessProfilePage() {
               </span>
             )}
           </div>
-          <label className="inline-block">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadLogo.mutate(f);
-              }}
-            />
-            <Button asChild variant="secondary" size="sm">
-              <span>{uploadLogo.isPending ? "Uploading\u2026" : "Upload logo"}</span>
-            </Button>
-          </label>
+          <input
+            ref={logoInputRef}
+            data-testid="business-logo-file"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) uploadLogo.mutate(f);
+              e.target.value = "";
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => logoInputRef.current?.click()}
+          >
+            {uploadLogo.isPending ? "Uploading\u2026" : "Upload logo"}
+          </Button>
         </Card>
 
         <Card className="lg:col-span-2 space-y-4">

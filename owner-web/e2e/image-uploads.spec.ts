@@ -87,12 +87,14 @@ test.describe("image uploads", () => {
     await page.waitForSelector("text=Business profile", { timeout: 15_000 });
     const done = page.waitForResponse(
       (res) => {
-        if (!res.url().includes("/api/v1/owner/business-profile/")) return false;
-        return res.request().method() === "PATCH";
+        if (!res.url().includes("owner/business-profile")) return false;
+        const m = (res.request().method() || "").toUpperCase();
+        if (m === "GET" || m === "OPTIONS" || m === "HEAD") return false;
+        return res.ok();
       },
       { timeout: 90_000 },
     );
-    await page.locator('label:has-text("Upload logo") input[type="file"]').setInputFiles(FIXTURE);
+    await page.getByTestId("business-logo-file").setInputFiles(FIXTURE);
     await expect(page.getByText(/Uploading/u)).toBeVisible({ timeout: 10_000 });
     const profileResp = await done;
     const errBody = await profileResp.text();
