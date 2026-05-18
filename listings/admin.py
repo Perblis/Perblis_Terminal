@@ -23,7 +23,7 @@ class ListingAdmin(GISModelAdmin, ModelAdmin):
     inlines = [ListingMediaInline]
     ordering = ['-created_at']
 
-    actions = ['activate_listings', 'pause_listings', 'archive_listings']
+    actions = ['activate_listings', 'pause_listings', 'archive_listings', 'remove_listings']
 
     @admin.action(description='Activate selected listings')
     def activate_listings(self, request, queryset):
@@ -36,6 +36,11 @@ class ListingAdmin(GISModelAdmin, ModelAdmin):
     @admin.action(description='Archive selected listings')
     def archive_listings(self, request, queryset):
         queryset.update(status='archived')
+
+    @admin.action(description='Remove selected listings (admin action)')
+    def remove_listings(self, request, queryset):
+        count = queryset.update(status='removed_by_admin')
+        self.message_user(request, f'{count} listing(s) removed by admin.')
 
 
 @admin.register(ListingReport)

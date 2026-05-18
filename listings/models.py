@@ -18,6 +18,7 @@ class ListingStatus(models.TextChoices):
     ACTIVE = 'active', 'Active'
     PAUSED = 'paused', 'Paused'
     ARCHIVED = 'archived', 'Archived'
+    REMOVED_BY_ADMIN = 'removed_by_admin', 'Removed by Admin'
 
 
 class VerificationTier(models.TextChoices):

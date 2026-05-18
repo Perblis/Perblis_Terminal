@@ -8,4 +8,5 @@ urlpatterns = [
     path('<uuid:listing_id>/media/', views.upload_media, name='listing-upload-media'),
     path('<uuid:listing_id>/media/<uuid:media_id>/', views.delete_media, name='listing-delete-media'),
     path('<uuid:listing_id>/report/', views.report_listing, name='listing-report'),
+    path('<uuid:listing_id>/availability/', views.listing_availability, name='listing-availability'),
 ]

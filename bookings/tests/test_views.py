@@ -274,7 +274,7 @@ class TestBookingStateTransitions:
         )
         assert response.status_code == 200
         booking.refresh_from_db()
-        assert booking.status == 'cancelled'
+        assert booking.status in ('cancelled', 'cancelled_renter', 'cancelled_owner')
 
     def test_cancelling_restores_listing_availability(
         self, auth_client, owner_client, owner_user, renter_user

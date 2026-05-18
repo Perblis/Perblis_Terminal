@@ -219,3 +219,40 @@ def report_listing(request, listing_id):
         'success': True,
         'message': 'Report submitted. Our team will review it.',
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([])
+def listing_availability(request, listing_id):
+    """
+    Returns booked date ranges for a listing so the mobile app can
+    display an availability calendar on the listing detail screen.
+
+    Returns an array of {start_date, end_date, status} for all
+    confirmed/active bookings within the next 90 days.
+    """
+    from bookings.models import Booking, BookingStatus
+    from datetime import date, timedelta
+
+    listing = get_object_or_404(Listing, id=listing_id, status='active')
+    today = date.today()
+    range_end = today + timedelta(days=90)
+
+    booked = Booking.objects.filter(
+        listing=listing,
+        status__in=[BookingStatus.CONFIRMED, BookingStatus.ACTIVE, BookingStatus.PENDING],
+        end_date__gte=today,
+        start_date__lte=range_end,
+    ).values('start_date', 'end_date', 'status').order_by('start_date')
+
+    return Response({
+        'success': True,
+        'data': [
+            {
+                'start_date': b['start_date'].isoformat(),
+                'end_date': b['end_date'].isoformat(),
+                'status': b['status'],
+            }
+            for b in booked
+        ],
+    })

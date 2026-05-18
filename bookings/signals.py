@@ -26,7 +26,11 @@ def handle_booking_status_change(sender, instance, created, **kwargs):
         if has_active:
             Listing.objects.filter(id=listing.id).update(is_available=False)
 
-    elif instance.status in [BookingStatus.CANCELLED, BookingStatus.DECLINED, BookingStatus.COMPLETED]:
+    elif instance.status in [
+        BookingStatus.CANCELLED, BookingStatus.CANCELLED_RENTER,
+        BookingStatus.CANCELLED_OWNER, BookingStatus.CANCELLED_ADMIN,
+        BookingStatus.DECLINED, BookingStatus.COMPLETED,
+    ]:
         has_active = Booking.objects.filter(
             listing=listing,
             status__in=[BookingStatus.CONFIRMED, BookingStatus.ACTIVE],

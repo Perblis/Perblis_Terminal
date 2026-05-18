@@ -116,6 +116,85 @@ def owner_dashboard(request):
 
 
 # ─────────────────────────────────────────────────────────────
+# ACTIVITY FEED (UNIFIED)
+# ─────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsOwnerRole])
+def activity_feed(request):
+    """
+    Unified activity feed: recent booking events + messages merged chronologically.
+    Returns up to 20 items, each with a `type` field (booking_request, booking_accepted,
+    booking_cancelled, message) and a `timestamp`.
+    """
+    user = request.user
+    limit = min(int(request.query_params.get('limit', 20)), 50)
+
+    recent_bookings = Booking.objects.filter(
+        owner=user,
+    ).select_related('renter', 'listing').order_by('-updated_at')[:limit]
+
+    recent_messages = Message.objects.filter(
+        thread__participants=user,
+    ).exclude(sender=user).select_related(
+        'sender', 'thread', 'thread__listing'
+    ).order_by('-created_at')[:limit]
+
+    feed_items = []
+
+    for booking in recent_bookings:
+        event_type = 'booking_request'
+        if booking.status == BookingStatus.CONFIRMED:
+            event_type = 'booking_confirmed'
+        elif booking.status == BookingStatus.ACTIVE:
+            event_type = 'booking_active'
+        elif booking.status == BookingStatus.COMPLETED:
+            event_type = 'booking_completed'
+        elif booking.status in [BookingStatus.CANCELLED, BookingStatus.CANCELLED_RENTER,
+                                 BookingStatus.CANCELLED_OWNER, BookingStatus.CANCELLED_ADMIN]:
+            event_type = 'booking_cancelled'
+        elif booking.status == BookingStatus.DECLINED:
+            event_type = 'booking_declined'
+
+        feed_items.append({
+            'type': event_type,
+            'id': str(booking.id),
+            'timestamp': booking.updated_at.isoformat(),
+            'actor_name': booking.renter.full_name,
+            'actor_photo': booking.renter.profile_photo.url if booking.renter.profile_photo else None,
+            'title': booking.listing.title,
+            'subtitle': f"{booking.start_date.strftime('%b %d')} – {booking.end_date.strftime('%b %d')}",
+            'amount': str(booking.gross_amount),
+            'status': booking.status,
+            'link': f"/bookings/{booking.id}",
+        })
+
+    for msg in recent_messages:
+        listing_title = msg.thread.listing.title if msg.thread.listing else 'Unknown'
+        feed_items.append({
+            'type': 'message',
+            'id': str(msg.id),
+            'timestamp': msg.created_at.isoformat(),
+            'actor_name': msg.sender.full_name,
+            'actor_photo': msg.sender.profile_photo.url if msg.sender.profile_photo else None,
+            'title': listing_title,
+            'subtitle': msg.body[:80] if msg.body else '',
+            'amount': None,
+            'status': None,
+            'link': f"/messages/{msg.thread.id}",
+        })
+
+    feed_items.sort(key=lambda x: x['timestamp'], reverse=True)
+    feed_items = feed_items[:limit]
+
+    return Response({
+        'success': True,
+        'count': len(feed_items),
+        'data': feed_items,
+    })
+
+
+# ─────────────────────────────────────────────────────────────
 # BOOKING CALENDAR
 # ─────────────────────────────────────────────────────────────
 
@@ -702,4 +781,85 @@ def notification_preferences(request):
         'success': True,
         'message': 'Notification preferences updated.',
         'data': UpdateNotificationPreferencesSerializer(profile).data,
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+# ADMIN COMMISSION DASHBOARD
+# ─────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_commission_dashboard(request):
+    """
+    Platform-wide commission dashboard. Superuser only.
+    Shows GMV, commission earned, booking counts, new users.
+    """
+    if not request.user.is_superuser:
+        return Response(
+            {'success': False, 'errors': 'Superuser access required.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    from accounts.models import User
+
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    week_start = now - timedelta(days=now.weekday())
+
+    completed_statuses = [
+        BookingStatus.CONFIRMED,
+        BookingStatus.ACTIVE,
+        BookingStatus.COMPLETED,
+    ]
+
+    all_time = Booking.objects.filter(status__in=completed_statuses).aggregate(
+        total_gmv=Sum('gross_amount'),
+        total_commission=Sum('commission_amount'),
+        total_payouts=Sum('owner_payout_amount'),
+        booking_count=Count('id'),
+    )
+
+    this_month = Booking.objects.filter(
+        status__in=completed_statuses,
+        created_at__gte=month_start,
+    ).aggregate(
+        gmv=Sum('gross_amount'),
+        commission=Sum('commission_amount'),
+        booking_count=Count('id'),
+    )
+
+    status_breakdown = {}
+    for s_choice in BookingStatus.choices:
+        count = Booking.objects.filter(status=s_choice[0]).count()
+        if count > 0:
+            status_breakdown[s_choice[0]] = count
+
+    new_users_this_week = User.objects.filter(date_joined__gte=week_start).count()
+    new_users_this_month = User.objects.filter(date_joined__gte=month_start).count()
+    total_users = User.objects.count()
+    total_listings = Listing.objects.filter(status='active').count()
+
+    return Response({
+        'success': True,
+        'data': {
+            'all_time': {
+                'total_gmv': str(all_time['total_gmv'] or Decimal('0.00')),
+                'total_commission': str(all_time['total_commission'] or Decimal('0.00')),
+                'total_payouts': str(all_time['total_payouts'] or Decimal('0.00')),
+                'booking_count': all_time['booking_count'] or 0,
+            },
+            'this_month': {
+                'gmv': str(this_month['gmv'] or Decimal('0.00')),
+                'commission': str(this_month['commission'] or Decimal('0.00')),
+                'booking_count': this_month['booking_count'] or 0,
+            },
+            'bookings_by_status': status_breakdown,
+            'users': {
+                'total': total_users,
+                'new_this_week': new_users_this_week,
+                'new_this_month': new_users_this_month,
+            },
+            'active_listings': total_listings,
+        },
     })

@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Dashboard
     path('dashboard/', views.owner_dashboard, name='owner-dashboard'),
+    path('activity/', views.activity_feed, name='owner-activity-feed'),
 
     # Booking calendar
     path('bookings/calendar/', views.booking_calendar, name='owner-booking-calendar'),
@@ -21,4 +22,7 @@ urlpatterns = [
     path('business-profile/', views.business_profile, name='owner-business-profile'),
     path('bank-account/', views.bank_account, name='owner-bank-account'),
     path('notifications/', views.notification_preferences, name='owner-notifications'),
+
+    # Admin commission dashboard (superuser only)
+    path('admin/commission-dashboard/', views.admin_commission_dashboard, name='admin-commission-dashboard'),
 ]

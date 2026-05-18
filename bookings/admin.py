@@ -27,12 +27,12 @@ class BookingAdmin(ModelAdmin):
 
     actions = ['cancel_bookings', 'mark_completed']
 
-    @admin.action(description='Cancel selected bookings')
+    @admin.action(description='Cancel selected bookings (admin)')
     def cancel_bookings(self, request, queryset):
         count = queryset.filter(
             status__in=['pending', 'confirmed']
-        ).update(status='cancelled')
-        self.message_user(request, f'{count} booking(s) cancelled.')
+        ).update(status='cancelled_admin', cancelled_by=request.user)
+        self.message_user(request, f'{count} booking(s) cancelled by admin.')
 
     @admin.action(description='Run auto-complete (mark expired bookings as completed)')
     def mark_completed(self, request, queryset):

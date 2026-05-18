@@ -11,6 +11,9 @@ class BookingStatus(models.TextChoices):
     ACTIVE = 'active', 'Active'
     COMPLETED = 'completed', 'Completed'
     CANCELLED = 'cancelled', 'Cancelled'
+    CANCELLED_RENTER = 'cancelled_renter', 'Cancelled by Renter'
+    CANCELLED_OWNER = 'cancelled_owner', 'Cancelled by Owner'
+    CANCELLED_ADMIN = 'cancelled_admin', 'Cancelled by Admin'
 
 
 class DurationType(models.TextChoices):

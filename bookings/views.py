@@ -220,7 +220,13 @@ def booking_cancel(request, booking_id):
     serializer = CancelBookingSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    booking.status = BookingStatus.CANCELLED
+    if request.user == booking.renter:
+        booking.status = BookingStatus.CANCELLED_RENTER
+    elif request.user == booking.owner:
+        booking.status = BookingStatus.CANCELLED_OWNER
+    else:
+        booking.status = BookingStatus.CANCELLED
+
     booking.cancelled_by = request.user
     booking.cancellation_reason = serializer.validated_data.get('reason', '')
     booking.save(update_fields=['status', 'cancelled_by', 'cancellation_reason', 'updated_at'])
