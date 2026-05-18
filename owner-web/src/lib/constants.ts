@@ -33,6 +33,7 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 export const QUERY_KEYS = {
   me: ["me"] as const,
   dashboard: ["owner", "dashboard"] as const,
+  activityFeed: ["owner", "activity"] as const,
   businessProfile: ["owner", "business-profile"] as const,
   bankAccount: ["owner", "bank-account"] as const,
   notifications: ["owner", "notifications"] as const,

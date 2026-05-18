@@ -13,6 +13,7 @@ import { KpiCard } from "@/components/tds/KpiCard";
 import { Skeleton } from "@/components/tds/LoadingSkeleton";
 import { loadTokensFromStorage } from "@/lib/api/client";
 import { ownerApi } from "@/lib/api/owner";
+import type { ActivityFeedItem } from "@/lib/api/owner";
 import { QUERY_KEYS } from "@/lib/constants";
 import { formatDateRange, formatNaira, formatRelativeTime } from "@/lib/format";
 
@@ -69,6 +70,8 @@ export default function DashboardPage() {
         <PendingRequestsPanel requests={d.pending_requests} />
         <RecentMessagesPanel messages={d.recent_messages} />
       </div>
+
+      <ActivityFeedPanel />
     </div>
   );
 }
@@ -191,6 +194,97 @@ function RecentMessagesPanel({
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+const ACTIVITY_ICONS: Record<ActivityFeedItem["type"], { icon: string; color: string }> = {
+  booking_request: { icon: "📋", color: "text-amber-400" },
+  booking_confirmed: { icon: "✓", color: "text-emerald-400" },
+  booking_active: { icon: "▶", color: "text-blue-400" },
+  booking_completed: { icon: "✔", color: "text-emerald-500" },
+  booking_cancelled: { icon: "✗", color: "text-red-400" },
+  booking_declined: { icon: "−", color: "text-red-400" },
+  message: { icon: "💬", color: "text-blue-400" },
+};
+
+function ActivityFeedPanel() {
+  const q = useQuery({
+    queryKey: QUERY_KEYS.activityFeed,
+    queryFn: () => ownerApi.activityFeed().then((r) => r.data),
+    retry: false,
+  });
+
+  return (
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-text-primary text-[13px] font-semibold tracking-[0.04em] uppercase">
+          Activity feed
+        </h2>
+      </div>
+
+      {q.isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[72px]" />
+          ))}
+        </div>
+      ) : q.isError || !q.data ? (
+        <Card>
+          <EmptyState
+            title="Couldn't load activity."
+            hint="Tap to retry."
+            cta={{ label: "Retry", onClick: () => q.refetch() }}
+          />
+        </Card>
+      ) : q.data.length === 0 ? (
+        <Card>
+          <EmptyState title="No recent activity." hint="Activity will appear here as bookings and messages come in." />
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {q.data.slice(0, 15).map((item) => {
+            const iconMeta = ACTIVITY_ICONS[item.type] ?? ACTIVITY_ICONS.booking_request;
+            return (
+              <Link key={item.id} href={item.link} className="block focus:outline-none">
+                <Card className="hover:bg-surface-high duration-fast transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="relative">
+                      <Avatar src={item.actor_photo} name={item.actor_name} size={36} />
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-elevated text-[10px] leading-none ${iconMeta.color}`}
+                      >
+                        {iconMeta.icon}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-body text-text-primary truncate text-[14px] font-semibold">
+                          {item.actor_name}
+                        </span>
+                        <span className="text-text-tertiary shrink-0 font-mono text-[11px]">
+                          {formatRelativeTime(item.timestamp)}
+                        </span>
+                      </div>
+                      <div className="text-text-secondary truncate text-[13px]">
+                        {item.title}
+                      </div>
+                      <div className="mt-1 flex items-baseline justify-between font-mono text-[12px]">
+                        <span className="text-text-tertiary truncate">{item.subtitle}</span>
+                        {item.amount && (
+                          <span className="text-forge-light shrink-0 ml-2">
+                            {formatNaira(item.amount)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>

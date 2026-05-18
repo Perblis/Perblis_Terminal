@@ -39,8 +39,30 @@ export type DashboardData = {
   recent_messages: DashboardRecentMessage[];
 };
 
+export type ActivityFeedItem = {
+  type:
+    | "booking_request"
+    | "booking_confirmed"
+    | "booking_active"
+    | "booking_completed"
+    | "booking_cancelled"
+    | "booking_declined"
+    | "message";
+  id: string;
+  timestamp: string;
+  actor_name: string;
+  actor_photo: string | null;
+  title: string;
+  subtitle: string;
+  amount: string | null;
+  status: string | null;
+  link: string;
+};
+
 export const ownerApi = {
   dashboard: () => apiClient.get<{ success: true; data: DashboardData }>("/owner/dashboard/"),
+  activityFeed: () =>
+    apiClient.get<{ success: true; count: number; data: ActivityFeedItem[] }>("/owner/activity/"),
 };
 
 export type RevenuePeriod = "month" | "quarter" | "year" | "all";
