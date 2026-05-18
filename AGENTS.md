@@ -75,6 +75,8 @@ Forgetting this will silently run against the non-local database.
 - All Django management commands (migrate, test, runserver, etc.) need the env overrides or they hit a remote non-local DB.
 - The `ruff` linter is installed into the venv, not globally. Always activate venv first: `source /workspace/venv/bin/activate && ruff check .`
 - One pre-existing test failure: `messaging/tests/test_models.py::TestMessagingServices::test_publish_to_ably_without_key_prints_to_console` (Ably console fallback test). Not environment-related.
+- `LoginRateThrottle` has a class-level `THROTTLE_RATES` that overrides development settings (`5/min` with 900s window). If you exhaust it during testing, restart the Django server to reset in-memory cache. The development settings rate (`1000/min`) does NOT take effect because of the class attribute.
+- The workspace path in Cloud Agent VMs is `/agent/repos/terminalv2` (not `/workspace`). Adjust paths accordingly when running commands.
 
 ### Owner Web Portal (owner-web/)
 
