@@ -83,6 +83,7 @@ def map_search(request):
     if q:
         queryset = queryset.filter(
             Q(title__icontains=q) |
+            Q(description__icontains=q) |
             Q(category__icontains=q) |
             Q(location_city__icontains=q)
         )
