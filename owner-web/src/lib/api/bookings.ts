@@ -22,6 +22,7 @@ export type Booking = {
   commission_amount: string;
   owner_payout_amount: string;
   commission_rate: string;
+  commission_rate_label: string;
   status: BookingStatus;
   payment_status: "unpaid" | "simulated_paid";
   renter_note: string | null;

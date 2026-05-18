@@ -165,7 +165,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <div className="flex justify-between">
               <span className="text-text-tertiary">
-                Commission ({(Number(b.commission_rate) * 100).toFixed(0)}%)
+                Commission ({b.commission_rate_label || `${(Number(b.commission_rate) * 100).toFixed(0)}%`})
               </span>
               <span className="text-alert-soft">−{formatNaira(b.commission_amount)}</span>
             </div>

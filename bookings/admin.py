@@ -17,7 +17,8 @@ class BookingAdmin(ModelAdmin):
     ]
     readonly_fields = [
         'id', 'renter', 'owner', 'listing',
-        'gross_amount', 'commission_rate', 'commission_amount', 'owner_payout_amount',
+        'gross_amount', 'commission_rate', 'commission_rate_label',
+        'commission_amount', 'owner_payout_amount',
         'created_at', 'updated_at',
     ]
     ordering = ['-created_at']
