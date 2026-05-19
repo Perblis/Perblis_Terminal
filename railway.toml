@@ -3,7 +3,8 @@ builder = "NIXPACKS"
 
 [deploy]
 startCommand = "/opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
-preDeployCommand = "/opt/venv/bin/python manage.py migrate"
+# After migrate, optionally create/update admin when SEED_SUPERUSER_EMAIL + SEED_SUPERUSER_PASSWORD are set in Railway.
+preDeployCommand = "/opt/venv/bin/python manage.py migrate && /opt/venv/bin/python manage.py ensure_superuser"
 healthcheckPath = "/health/"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
