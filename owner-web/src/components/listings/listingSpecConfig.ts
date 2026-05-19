@@ -111,6 +111,29 @@ export function pickSpecsForApi(
   return out;
 }
 
+/**
+ * When PATCH includes `specs`, DRF replaces the entire JSONField. Preserve keys the owner
+ * portal does not model (other clients, legacy data) by carrying them over from the server
+ * snapshot for the same `resource_type`. On resource type change, use `picked` only so the
+ * new type’s typed namespace is authoritative.
+ */
+export function mergeServerSpecsWithPicked(
+  serverSpecs: Record<string, unknown> | null | undefined,
+  resourceType: ResourceType,
+  picked: Record<string, string | number | boolean>,
+): Record<string, unknown> {
+  const allowed = specKeysFor(resourceType);
+  const out: Record<string, unknown> = {};
+  if (serverSpecs) {
+    for (const [k, v] of Object.entries(serverSpecs)) {
+      if (allowed.has(k)) continue;
+      out[k] = v;
+    }
+  }
+  Object.assign(out, picked);
+  return out;
+}
+
 /** Checkbox-friendly defaults for boolean spec fields (new listing / after type change). */
 export function specsFormBaseDefaults(
   resourceType: ResourceType,

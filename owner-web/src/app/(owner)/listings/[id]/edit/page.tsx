@@ -6,14 +6,25 @@ import { use } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ListingForm, type ListingFormValues } from "@/components/listings/ListingForm";
 import { PhotoUploader } from "@/components/listings/PhotoUploader";
-import { pickSpecsForApi, specsDefaultsForForm, specsFormBaseDefaults } from "@/components/listings/listingSpecConfig";
+import {
+  mergeServerSpecsWithPicked,
+  pickSpecsForApi,
+  specsDefaultsForForm,
+  specsFormBaseDefaults,
+} from "@/components/listings/listingSpecConfig";
 import { Skeleton } from "@/components/tds/LoadingSkeleton";
 import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api/client";
-import { listingsApi, type ListingCreatePayload } from "@/lib/api/listings";
+import { listingsApi, type Listing, type ListingCreatePayload } from "@/lib/api/listings";
 import { type ListingStatus, QUERY_KEYS } from "@/lib/constants";
 
-function valuesToPatchPayload(v: ListingFormValues): Partial<ListingCreatePayload> {
+function valuesToPatchPayload(listing: Listing, v: ListingFormValues): Partial<ListingCreatePayload> {
+  const picked = pickSpecsForApi(v.resource_type, v.specs);
+  const specs =
+    v.resource_type === listing.resource_type
+      ? mergeServerSpecsWithPicked(listing.specs as Record<string, unknown>, v.resource_type, picked)
+      : picked;
+
   return {
     resource_type: v.resource_type,
     title: v.title,
@@ -22,7 +33,7 @@ function valuesToPatchPayload(v: ListingFormValues): Partial<ListingCreatePayloa
     price_daily: v.price_daily,
     price_weekly: v.price_weekly,
     price_monthly: v.price_monthly,
-    specs: pickSpecsForApi(v.resource_type, v.specs),
+    specs,
     latitude: v.latitude,
     longitude: v.longitude,
     location_address: v.location_address ?? "",
@@ -42,7 +53,13 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
   });
 
   const patch = useMutation({
-    mutationFn: (v: ListingFormValues) => listingsApi.patch(id, valuesToPatchPayload(v)),
+    mutationFn: (v: ListingFormValues) => {
+      const listing = qc.getQueryData<Listing>(QUERY_KEYS.listing(id));
+      if (!listing) {
+        throw new Error("Listing is not loaded.");
+      }
+      return listingsApi.patch(id, valuesToPatchPayload(listing, v));
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.listing(id) }),
   });
 

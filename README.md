@@ -534,6 +534,19 @@ SENTRY_DSN=<from-sentry>
 
 ### Post-Deploy Steps
 
+**Automatic admin bootstrap (recommended on Railway):** set these variables on the API service. Every deploy runs `ensure_superuser` after `migrate` (see `railway.toml`); if the variables are unset, the step is skipped.
+
+```env
+SEED_SUPERUSER_EMAIL=admin@yourdomain.com
+SEED_SUPERUSER_PASSWORD=<strong-unique-password>
+# Optional (defaults shown):
+# SEED_SUPERUSER_PHONE=+2348000000999
+# SEED_SUPERUSER_FIRST_NAME=Admin
+# SEED_SUPERUSER_LAST_NAME=User
+```
+
+Log in at `https://<your-api>/admin/` with that email and password. Re-deploying updates the password if you change `SEED_SUPERUSER_PASSWORD`.
+
 ```bash
 # Verify the deployment
 curl https://<your-app>.railway.app/health/
@@ -545,7 +558,7 @@ open https://<your-app>.railway.app/api/docs/
 # Seed production data (optional)
 railway run python manage.py shell < scripts/seed.py
 
-# Create admin superuser
+# Create admin superuser (manual alternative if you do not use SEED_SUPERUSER_*)
 railway run python manage.py createsuperuser --email admin@terminal.app
 ```
 
