@@ -53,7 +53,17 @@ export function useLogin() {
 
       if (!res.ok) {
         const errBody = data as { error?: { detail?: string } };
-        throw new Error(errBody.error?.detail ?? "Sign-in failed. Check your credentials.");
+        const detail = errBody.error?.detail;
+        if (detail) throw new Error(detail);
+        if (res.status === 429) {
+          throw new Error(
+            "Too many sign-in attempts from this device or network. Please wait a few minutes and try again.",
+          );
+        }
+        if (res.status === 401) {
+          throw new Error("Invalid email or password.");
+        }
+        throw new Error("Sign-in failed. Check your credentials.");
       }
 
       const ok = data as LoginRouteResponse;

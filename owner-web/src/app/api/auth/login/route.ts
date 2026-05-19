@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { setSession } from "@/lib/auth/session";
 import { API_BASE_URL, API_PREFIX } from "@/lib/constants";
+import { loginFailureDetail } from "@/lib/djangoApiError";
 
 type LoginRequest = { email?: string; password?: string };
 
@@ -31,6 +32,19 @@ type MeUpstream = {
   };
 };
 
+/** Forward the browser IP so Django login throttling keys per user, not the Next.js server. */
+function upstreamHeadersForThrottle(req: Request): Headers {
+  const headers = new Headers({ "Content-Type": "application/json" });
+  const xff = req.headers.get("x-forwarded-for")?.trim();
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  if (xff) {
+    headers.set("X-Forwarded-For", xff);
+  } else if (realIp) {
+    headers.set("X-Forwarded-For", realIp);
+  }
+  return headers;
+}
+
 export async function POST(req: Request) {
   let body: LoginRequest;
   try {
@@ -49,14 +63,14 @@ export async function POST(req: Request) {
 
   const upstream = await fetch(`${API_BASE_URL}${API_PREFIX}/auth/login/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: upstreamHeadersForThrottle(req),
     body: JSON.stringify({ email, password }),
     cache: "no-store",
   });
 
-  const loginData = (await upstream.json().catch(() => null)) as LoginUpstream | null;
+  const raw: unknown = await upstream.json().catch(() => null);
 
-  if (!upstream.ok || !loginData?.access) {
+  if (!upstream.ok) {
     if (upstream.status === 404) {
       return NextResponse.json(
         {
@@ -68,10 +82,14 @@ export async function POST(req: Request) {
         { status: 404 },
       );
     }
-    return NextResponse.json(
-      { error: loginData ?? { detail: "Sign-in failed." } },
-      { status: upstream.status || 502 },
-    );
+    const detail = loginFailureDetail(raw, upstream.status);
+    return NextResponse.json({ error: { detail } }, { status: upstream.status || 502 });
+  }
+
+  const loginData = raw as LoginUpstream | null;
+  if (!loginData?.access) {
+    const detail = loginFailureDetail(raw, upstream.status);
+    return NextResponse.json({ error: { detail } }, { status: 502 });
   }
 
   // The Terminal backend does not return `user` in the login response, so
