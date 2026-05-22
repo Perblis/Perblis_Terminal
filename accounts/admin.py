@@ -59,6 +59,29 @@ class UserDocumentAdmin(ModelAdmin):
     list_display = ['user', 'document_type', 'status', 'created_at']
     list_filter = ['document_type', 'status']
     search_fields = ['user__email']
+    readonly_fields = ['id', 'created_at']
+    ordering = ['-created_at']
+
+    actions = ['approve_documents', 'reject_documents']
+
+    @admin.action(description='Approve selected documents')
+    def approve_documents(self, request, queryset):
+        count = 0
+        for doc in queryset.filter(status='pending'):
+            doc.status = 'approved'
+            doc.save()
+            user = doc.user
+            user.is_id_verified = True
+            if user.verification_level < 1:
+                user.verification_level = 1
+            user.save(update_fields=['is_id_verified', 'verification_level'])
+            count += 1
+        self.message_user(request, f'{count} document(s) approved and user(s) verified.')
+
+    @admin.action(description='Reject selected documents')
+    def reject_documents(self, request, queryset):
+        count = queryset.filter(status='pending').update(status='rejected')
+        self.message_user(request, f'{count} document(s) rejected.')
 
 
 @admin.register(OwnerProfile)

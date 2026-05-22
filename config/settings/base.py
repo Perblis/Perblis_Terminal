@@ -55,6 +55,7 @@ UNFOLD = {
     "SITE_URL": "/",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
+    "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",
     "COLORS": {
         "primary": {
             "50": "240 249 255",
