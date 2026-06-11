@@ -22,13 +22,17 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 | 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | ⏸ Gated on Wave 4 |
 | 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ⏸ Gated on Wave 5 |
 
-## Frontend waves (authored after backend wave files are approved)
+## Frontend & launch waves
 
-| Wave | Deliverable | Notes |
-|---|---|---|
-| 7 | Supplier Portal complete (FSD §10.2) | May interleave with 5–6 once Wave 4 contracts freeze |
-| 8 | Hirer app complete (FSD §10.1) | May interleave with 5–6 once Wave 4 contracts freeze |
-| 9 | Hardening: load test, security pass, runbooks, beta onboarding | Launch gate = FSD §13 |
+| Wave | File | Deliverable | Status |
+|---|---|---|---|
+| 7 | [wave-7.md](wave-7.md) | Supplier Portal complete (FSD §10.2, screens `ux/03` P1–P12) | ⏸ Gated on Wave 4 contract freeze (Messages slice needs Wave 5) |
+| 8 | [wave-8.md](wave-8.md) | Hirer app complete (FSD §10.1, screens `ux/02` S1–S17) | ⏸ Gated on Wave 4 contract freeze (Messages slice needs Wave 5) |
+| 9 | [wave-9.md](wave-9.md) | Hardening: journeys verbatim, load, security, runbooks, beta, launch gate | ⏸ Gated on Waves 0–8 |
+
+Waves 7 and 8 may interleave with Waves 5–6 once Wave 4's OpenAPI contracts are frozen (TSD §10).
+
+**Numbering note for Waves 7–8:** the `ux/` docs cite pre-v2.1 FSD numbering — read their "§6.3 / §6.6 / §8.1 / §8.2" as v2.1 **§7.3 / §7.6 / §10.1 / §10.2**.
 
 ## Reading order for any wave
 
