@@ -20,7 +20,7 @@ Companion docs: 01 Product Definition · 02 System Lexicon · 03 MVP Scope · 04
 ### 1.1 How to read this document (for coding agents)
 - **MUST / never / always** statements are requirements. Tables of states, rates, and rules are normative.
 - Each module section ends with **Acceptance checks** — testable assertions the implementation must satisfy.
-- Decision IDs (D-001…D-014) trace to DECISIONS.md; do not re-litigate them in code review.
+- Decision IDs (D-001…D-016) trace to DECISIONS.md; do not re-litigate them in code review.
 
 ## 2. Product Summary
 
@@ -87,7 +87,7 @@ Rules:
 - On supplier acceptance the hirer receives a Paystack checkout (card / bank transfer / USSD). **Payment window: 4 hours** from acceptance; up to 3 charge attempts within the window.
 - Successful charge (webhook-confirmed, never client-redirect-confirmed) → hire becomes **Confirmed**. Window expiry or 3 failed attempts → auto-cancel (`cancelled_by: system`, reason `payment_expired`), dates released, both parties notified.
 - A daily reconciliation job compares the Paystack ledger against payment records; any mismatch alerts Ops. Zero-mismatch is a launch criterion.
-- **Payouts:** when a hire completes, a payout record (state `due`) enters the Ops payout queue at `payout_amount`. Founder executes bank transfers weekly, recording a reference per payout. States: `pending → due → paid`, or `frozen` (dispute). A payout is never created for a hire that did not complete.
+- **Payouts:** when a hire completes, a payout record (state `due`) enters the Ops payout queue at `payout_amount`. Founder executes bank transfers weekly, recording a reference per payout. States: `pending → due → paid`, or `frozen` (dispute). A payout is never created for a hire that did not complete — with one exception (D-015): the withheld day on a ≤72h hirer cancellation becomes a supplier payout (`due`) per §7.6.
 - **Refunds** per §7.6, issued via Paystack refund API, tracked per hire (`none/pending/completed/failed`); failures alert Ops.
 
 ### 3.3 Money invariants (system-wide)

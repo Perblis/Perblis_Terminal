@@ -1,5 +1,5 @@
 # TERMINAL — Technical Specification Document v2.1
-v2.1 · June 2026 · Implements FSD v2.1 under DECISIONS D-001…D-014
+v2.1 · June 2026 · Implements FSD v2.1 under DECISIONS D-001…D-016
 Status: ✅ Reference edition for development
 Stack (D-009…D-013): Django 6.0.x · DRF 3.17 · PostgreSQL 17 + PostGIS 3.5 · django-tasks · Ably · Railway Hobby · Cloudflare R2 · MapLibre GL / OpenFreeMap / LocationIQ · Next.js on Cloudflare Workers · React Native + Expo · Paystack · Termii · Resend · Sentry
 Budget ceiling: **$25/month** total (04 §8: fixed ≈ $10–15).
@@ -206,7 +206,7 @@ On message create: regex Nigerian phones (`(\+?234|0)[789][01]\d{8}` + spaced/do
 - Expo SDK (current) · TypeScript strict · expo-router · TanStack Query + Zustand (session, map filters) · tokens in SecureStore · NativeWind styled from `packages/tokens`.
 - Map: `maplibre-react-native` + OpenFreeMap style URL (Protomaps-on-R2 fallback = config swap, D-013); pins/Yard Sheet per doc 08 §4.2; LocationIQ autocomplete via backend proxy.
 - Payments: open `authorization_url` in `expo-web-browser`; on return **poll hire status** (webhook is truth). CountdownPill drives urgency.
-- Handover: camera-first capture, client resize, presigned PUT. Offline posture: tile cache + persisted Query cache (MMKV) so My Hires/Messages render cold; mutations require connectivity.
+- Handover: camera-first capture, client resize, presigned PUT. Offline posture: tile cache + persisted Query cache (MMKV) so My Hires/Messages render cold; mutations require connectivity — except handover capture, the one allowed offline mutation (D-016): photos queue locally, the record submits on reconnect (per ux/02 S11).
 - Distribution: local Android builds; EAS free tier iOS (15/mo) + expo-updates OTA for JS changes.
 
 ## 7. Security & Compliance Implementation

@@ -13,7 +13,7 @@ Read order for any task: this file → the FSD section for your module → the T
 |---|---|
 | `docs/v2/06_FSD_v2.md` (PDF: `docs/v2/pdf/`) | WHAT the system does — behaviour, rules, states, journeys |
 | `docs/v2/07_TSD.md` (PDF: `docs/v2/pdf/`) | HOW — stack, schema, services, API contracts, waves |
-| `docs/v2/DECISIONS.md` | Founder decisions D-001…D-014. **Binding. Never re-litigate in code.** |
+| `docs/v2/DECISIONS.md` | Founder decisions D-001…D-016. **Binding. Never re-litigate in code.** |
 | `docs/v2/02_System_Lexicon.md` | Every name in the system (UI, API, DB). |
 | `docs/v2/05_Asset_Spec_Schemas.md` | Spec templates per asset class/type (seed data source) |
 | `docs/v2/08_Design_System.md` + `docs/v2/design-system/` | All visual/UX language ("Heavy Duty"). Chapters win over summary. |

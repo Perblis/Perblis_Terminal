@@ -2,7 +2,7 @@
 
 **Status:** ⏸ Gated on Wave 3 sign-off
 **Depends on:** Waves 1–3 (auth + account levels, Live listings, search)
-**Spec references:** FSD §3 (money rules — worked examples are test vectors) · §7 (hire lifecycle — state table normative) · §9 (notification matrix) · TSD §3.2 (fee engine code), §3.3 (`hires`, `hire_events`, `handover_records`, `payments`, `paystack_events`, `refunds`, `payouts`), §3.4 (availability + race rule — **binding**), §3.5 (state machine & timers), §3.6 (Paystack) · DECISIONS D-002, D-004, D-005, D-006, D-008, D-014
+**Spec references:** FSD §3 (money rules — worked examples are test vectors) · §7 (hire lifecycle — state table normative) · §9 (notification matrix) · TSD §3.2 (fee engine code), §3.3 (`hires`, `hire_events`, `handover_records`, `payments`, `paystack_events`, `refunds`, `payouts`), §3.4 (availability + race rule — **binding**), §3.5 (state machine & timers), §3.6 (Paystack) · DECISIONS D-002, D-004, D-005, D-006, D-008, D-014, D-015
 
 **This is the heaviest wave and the heart of the product. Coverage gate here is 85%. Build it as the six slices below, in order — each slice lands with its tests before the next begins.**
 
@@ -21,6 +21,7 @@ The full money loop, real: request → accept (terms lock) → Paystack checkout
 - `hires/state.py`: `TRANSITIONS` table per FSD §7.3 (7 states; all legal exits; `cancelled_by` + reason taxonomy). `apply(actor, hire, action, **meta)`: validate guards (actor role, payment state, acknowledgment presence) → lock where capacity-relevant → write → append event → `transaction.on_commit` side-effects. **The only write-path to `hires.status` in the codebase.**
 - `hires/availability.py`: TSD §3.4 SQL — holding states = `confirmed`, `on_hire`, `accepted` with live `payment_deadline`; available iff `overlapping_holds < unit_count`. **`Requested` never holds dates.**
 - **Race rule (binding):** `accept_hire` and `apply_payment_success` take `SELECT … FOR UPDATE` on the **listing row**, re-check availability, then write — one transaction. On entering Confirmed, the same transaction auto-declines overflowed Requested/Accepted hires (`no_longer_available`) and queues their notifications on commit.
+- **Close the Wave 3 stub:** wire real availability into the search payloads — listing `available` flags and the yard-sheet "n of m free" caption data (`ux/02` S5) now compute via this engine. Remove the stub note from the search OpenAPI schema.
 - Tests: every legal transition · every illegal transition rejected · guard failures · event appended per transition · the **threaded double-payment race test** (two concurrent payments, last unit ⇒ exactly one Confirmed, loser flagged for auto-refund) · availability matrix incl. unit_count > 1 and expired-window release.
 
 ### 4C — Request → Accept → Decline/Expire (FSD §7.1–§7.2)
@@ -41,9 +42,9 @@ The full money loop, real: request → accept (terms lock) → Paystack checkout
 - Disputes: either party flags during On Hire or ≤72h after end → In Dispute, payout frozen. Resolution is an Ops action (Wave 6 surface; service function + tests now).
 
 ### 4F — Payouts, reconciliation, notifications
-- Payout lifecycle `pending → due → paid | frozen`; created **only** on completion; mark-paid records reference (Ops surface Wave 6, service now).
+- Payout lifecycle `pending → due → paid | frozen`; created on completion — plus the one exception, the ≤72h-cancellation withheld-day payout (D-015); mark-paid records reference (Ops surface Wave 6, service now).
 - Daily Paystack reconciliation task (ledger vs `payments`; mismatch ⇒ Sentry + Ops email). Zero-mismatch is a launch criterion.
-- Notification matrix FSD §9, hire rows: badge + email per event; supplier email prefs honoured (badges always accrue); **hirer receipt shows no fee** (D-014).
+- Notification matrix FSD §9, hire rows: badge + email per event; supplier email prefs honoured (badges always accrue); **hirer receipt shows no fee** (D-014). Includes the supplier-strike email (FSD §9 last row) fired when a supplier-cancel records a strike (manual Ops strikes reuse the same path in Wave 6).
 
 ## Out of scope (deferred)
 

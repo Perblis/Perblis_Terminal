@@ -28,7 +28,7 @@ A verified supplier can build their entire supply presence through the API: busi
 - Fields per TSD §3.3 `listings` row. Pricing: **daily ₦ required**; weekly/monthly optional (kobo, integers); `unit_count ≥ 1`; optional per-unit labels (`units` table). "Other" asset type routes to Ops review.
 - **Status actions** `POST :id/publish|pause|archive|duplicate`: Draft → Live ⇄ Paused → Archived; Removed is Ops-only (Wave 6 surface; model + reason field now). Archived/Removed preserve hire history; hard delete forbidden once hires exist (DB-level PROTECT).
 - **Publish gates** (FSD §5.2 acceptance): daily price set · ≥1 photo · valid location (yard chip OR own pin OR geocoded address) · all required template specs · supplier Verified + business profile complete. Each failure a stable error code (`publish_requires_photo`, …).
-- **Duplicate Listing** copies everything except photos? — No: copies specs/pricing/yard, *includes* photo keys (same R2 objects), lands as Draft. Tier resets to Basic.
+- **Duplicate Listing** creates a new Draft copying class/type, specs, pricing, unit data, and yard; photo copy is optional per `ux/01` F9 (when copied, photos reference the same R2 objects — no re-upload). Tier resets to Basic (tiers are per-listing, auto-Basic at publish).
 - Completeness score computed and stored (not user-visible in MVP).
 - Tiers: Basic auto at publish; Verified/Inspected are Ops-awarded (Wave 6 action; field now).
 

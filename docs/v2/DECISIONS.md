@@ -22,6 +22,9 @@ Running log of founder-approved decisions. Each entry is binding on downstream d
 
 | D-014 | 2026-06-11 | **Service fee is supplier-confidential** | Hirers see only the total they pay — no service-fee or payout figures anywhere on hirer surfaces (request preview, hire detail, receipt, emails). Fee breakdown (Hire Value / Service Fee / You Receive) renders on supplier and Ops surfaces only. ToS discloses the fee model in legal terms. Refines D-005. |
 
+| D-015 | 2026-06-11 | **Cancellation withholdings ARE payouts (FSD §7.6 wins over §3.2)** | Resolves the conflict between FSD §3.2 ("a payout is never created for a hire that did not complete") and §7.6 (hirer cancels ≤72h before start → the withheld day "becomes a supplier payout (due)"). The §7.6 rule stands: a cancellation-withholding payout is the one exception to the completion rule — the supplier is compensated for late cancellation. §3.2 amended to carry the exception. |
+| D-016 | 2026-06-11 | **Handover capture works offline (ux/02 S11 wins over TSD §6)** | Resolves the conflict between TSD §6 ("mutations require connectivity") and ux/02 S11 (offline capture, photos queue, record submits on reconnect). Handover is the one allowed offline mutation — it happens in the field at sites with poor signal, and a lost capture damages the dispute-evidence story. TSD §6 amended. |
+
 ## Open items (tracked in task list)
 - Tasks #1 & #2 resolved by Stage 2 (03_MVP_Scope.md §6–§7 and D-006/D-007/D-008).
 - Stage 2 sign-off checklist (`03` §9) — pending founder review.

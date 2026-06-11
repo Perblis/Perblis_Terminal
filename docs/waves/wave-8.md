@@ -2,7 +2,7 @@
 
 **Status:** ⏸ Gated on founder approval (startable any time after the Wave 4 contract freeze; Messages tab additionally needs Wave 5 — TSD §10 interleave note)
 **Depends on:** Wave 4 contracts (search contracts from Wave 3; messaging contracts for 8E from Wave 5)
-**Spec references:** FSD §10.1 (app surface — normative) · TSD §6 (Expo architecture, payments posture, offline posture, distribution) · `ux/02` (S1–S17 screen specs — **normative per screen**) · `ux/00` J2, J3, J5, J8 (hirer journeys) · `ux/01` F1–F3, F5–F8, F10, F12 · design-system chapters (esp. 06 §3 pins, 08 motion) · DECISIONS D-013 (MapLibre/OpenFreeMap), D-014 (no fee on any hirer surface)
+**Spec references:** FSD §10.1 (app surface — normative) · TSD §6 (Expo architecture, payments posture, offline posture, distribution) · `ux/02` (S1–S17 screen specs — **normative per screen**) · `ux/00` J2, J3, J5, J8 (hirer journeys) · `ux/01` F1–F3, F5–F8, F10, F12 · design-system chapters (esp. 06 §3 pins, 08 motion) · DECISIONS D-013 (MapLibre/OpenFreeMap), D-014 (no fee on any hirer surface), D-016 (offline handover capture)
 **Numbering note:** the `ux/` docs cite pre-v2.1 FSD numbering — read their "§6.3 / §6.6 / §8.1" as v2.1 **§7.3 / §7.6 / §10.1**.
 
 ## Objective
@@ -38,7 +38,7 @@ Every screen: design-system components only (NativeWind styled from `packages/to
 ### 8D — Hires & handover (S9, S10, S11 · F5, F6 · J3, J8)
 - S9 My Hires: tabs Requested/Upcoming/On hire/History; HireCards with context strips (countdowns, "Handover today" chips); **"Hire again" row atop History — J8's two-tap re-request**; Ably-live updates + pull-to-refresh.
 - S10 Hire Detail: status banner (**all 9 state variants, copy from 09 §3**) → LockedTerms hirer variant → mono dates block → EventTimeline → HandoverRecord cards → conversation row → contextual actions: Cancel (**refund preview manifest with exact FSD §7.6 figures**, F5) · Pay now · Confirm handover · **Raise issue (≤72h post-end → In Dispute)**.
-- S11 Handover Capture: camera-first full screen, class-recipe checklist chips (hour meter / odometer / none per FSD §7.4), thumb rail, mono numeric pad for readings, notes, review → submit → ConfirmPanel both-party ticks. **Resume-safe; the one allowed offline mutation** — photos queue locally, record submits on reconnect (TSD §6). Skip path surfaces the dispute-weakening copy beforehand (J3).
+- S11 Handover Capture: camera-first full screen, class-recipe checklist chips (hour meter / odometer / none per FSD §7.4), thumb rail, mono numeric pad for readings, notes, review → submit → ConfirmPanel both-party ticks. **Resume-safe; the one allowed offline mutation** — photos queue locally, record submits on reconnect (D-016, `ux/02` S11). Skip path surfaces the dispute-weakening copy beforehand (J3).
 
 ### 8E — Messages, profile, reports (S14–S16 · F2, F7, F8, F10 · J5)
 - S14/S15 Messages: thread rows with listing/hire context chips, unread badges; conversation with date separators, inline system status messages ("Contact details unlocked"), **MaskedContact chips + first-occurrence explainer** (informative, never punitive), optimistic send with per-message retry; Ably + 15s polling fallback.

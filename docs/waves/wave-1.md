@@ -31,6 +31,11 @@ A real person can register, verify their phone with a real SMS OTP, log in with 
 - Ops queue: Django Admin list (pending first), inline doc viewer via 15-min presigned GETs, approve → level upgrade, reject → **mandatory reason**, user notified (badge + email), resubmission allowed. Full Ops Console UX is Wave 6 — this wave ships the functional minimum so verification is operable from day one.
 - Suspension semantics (FSD §4.2): suspended user fails login with a stable error code; soft-delete fields honoured by auth.
 
+### 1.5 Account deletion & NDPR retention (FSD §4.2, §12)
+- Delete-account endpoint (soft delete: 30-day recovery window; blocked while the user has non-terminal hires — the "active-hire guard" of `ux/03` P11; the guard is a stable error code now even though hires arrive in Wave 4).
+- Daily purge task: hard-deletes accounts past the 30-day window **with retention carve-outs** — financial records 7 years, verification documents 5 years (NDPR). Idempotent like all sweeps.
+- **Spec-gap note:** TSD §3.8's endpoint inventory omits a delete endpoint (the FSD and both screen specs require it). Add `DELETE /api/v1/me` to the inventory when implementing — flag in the PR per design.md §10.
+
 ## Out of scope (deferred)
 
 - Publish gate (Wave 2) · ₦250k Basic hire cap (Wave 4) · storefront badge rendering (Wave 2/7) · 2FA on admin (hardening config, verify in Wave 6) · push notifications (Phase 3).
@@ -46,6 +51,7 @@ A real person can register, verify their phone with a real SMS OTP, log in with 
 - Lockout and throttle behaviour (freezegun).
 - Password reset: single-use, 1-h expiry, session invalidation, no user enumeration.
 - Verification: private-bucket keys **never** publicly reachable (FSD §4.3 acceptance check); approve/reject transitions + notification dispatch; rejected user sees reason and can resubmit.
+- Deletion: soft-delete recoverable inside 30 days; purge task respects the carve-outs (financial/verification records survive a hard delete); purge double-run is a no-op.
 - Lexicon sweep: no `owner`/`renter` identifiers (design.md commandment 1).
 
 ## Exit criterion (founder demo)
