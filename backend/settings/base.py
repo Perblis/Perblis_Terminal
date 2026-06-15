@@ -193,9 +193,11 @@ R2_PUBLIC_BUCKET = env("R2_PUBLIC_BUCKET", default="")
 R2_PRIVATE_BUCKET = env("R2_PRIVATE_BUCKET", default="")
 R2_PUBLIC_BASE_URL = env("R2_PUBLIC_BASE_URL", default="")
 
-PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
-PAYSTACK_PUBLIC_KEY = env("PAYSTACK_PUBLIC_KEY", default="")
-PAYSTACK_WEBHOOK_SECRET = env("PAYSTACK_WEBHOOK_SECRET", default="")
+# Payments: Bachs.io, collect-only (D-017, supersedes Paystack in D-006).
+# Keys absent in dev => degraded, never crash. Integration lands in Wave 4.
+BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1")
+BACHS_SECRET_KEY = env("BACHS_SECRET_KEY", default="")
+BACHS_WEBHOOK_SECRET = env("BACHS_WEBHOOK_SECRET", default="")
 
 ABLY_API_KEY = env("ABLY_API_KEY", default="")
 TERMII_API_KEY = env("TERMII_API_KEY", default="")
