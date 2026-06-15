@@ -1,0 +1,86 @@
+{
+  "_doc": "Semantic aliases (02 §2). Values are dotted refs into primitives.json. Names never reference hue (02 §2) so dark mode is a remap. Class/status names use domain words and are stable forever.",
+  "light": {
+    "surface/page": "color.paper.50",
+    "surface/card": "color.paper.0",
+    "surface/sunken": "color.ink.100",
+    "surface/inverse": "color.ink.900",
+    "surface/brand": "color.amber.500",
+
+    "text/primary": "color.ink.900",
+    "text/secondary": "color.ink.700",
+    "text/tertiary": "color.ink.500",
+    "text/inverse": "color.paper.0",
+    "text/on-brand": "color.ink.900",
+    "text/link": "color.blue.700",
+    "text/danger": "color.red.700",
+    "text/money": "color.ink.900",
+
+    "border/default": "color.ink.200",
+    "border/strong": "color.ink.300",
+    "border/structural": "color.ink.900",
+    "border/focus": "color.amber.500",
+    "border/error": "color.red.600",
+
+    "action/primary": "color.amber.500",
+    "action/primary-hover": "color.amber.400",
+    "action/primary-active": "color.amber.600",
+    "action/destructive": "color.red.600",
+
+    "class/plant": "color.amber.600",
+    "class/trucks": "color.blue.600",
+    "class/warehouse": "color.green.600",
+    "class/terminals": "color.violet.600",
+    "class/land": "color.earth.700",
+
+    "status/requested": "color.amber.600",
+    "status/accepted": "color.blue.600",
+    "status/confirmed": "color.teal.600",
+    "status/onHire": "color.green.600",
+    "status/completed": "color.ink.600",
+    "status/cancelled": "color.red.600",
+    "status/dispute": "color.violet.600"
+  },
+  "dark": {
+    "_doc": "Specified now, ships post-MVP (02 §5). amber-500 stays amber-500.",
+    "surface/page": "color.ink.900",
+    "surface/card": "color.ink.800",
+    "surface/sunken": "color.ink.900",
+    "surface/inverse": "color.paper.0",
+    "surface/brand": "color.amber.500",
+
+    "text/primary": "color.paper.50",
+    "text/secondary": "color.ink.300",
+    "text/tertiary": "color.ink.400",
+    "text/inverse": "color.ink.900",
+    "text/on-brand": "color.ink.900",
+    "text/link": "color.blue.500",
+    "text/danger": "color.red.500",
+    "text/money": "color.paper.50",
+
+    "border/default": "color.ink.700",
+    "border/strong": "color.ink.600",
+    "border/structural": "color.paper.0",
+    "border/focus": "color.amber.500",
+    "border/error": "color.red.500",
+
+    "action/primary": "color.amber.500",
+    "action/primary-hover": "color.amber.400",
+    "action/primary-active": "color.amber.600",
+    "action/destructive": "color.red.500",
+
+    "class/plant": "color.amber.500",
+    "class/trucks": "color.blue.500",
+    "class/warehouse": "color.green.500",
+    "class/terminals": "color.violet.500",
+    "class/land": "color.earth.600",
+
+    "status/requested": "color.amber.500",
+    "status/accepted": "color.blue.500",
+    "status/confirmed": "color.teal.500",
+    "status/onHire": "color.green.500",
+    "status/completed": "color.ink.400",
+    "status/cancelled": "color.red.500",
+    "status/dispute": "color.violet.500"
+  }
+}

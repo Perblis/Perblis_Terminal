@@ -1,0 +1,27 @@
+{
+  "name": "@terminal/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Terminal design tokens — one source, multi-platform outputs (design-system ch.10).",
+  "main": "tokens.ts",
+  "types": "tokens.ts",
+  "exports": {
+    ".": "./tokens.ts",
+    "./tailwind": "./tailwind.tokens.cjs",
+    "./css": "./tokens.css",
+    "./admin.css": "./admin.css"
+  },
+  "files": [
+    "src",
+    "glyphs",
+    "tokens.ts",
+    "tailwind.tokens.cjs",
+    "tokens.css",
+    "admin.css"
+  ],
+  "scripts": {
+    "build": "node build.ts",
+    "check": "node build.ts"
+  }
+}

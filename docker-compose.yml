@@ -1,0 +1,30 @@
+# Local dev dependencies: PostGIS + Mailpit. No Redis (D-010).
+# `docker compose up -d` then run the backend with settings.dev.
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_DB: terminal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - terminal_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d terminal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI -> http://localhost:8025
+    environment:
+      MP_MAX_MESSAGES: "500"
+
+volumes:
+  terminal_pgdata:

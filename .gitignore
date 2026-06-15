@@ -35,6 +35,8 @@ node_modules/
 
 # ── Next.js (portal/) ───────────────────────────────────────────
 portal/.next/
+portal/.open-next/
+portal/next-env.d.ts
 portal/out/
 portal/.vercel/
 portal/.cloudflare/
@@ -54,6 +56,13 @@ app/*.mobileprovision
 # ── Build artefacts ──────────────────────────────────────────────
 *.tsbuildinfo
 .turbo/
+
+# Generated token outputs (source of truth is packages/tokens/src/*.json;
+# `pnpm build` regenerates these — consumers build before use).
+packages/tokens/tokens.ts
+packages/tokens/tailwind.tokens.cjs
+packages/tokens/tokens.css
+packages/tokens/admin.css
 
 # ── OS / editors ─────────────────────────────────────────────────
 .DS_Store

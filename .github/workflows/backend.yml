@@ -1,0 +1,71 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: terminal
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgis://postgres:postgres@localhost:5432/terminal
+      SECRET_KEY: ci-secret-not-used-in-prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GDAL/GEOS (GeoDjango runtime)
+        run: sudo apt-get update && sudo apt-get install -y binutils libproj-dev gdal-bin
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: mypy (loose)
+        run: uv run mypy core accounts settings
+        env:
+          DJANGO_SETTINGS_MODULE: settings.dev
+
+      - name: .env.example completeness
+        run: uv run python scripts/check_env_example.py
+
+      - name: Migrations are in sync
+        run: uv run python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: settings.dev
+
+      - name: Tests + overall coverage gate (70%)
+        run: uv run pytest --cov --cov-report=term-missing
+
+      - name: Money + state-machine coverage gate (85% hires/payments)
+        run: uv run pytest --cov=hires --cov=payments --cov-fail-under=85

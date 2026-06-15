@@ -1,0 +1,18 @@
+{
+  "_doc": "Component-level tokens (05/06). Seeded minimally for Wave 0; grows as components are specced.",
+  "button": {
+    "heightSm": "32px",
+    "heightMd": "40px",
+    "heightLg": "48px",
+    "radius": "radius.md",
+    "paddingX": "space.s4"
+  },
+  "pin": {
+    "size": "28px",
+    "sizeActive": "36px"
+  },
+  "card": {
+    "radius": "radius.lg",
+    "padding": "space.s5"
+  }
+}
