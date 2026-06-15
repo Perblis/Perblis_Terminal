@@ -42,7 +42,8 @@ Topology (TSD §1): **api** (gunicorn, 512 MB) · **worker** (django-tasks, 256 
    SENTRY_DSN=<optional>
    SENTRY_ENVIRONMENT=production
    # Integration keys — set as you provision each (absent => degraded, not crashed):
-   PAYSTACK_SECRET_KEY= PAYSTACK_PUBLIC_KEY= PAYSTACK_WEBHOOK_SECRET=
+   BACHS_API_BASE=https://api.bachs.io/v1   # sandbox: https://sandbox-api.bachs.io/v1
+   BACHS_SECRET_KEY= BACHS_WEBHOOK_SECRET=
    ABLY_API_KEY= TERMII_API_KEY= TERMII_SENDER_ID= RESEND_API_KEY= LOCATIONIQ_KEY=
    R2_ACCOUNT_ID= R2_ACCESS_KEY_ID= R2_SECRET= R2_PUBLIC_BUCKET= R2_PRIVATE_BUCKET= R2_PUBLIC_BASE_URL=
    ```

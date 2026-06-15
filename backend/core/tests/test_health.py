@@ -29,7 +29,7 @@ def test_healthz_degraded_when_db_down(client, monkeypatch):
 
 
 @pytest.mark.django_db
-@override_settings(R2_ACCESS_KEY_ID="", R2_SECRET="", ABLY_API_KEY="", PAYSTACK_SECRET_KEY="")
+@override_settings(R2_ACCESS_KEY_ID="", R2_SECRET="", ABLY_API_KEY="", BACHS_SECRET_KEY="")
 def test_readyz_reports_not_configured_without_keys(client):
     response = client.get("/readyz")
     assert response.status_code == 200
@@ -38,12 +38,12 @@ def test_readyz_reports_not_configured_without_keys(client):
     assert checks["database"] == "ok"
     assert checks["r2"] == "not_configured"
     assert checks["ably"] == "not_configured"
-    assert checks["paystack"] == "not_configured"
+    assert checks["bachs"] == "not_configured"
 
 
 @pytest.mark.django_db
 @override_settings(
-    R2_ACCESS_KEY_ID="ak", R2_SECRET="sk", ABLY_API_KEY="key", PAYSTACK_SECRET_KEY="sk_test"
+    R2_ACCESS_KEY_ID="ak", R2_SECRET="sk", ABLY_API_KEY="key", BACHS_SECRET_KEY="sk_sandbox_x"
 )
 def test_readyz_reports_configured_when_keys_present(client):
     response = client.get("/readyz")
@@ -51,4 +51,4 @@ def test_readyz_reports_configured_when_keys_present(client):
     checks = response.json()["checks"]
     assert checks["r2"] == "configured"
     assert checks["ably"] == "configured"
-    assert checks["paystack"] == "configured"
+    assert checks["bachs"] == "configured"

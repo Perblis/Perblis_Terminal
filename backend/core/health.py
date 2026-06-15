@@ -4,7 +4,7 @@
 health check; returns 200 only when the DB round-trips.
 
 `/readyz` — the above plus a snapshot of each external integration (R2, Ably,
-Paystack). Per commandment 10, a missing key degrades a check to
+Bachs). Per commandment 10, a missing key degrades a check to
 "not_configured" — it never raises and never fails the probe in dev. Only a
 DB failure makes readyz unhealthy.
 """
@@ -49,7 +49,7 @@ def readyz(request) -> JsonResponse:
             "database": db_status,
             "r2": _integration_status("R2_ACCESS_KEY_ID", "R2_SECRET"),
             "ably": _integration_status("ABLY_API_KEY"),
-            "paystack": _integration_status("PAYSTACK_SECRET_KEY"),
+            "bachs": _integration_status("BACHS_SECRET_KEY"),
         },
     }
     # Only the database gates readiness; unconfigured integrations are expected
