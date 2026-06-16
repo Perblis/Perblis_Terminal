@@ -25,4 +25,4 @@ RUN python manage.py collectstatic --noinput || true
 EXPOSE 8000
 
 # Default to the API; the worker service overrides this with `db_worker`.
-CMD ["gunicorn", "wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["/bin/sh", "-c", "gunicorn wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3"]

@@ -15,7 +15,8 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 
 # Behind Railway's TLS-terminating proxy.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = True
+# Railway terminates TLS at the edge; internal health checks use HTTP.
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30

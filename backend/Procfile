@@ -1,5 +1,5 @@
 # Railway process types. `release` runs on every deploy (migrations).
 # Assign `web` to the api service and `worker` to the worker service.
 release: python manage.py migrate --noinput && python manage.py seed_superuser
-web: gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 3
+web: /bin/sh -c "gunicorn wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3"
 worker: python manage.py db_worker
