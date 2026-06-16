@@ -48,6 +48,8 @@ def readyz(request) -> JsonResponse:
         "checks": {
             "database": db_status,
             "r2": _integration_status("R2_ACCESS_KEY_ID", "R2_SECRET"),
+            "resend": _integration_status("RESEND_API_KEY"),
+            "termii": _integration_status("TERMII_API_KEY"),
             "ably": _integration_status("ABLY_API_KEY"),
             "bachs": _integration_status("BACHS_SECRET_KEY"),
         },

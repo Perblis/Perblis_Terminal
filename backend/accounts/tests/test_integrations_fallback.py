@@ -21,13 +21,27 @@ def test_sms_console_fallback_returns_false(capsys):
 
 
 @override_settings(TERMII_API_KEY="", RESEND_API_KEY="")
-def test_dispatch_otp_emails_when_sms_unavailable():
-    from accounts.tasks import dispatch_otp_sms
+def test_deliver_otp_emails_when_sms_unavailable():
+    from accounts.services.delivery import deliver_otp
 
-    dispatch_otp_sms.call("+2348031234567", "654321", "hirer@example.com")
+    deliver_otp(phone="+2348031234567", code="654321", email="hirer@example.com")
     assert len(mail.outbox) == 1
     assert "654321" in mail.outbox[0].body
     assert mail.outbox[0].to == ["hirer@example.com"]
+
+
+@override_settings(TERMII_API_KEY="dummy-key", RESEND_API_KEY="")
+def test_deliver_otp_emails_even_when_termii_configured(monkeypatch):
+    """Email must still go out when Termii is configured (SMS may not arrive)."""
+    from accounts.services.delivery import deliver_otp
+
+    monkeypatch.setattr(
+        "accounts.integrations.sms.send_otp_sms",
+        lambda phone, code: True,
+    )
+    deliver_otp(phone="+2348031234567", code="111222", email="hirer@example.com")
+    assert len(mail.outbox) == 1
+    assert "111222" in mail.outbox[0].body
 
 
 @override_settings(RESEND_API_KEY="")
