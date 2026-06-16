@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: "export",
   // Token source lives in a workspace package; allow transpiling it.
   transpilePackages: ["@terminal/tokens"],
 };

@@ -10,8 +10,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+    "build:workers": "next build",
+    "preview": "pnpm run build:workers && pnpm exec wrangler dev",
+    "deploy": "pnpm run build:workers && pnpm exec wrangler deploy"
   },
   "dependencies": {
     "@terminal/tokens": "workspace:*",
