@@ -8,18 +8,18 @@ the session-start protocol that drives this file live in `CLAUDE.md`.
 
 ## Current status — _keep this section current_
 
-**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) MERGED to `main`** (PRs #7–#12) — auto-deploys backend. Two-channel verification (separate phone + email OTP) in PR (feature/two-channel-verification). Local suite green (91 tests, 92.85% cov).
+**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) COMPLETE — all merged to `main`** (PRs #7–#13). **Wave 2 (Supply: supplier profiles, yards, spec templates, listings CRUD + publish) is the founder-approved next wave — starting now in a fresh instance.** Local suite green (91 tests, 92.85% cov).
 
-- **Built:** backend `core`; `accounts` full Wave 1 — register + **two-channel verification** (separate phone-SMS OTP and email OTP; both required for login), JWT login/refresh/logout, password reset, me/roles, verification docs + Ops admin queue, soft-delete + purge. `packages/tokens`; `portal` hello-world; CI green on `main`.
-- **Not built:** domain apps `suppliers listings search hires payments messaging ops` still empty (Waves 2+).
-- **Deploy:** Railway api + worker + PostGIS live — `/healthz` + `/readyz` green. **Portal on Cloudflare Workers: PENDING**.
-- **Integrations:** R2 + Resend verified working with founder keys. OTP delivery is inline (no worker): **phone code via SMS only** (loud failure — `otp_delivery_failed` — if Termii can't send in prod; console in dev), **email code via email only**. `DEFAULT_FROM_EMAIL` = contact@perblis.com (Resend-verified).
+- **Built:** backend `core`; `accounts` = full Wave 1 — register + **independent two-channel verification** (phone via SMS / email via Resend, both required for login), JWT login/refresh/logout (rotating + blacklist + `tv` session-invalidation), no-enumeration password reset, `GET/PATCH/DELETE me`, activate-supplier, verification docs (private R2) + Ops admin review queue, soft-delete + NDPR purge. Migrations `0001`–`0005`. Frozen OpenAPI `backend/openapi/schema.yml`. `packages/tokens`; `portal` hello-world; CI green on `main`.
+- **Not built:** domain apps `suppliers listings search hires payments messaging ops` still empty — Wave 2 fills `suppliers`/`listings` first.
+- **Deploy:** Railway api + worker + PostGIS live — `/healthz` + `/readyz` green. Prod **must** keep `TERMII_API_KEY` set (phone OTP fails loudly, no silent fallback). **Portal on Cloudflare Workers: PENDING** (Wave 0 portal exit still open).
+- **Integrations:** R2 + Resend verified working with founder keys. OTP inline (no worker): phone code SMS-only (loud `otp_delivery_failed` on prod failure; console in dev), email code email-only. `DEFAULT_FROM_EMAIL` = contact@perblis.com.
 - **Decisions since specs:** D-017 = MVP payment provider **Bachs.io** (collect-only), supersedes Paystack in D-006; integration lands in Wave 4.
 
-**Next:**
-1. Set live Termii/Resend/R2 keys in Railway; run the founder demo (register→OTP→verify→login→submit ID→approve→Verified).
-2. Finish Wave 0 exit — deploy the Supplier Portal to Cloudflare Workers.
-3. **Wave 2** — _gated, needs founder approval_.
+**Next (Wave 2 — read `docs/waves/wave-2.md` first):**
+1. **Wave 2** is approved — supplier profiles, yards, spec templates, listings CRUD + publish (wave-2.md / FSD §5–6 / TSD). **Wave 1's auth contract is frozen — consume it, don't break it.** Note the publish gate uses the verified account levels Wave 1 established.
+2. Known minor follow-up (non-blocking): `accounts/integrations/email.py::send_otp_email` copy still reads "verify your phone" / "fallback" — should read "verify your email" (it's now the dedicated email-channel sender). One-line copy fix.
+3. Still open from Wave 0: deploy the Supplier Portal to Cloudflare Workers.
 
 **Live:** https://perblisterminal-production.up.railway.app/healthz
 
@@ -129,3 +129,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder asked to verify email as well as mobile, with mobile not silently failing.
 - change_ref: 2026-06-16 12:20 - OTP email fallback when Termii absent
 - notes: Green locally — 91 tests / 92.85% cov, ruff+format, mypy, makemigrations --check, OpenAPI regenerated. Contract change (reopens frozen Wave 1 auth contract) — founder-requested. FSD §4.2 + TSD §3.3/§3.8 updated to match. Branch: feature/two-channel-verification.
+
+## 2026-06-16 14:00 - Wave 1 close-out + Wave 2 handoff doc sync
+- tag: CHORE
+- area: CLAUDE.md (current-state), docs/waves/README.md (status column), Implementations.md (current status)
+- summary: Marked Wave 1 COMPLETE (PRs #7–#13 merged: accounts incl. independent email+phone OTP, both required for login) across the handoff docs, and Wave 2 as the founder-approved next wave. CLAUDE.md "Current state" now describes the full accounts surface (migrations 0001–0005, frozen OpenAPI, TERMII_API_KEY required in prod). waves/README.md status: Wave 0 ✅ (portal deploy still pending), Wave 1 ✅, Wave 2 🟡 approved & starting.
+- reason: Founder is about to start Wave 2 in a fresh instance and asked for the handoff docs to be brought current.
+- change_ref: 2026-06-16 13:20 - Two-channel verification (separate email + phone OTP)
+- notes: Next instance: read Implementations.md → design.md → docs/waves/wave-2.md → FSD/TSD §5–6. Wave 1 auth contract is frozen (breaking it needs founder sign-off). Known non-blocking nit recorded: send_otp_email copy says "phone" instead of "email". Local DB for tests needs PostGIS + DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal (env injects a remote Supabase URL that can't build a test DB).

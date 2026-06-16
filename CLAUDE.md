@@ -10,11 +10,11 @@ Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plan
 
 ## Current state of the repo
 
-**Wave 0 is built and the backend is deployed; later waves have not started.** This snapshot can lag — always reconcile against `Implementations.md` and the code itself (see Session start protocol).
+**Wave 1 is complete and merged; the backend is deployed. Wave 2 is the next wave (founder-approved, starting now).** This snapshot can lag — always reconcile against `Implementations.md` and the code itself (see Session start protocol).
 
-- `backend/` — Django skeleton live: `core` (BaseModel UUIDv7, `money`, permissions, cursor pagination, error envelope, `/healthz`+`/readyz`, heartbeat task) and `accounts` (custom `User`, migration `0001`). Domain apps `suppliers listings search hires payments messaging ops` are registered but **empty** (no models/migrations). No `/api/v1/` business endpoints yet.
+- `backend/` — `core` (BaseModel UUIDv7, `money`, permissions, cursor pagination, error envelope, `/healthz`+`/readyz`, heartbeat task) and `accounts` — **Wave 1 fully built**: register, **independent phone (SMS) + email (Resend) OTP verification** (both required for login), JWT login/refresh/logout (rotating + blacklist + `tv` session-invalidation claim), no-enumeration password reset, `GET/PATCH/DELETE me`, supplier activation, identity/business verification docs (private R2 + Ops admin review queue), soft-delete + NDPR purge. Migrations `0001`–`0005`. Frozen OpenAPI at `backend/openapi/schema.yml`. Domain apps `suppliers listings search hires payments messaging ops` are still registered but **empty** — they are Waves 2+.
 - `packages/tokens/` — token build pipeline (WCAG contrast gate + emitted artifacts). `portal/` — Next.js hello-world proving the token pipeline. CI (`backend.yml`, `portal.yml`) green on `main`.
-- **Deploy:** backend api + worker + PostGIS live on Railway (`/healthz` green); the Supplier Portal on Cloudflare Workers is **still pending** — so Wave 0's exit criterion is only partially met.
+- **Deploy:** backend api + worker + PostGIS live on Railway (`/healthz` green). Prod **must** have `TERMII_API_KEY` set (phone OTP fails loudly rather than falling back). The Supplier Portal on Cloudflare Workers is **still pending** — Wave 0's portal exit criterion remains open.
 - **Decisions since the specs:** D-017 switched the MVP payment provider to **Bachs.io** (collect-only), superseding Paystack in D-006.
 
 ## Session start protocol (do this first, every session)
