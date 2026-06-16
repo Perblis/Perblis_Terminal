@@ -105,3 +105,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: User requested Wave 1 tests and functional verification.
 - change_ref: 2026-06-16 07:30 - Wave 1: accounts identity, auth, verification
 - notes: Local test env needs PostGIS (`DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal`). Integration keys (Termii/Resend/R2) optional in dev — console/Mailpit fallbacks work. PR: cursor/wave1-test-bcrypt-fix-5d9a.
+
+## 2026-06-16 12:20 - OTP email fallback when Termii absent
+- tag: FIX
+- area: accounts/integrations/email.py, tasks.py, services/otp.py, settings/base.py, .env.example
+- summary: When Termii is not configured (SMS console fallback), OTP is now also emailed via Resend so register→verify works without SMS keys. Updated DEFAULT_FROM_EMAIL default to `contact@perblis.com` (verified in Resend; perblis.io is not).
+- reason: User received welcome email but no OTP code — SMS-only delivery with no Termii key.
+- change_ref: 2026-06-16 07:30 - Wave 1: accounts identity, auth, verification
+- notes: Production still uses Termii SMS when `TERMII_API_KEY` is set; email is fallback only. R2 + Resend verified working with founder keys. PR: cursor/otp-email-fallback-5d9a.
