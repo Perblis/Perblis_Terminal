@@ -10,7 +10,35 @@ Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plan
 
 ## Current state of the repo
 
-This is a **specs-and-scaffold monorepo before the build starts**. `backend/`, `portal/`, `app/`, and `packages/tokens/` are empty (`.gitkeep`) — all real content is in `docs/` and `design.md`. Do not assume code exists; you are likely creating it. Work is gated (see Wave gating below), so confirm the active wave before building a module.
+**Wave 0 is built and the backend is deployed; later waves have not started.** This snapshot can lag — always reconcile against `Implementations.md` and the code itself (see Session start protocol).
+
+- `backend/` — Django skeleton live: `core` (BaseModel UUIDv7, `money`, permissions, cursor pagination, error envelope, `/healthz`+`/readyz`, heartbeat task) and `accounts` (custom `User`, migration `0001`). Domain apps `suppliers listings search hires payments messaging ops` are registered but **empty** (no models/migrations). No `/api/v1/` business endpoints yet.
+- `packages/tokens/` — token build pipeline (WCAG contrast gate + emitted artifacts). `portal/` — Next.js hello-world proving the token pipeline. CI (`backend.yml`, `portal.yml`) green on `main`.
+- **Deploy:** backend api + worker + PostGIS live on Railway (`/healthz` green); the Supplier Portal on Cloudflare Workers is **still pending** — so Wave 0's exit criterion is only partially met.
+- **Decisions since the specs:** D-017 switched the MVP payment provider to **Bachs.io** (collect-only), superseding Paystack in D-006.
+
+## Session start protocol (do this first, every session)
+
+Before acting on a task, build context and locate yourself in the build — do not assume the snapshot above is current:
+
+1. **Read `Implementations.md`** (repo root) — the running agent progress log. Its newest entries are the fast truth of what was just done, deployed, or left blocked, so any instance can take over mid-stream.
+2. **Read `design.md`**, then the document-authority docs (below) for your task area.
+3. **Determine the precise wave status from code, not just docs.** Check backend apps (which have models/migrations), `/api/v1/` routes, tests, and `docs/waves/`. If `docs/waves/README.md`'s status column disagrees with the code or `Implementations.md`, trust the code — then reconcile the docs.
+4. **Identify the next wave and confirm it's founder-approved** before building it (wave gating is binding — design.md §7). Finishing one wave never authorizes the next.
+
+## Tracking progress (`Implementations.md`)
+
+`Implementations.md` (repo root) is the append-only handoff log. **Keep it current**: append an entry for every meaningful change — feature, fix, decision, deploy, or blocker — so the next instance can resume without re-deriving context. Newest entries at the bottom. Entry format:
+
+```
+## YYYY-MM-DD HH:MM - <short title>
+- tag: FEATURE | FIX | CHORE | DECISION | DEPLOY
+- area: <files / services touched>
+- summary: <what changed>
+- reason: <why>
+- change_ref: <prior related entry>   # optional
+- notes: <follow-ups, blockers, the next step>
+```
 
 ## Document authority (where truth lives)
 
