@@ -37,6 +37,20 @@ class PhoneNotVerified(TerminalError):
     default_detail = "Verify your phone number before signing in."
 
 
+class EmailNotVerified(TerminalError):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_code = "email_not_verified"
+    default_detail = "Verify your email address before signing in."
+
+
+class OtpDeliveryFailed(TerminalError):
+    # Surfaced (never swallowed) so phone OTP can't silently fail: if SMS can't
+    # be delivered we say so rather than pretend a code was sent.
+    status_code = status.HTTP_502_BAD_GATEWAY
+    default_code = "otp_delivery_failed"
+    default_detail = "We couldn't send your verification code. Please try again."
+
+
 class LoginLocked(TerminalError):
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
     default_code = "login_locked"

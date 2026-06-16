@@ -10,9 +10,9 @@ from django.db import models
 
 
 class OtpPurpose(models.TextChoices):
-    # Wave 1 only verifies phones at registration; the column carries a purpose
-    # so the same table serves future flows (e.g. step-up auth) without reshape.
+    # Phone and email are verified independently, each over its own channel.
     PHONE_VERIFY = "phone_verify", "Phone verification"
+    EMAIL_VERIFY = "email_verify", "Email verification"
 
 
 class VerificationKind(models.TextChoices):

@@ -14,9 +14,16 @@ class OtpSendThrottle(ScopedRateThrottle):
     """
 
     scope = "otp_send"
+    ident_field = "phone"
 
     def get_cache_key(self, request, view):
-        phone = (request.data.get("phone") or "").strip()
-        if not phone:
+        ident = (request.data.get(self.ident_field) or "").strip()
+        if not ident:
             return None  # nothing to throttle on; view validation rejects it
-        return self.cache_format % {"scope": self.scope, "ident": phone}
+        return self.cache_format % {"scope": self.scope, "ident": ident}
+
+
+class EmailOtpSendThrottle(OtpSendThrottle):
+    """Same 3/hour cap, keyed per email address for the email channel."""
+
+    ident_field = "email"

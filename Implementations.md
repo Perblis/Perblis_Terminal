@@ -8,12 +8,12 @@ the session-start protocol that drives this file live in `CLAUDE.md`.
 
 ## Current status — _keep this section current_
 
-**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) MERGED to `main`** (PRs #7 feature, #8 TSD reconcile, #9 bcrypt dep fix, #10 OTP email fallback) — auto-deploys backend. Local suite green (81 tests).
+**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) MERGED to `main`** (PRs #7–#12) — auto-deploys backend. Two-channel verification (separate phone + email OTP) in PR (feature/two-channel-verification). Local suite green (91 tests, 92.85% cov).
 
-- **Built:** backend `core`; `accounts` full Wave 1 — register + OTP (Termii SMS, email fallback when unconfigured), JWT login/refresh/logout, password reset, me/roles, verification + Ops admin queue, soft-delete + purge. `packages/tokens`; `portal` hello-world; CI green on `main`.
+- **Built:** backend `core`; `accounts` full Wave 1 — register + **two-channel verification** (separate phone-SMS OTP and email OTP; both required for login), JWT login/refresh/logout, password reset, me/roles, verification docs + Ops admin queue, soft-delete + purge. `packages/tokens`; `portal` hello-world; CI green on `main`.
 - **Not built:** domain apps `suppliers listings search hires payments messaging ops` still empty (Waves 2+).
 - **Deploy:** Railway api + worker + PostGIS live — `/healthz` + `/readyz` green. **Portal on Cloudflare Workers: PENDING**.
-- **Integrations:** R2 + Resend verified working with founder keys. OTP: Termii SMS when `TERMII_API_KEY` set, else console + email fallback (prod must keep Termii set or phone-channel proof degrades to email). `DEFAULT_FROM_EMAIL` = contact@perblis.com (Resend-verified).
+- **Integrations:** R2 + Resend verified working with founder keys. OTP delivery is inline (no worker): **phone code via SMS only** (loud failure — `otp_delivery_failed` — if Termii can't send in prod; console in dev), **email code via email only**. `DEFAULT_FROM_EMAIL` = contact@perblis.com (Resend-verified).
 - **Decisions since specs:** D-017 = MVP payment provider **Bachs.io** (collect-only), supersedes Paystack in D-006; integration lands in Wave 4.
 
 **Next:**
@@ -121,3 +121,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder asked to review the externally-merged changes and update affected docs.
 - change_ref: 2026-06-16 10:50 - TSD reconciliation for Wave 1 deltas
 - notes: No code change. OpenAPI not regenerated (no contract drift). Possible future hardening: warn/refuse in prod when TERMII_API_KEY is unset rather than silently emailing OTPs — flagged to founder.
+
+## 2026-06-16 13:20 - Two-channel verification (separate email + phone OTP)
+- tag: FEATURE
+- area: backend/accounts (models, enums, errors, services/{otp,delivery,login,registration}, views, serializers, urls, throttles, tasks, factories, tests, migrations 0004/0005), backend/openapi/schema.yml, docs/v2/06_FSD_v2.md §4.2, docs/v2/07_TSD.md §3.3/§3.8
+- summary: Replaced the cross-channel "email the phone OTP" fallback (PRs #10/#12) with independent verification of each channel. Phone OTP delivered ONLY by SMS (Termii); email OTP delivered ONLY by email (Resend) — codes never crossed, so an email can't prove phone ownership. Phone delivery is loud, not silent: raises `otp_delivery_failed` (502) when SMS can't be sent (provider error, or no TERMII_API_KEY in prod); dev (DEBUG) prints to console. New: User.email_verified_at + is_email_verified; OtpPurpose.EMAIL_VERIFY; errors EmailNotVerified (403) + OtpDeliveryFailed (502); endpoints auth/email/verify + auth/email/resend (email-keyed throttle); MeSerializer.is_email_verified. Login (Basic) now requires BOTH phone and email verified (FSD §4.1). Registration issues both OTPs inline (resilient: a channel failure is logged, account still created, resend is the strict path). Removed orphaned dispatch_otp_sms task + deliver_otp.
+- reason: Founder asked to verify email as well as mobile, with mobile not silently failing.
+- change_ref: 2026-06-16 12:20 - OTP email fallback when Termii absent
+- notes: Green locally — 91 tests / 92.85% cov, ruff+format, mypy, makemigrations --check, OpenAPI regenerated. Contract change (reopens frozen Wave 1 auth contract) — founder-requested. FSD §4.2 + TSD §3.3/§3.8 updated to match. Branch: feature/two-channel-verification.

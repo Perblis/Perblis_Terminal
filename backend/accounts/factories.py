@@ -21,12 +21,16 @@ class UserFactory(factory.django.DjangoModelFactory):
     phone = factory.Sequence(lambda n: f"+23480{n:08d}")
     is_hirer = True
     is_supplier = False
-    # Phone-verified by default so the user can log in; use the `unverified`
-    # trait for registration/OTP scenarios.
+    # Fully verified by default so the user can log in; use the traits below for
+    # registration/OTP scenarios.
     phone_verified_at = factory.LazyFunction(timezone.now)
+    email_verified_at = factory.LazyFunction(timezone.now)
 
     class Params:
-        unverified = factory.Trait(phone_verified_at=None)
+        # Brand-new registrant: neither channel verified yet.
+        unverified = factory.Trait(phone_verified_at=None, email_verified_at=None)
+        phone_unverified = factory.Trait(phone_verified_at=None)
+        email_unverified = factory.Trait(email_verified_at=None)
         staff = factory.Trait(is_staff=True, is_superuser=True)
 
     @classmethod

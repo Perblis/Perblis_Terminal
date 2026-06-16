@@ -61,9 +61,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    # Set once the registration OTP is verified. A Basic account is "OTP+email"
-    # (FSD §4.1), so login requires a verified phone.
+    # A Basic account is "OTP + email" (FSD §4.1): phone and email are each
+    # verified over their own channel (SMS code / email code), and login
+    # requires both. Set when the respective OTP is verified.
     phone_verified_at = models.DateTimeField(null=True, blank=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
 
     # NDPR consent captured at registration (FSD §12).
     tos_accepted_at = models.DateTimeField(null=True, blank=True)
@@ -109,6 +111,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_phone_verified(self) -> bool:
         return self.phone_verified_at is not None
+
+    @property
+    def is_email_verified(self) -> bool:
+        return self.email_verified_at is not None
 
     @property
     def is_verified(self) -> bool:

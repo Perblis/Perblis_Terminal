@@ -15,20 +15,11 @@ from django.utils import timezone
 from django_tasks import task
 
 from accounts.integrations import email as email_integration
-from accounts.integrations import sms as sms_integration
 
 logger = structlog.get_logger(__name__)
 
 # Recovery window before a soft-deleted account is purged (FSD §4.2).
 SOFT_DELETE_RETENTION = timedelta(days=30)
-
-
-@task()
-def dispatch_otp_sms(phone: str, code: str, email: str = "") -> None:
-    """Worker entrypoint — delegates to inline delivery."""
-    from accounts.services.delivery import deliver_otp
-
-    deliver_otp(phone=phone, code=code, email=email)
 
 
 @task()
