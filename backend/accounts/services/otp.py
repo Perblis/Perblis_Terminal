@@ -1,10 +1,9 @@
-"""OTP issuing and verification.
+"""OTP issuing and verification, per channel (phone / email).
 
 Codes are 6 digits, stored only as an HMAC-SHA256 digest keyed by SECRET_KEY,
 expire after 10 minutes, allow 5 verify attempts before a new code is required,
-and are capped at 3 resends per hour. The tiny code space makes hash *cost*
-irrelevant — expiry, the attempt cap, and the send throttle are the defence,
-so a fast keyed hash is correct here.
+and are capped at 3 resends per hour per channel. Phone and email are verified
+independently: each has its own code, delivered only over its own channel.
 """
 
 from __future__ import annotations
@@ -19,14 +18,16 @@ from django.utils.crypto import salted_hmac
 from accounts.enums import OtpPurpose
 from accounts.errors import OtpAttemptsExceeded, OtpExpired, OtpInvalid, OtpResendThrottled
 from accounts.models import OtpCode, User
-from accounts.services.delivery import deliver_otp
+from accounts.services.delivery import deliver_email_otp, deliver_phone_otp
 
 OTP_LENGTH = 6
 OTP_TTL = timedelta(minutes=10)
 MAX_VERIFY_ATTEMPTS = 5
 MAX_RESENDS_PER_HOUR = 3
-# str() of the (str-subclass) TextChoices member — the canonical column value.
-DEFAULT_OTP_PURPOSE = str(OtpPurpose.PHONE_VERIFY)
+
+# Canonical string values of the (str-subclass) TextChoices members.
+PHONE_VERIFY = str(OtpPurpose.PHONE_VERIFY)
+EMAIL_VERIFY = str(OtpPurpose.EMAIL_VERIFY)
 
 
 def _generate_code() -> str:
@@ -38,8 +39,7 @@ def hash_code(code: str) -> str:
     return salted_hmac("accounts.otp", code).hexdigest()
 
 
-def issue_otp(user: User, purpose: str = DEFAULT_OTP_PURPOSE) -> OtpCode:
-    """Create a fresh code, persist its digest, and dispatch it by SMS."""
+def _create_code(user: User, purpose: str) -> tuple[OtpCode, str]:
     code = _generate_code()
     otp = OtpCode.objects.create(
         user=user,
@@ -47,28 +47,69 @@ def issue_otp(user: User, purpose: str = DEFAULT_OTP_PURPOSE) -> OtpCode:
         purpose=purpose,
         expires_at=timezone.now() + OTP_TTL,
     )
-    deliver_otp(phone=user.phone, code=code, email=user.email)
-    return otp
+    return otp, code
 
 
-def resend_otp(user: User, purpose: str = DEFAULT_OTP_PURPOSE) -> OtpCode:
-    """Issue a new code, enforcing the 3-per-hour cap (belt-and-suspenders with
-    the per-phone ScopedRateThrottle on the view)."""
+def _resend_guard(user: User, purpose: str) -> None:
+    """Enforce the 3-per-hour cap (belt-and-suspenders with the view throttle)."""
     window_start = timezone.now() - timedelta(hours=1)
     recent = OtpCode.objects.filter(
         user=user, purpose=purpose, created_at__gte=window_start
     ).count()
     if recent >= MAX_RESENDS_PER_HOUR:
         raise OtpResendThrottled()
-    return issue_otp(user, purpose)
 
 
-def verify_otp(user: User, code: str, purpose: str = DEFAULT_OTP_PURPOSE) -> None:
-    """Verify a code against the user's latest unconsumed OTP.
+# --- Phone channel -------------------------------------------------------
 
-    On success the OTP is consumed and the user's phone is marked verified. A
-    wrong code increments the attempt counter; once attempts hit the cap the
-    code is unusable and a new one must be requested.
+
+def issue_phone_otp(user: User) -> OtpCode:
+    otp, code = _create_code(user, PHONE_VERIFY)
+    deliver_phone_otp(phone=user.phone, code=code)
+    return otp
+
+
+def resend_phone_otp(user: User) -> OtpCode:
+    _resend_guard(user, PHONE_VERIFY)
+    return issue_phone_otp(user)
+
+
+def verify_phone_otp(user: User, code: str) -> None:
+    _consume(user, code, PHONE_VERIFY)
+    if not user.is_phone_verified:
+        user.phone_verified_at = timezone.now()
+        user.save(update_fields=["phone_verified_at", "updated_at"])
+
+
+# --- Email channel -------------------------------------------------------
+
+
+def issue_email_otp(user: User) -> OtpCode:
+    otp, code = _create_code(user, EMAIL_VERIFY)
+    deliver_email_otp(email=user.email, code=code)
+    return otp
+
+
+def resend_email_otp(user: User) -> OtpCode:
+    _resend_guard(user, EMAIL_VERIFY)
+    return issue_email_otp(user)
+
+
+def verify_email_otp(user: User, code: str) -> None:
+    _consume(user, code, EMAIL_VERIFY)
+    if not user.is_email_verified:
+        user.email_verified_at = timezone.now()
+        user.save(update_fields=["email_verified_at", "updated_at"])
+
+
+# --- Shared verification core --------------------------------------------
+
+
+def _consume(user: User, code: str, purpose: str) -> None:
+    """Validate a code against the user's latest unconsumed OTP for `purpose`.
+
+    On success the OTP is consumed. A wrong code increments the attempt counter;
+    once attempts hit the cap the code is unusable and a new one is required.
     """
     otp = (
         OtpCode.objects.filter(user=user, purpose=purpose, consumed_at__isnull=True)
@@ -85,9 +126,6 @@ def verify_otp(user: User, code: str, purpose: str = DEFAULT_OTP_PURPOSE) -> Non
     if hmac.compare_digest(otp.code_hash, hash_code(code)):
         otp.consumed_at = timezone.now()
         otp.save(update_fields=["consumed_at", "updated_at"])
-        if not user.is_phone_verified:
-            user.phone_verified_at = timezone.now()
-            user.save(update_fields=["phone_verified_at", "updated_at"])
         return
 
     otp.attempts += 1

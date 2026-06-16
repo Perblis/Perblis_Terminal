@@ -44,7 +44,9 @@ def request_reset(*, email: str) -> None:
         token_hash=_hash_token(raw_token),
         expires_at=timezone.now() + RESET_TTL,
     )
-    transaction.on_commit(lambda: deliver_password_reset(to=user.email, reset_url=_reset_url(raw_token)))
+    transaction.on_commit(
+        lambda: deliver_password_reset(to=user.email, reset_url=_reset_url(raw_token))
+    )
 
 
 @transaction.atomic

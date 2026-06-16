@@ -45,6 +45,16 @@ def test_unverified_phone_blocks_login(api, password):
     assert resp.json()["error"]["code"] == "phone_not_verified"
 
 
+def test_unverified_email_blocks_login(api, password):
+    # Phone verified but email not → login still blocked (Basic = OTP + email).
+    from accounts.factories import UserFactory
+
+    u = UserFactory(email_unverified=True)
+    resp = _login(api, u.email, password)
+    assert resp.status_code == 403
+    assert resp.json()["error"]["code"] == "email_not_verified"
+
+
 def test_suspended_user_rejected_at_login(api, user, password):
     user.suspended_at = timezone.now()
     user.save(update_fields=["suspended_at"])

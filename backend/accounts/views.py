@@ -25,7 +25,7 @@ from accounts.integrations import media
 from accounts.models import User
 from accounts.services import deletion, login, otp, password_reset, registration, verification
 from accounts.services.tokens import TerminalTokenRefreshSerializer, tokens_for_user
-from accounts.throttles import OtpSendThrottle
+from accounts.throttles import EmailOtpSendThrottle, OtpSendThrottle
 
 
 class RegisterView(GenericAPIView):
@@ -58,7 +58,7 @@ class OtpVerifyView(GenericAPIView):
         user = User.objects.filter(phone=data.validated_data["phone"]).first()
         if user is None:
             raise OtpInvalid()
-        otp.verify_otp(user, data.validated_data["code"])
+        otp.verify_phone_otp(user, data.validated_data["code"])
         return Response({"detail": "Phone verified."}, status=status.HTTP_200_OK)
 
 
@@ -72,9 +72,40 @@ class OtpResendView(GenericAPIView):
         data.is_valid(raise_exception=True)
         user = User.objects.filter(phone=data.validated_data["phone"]).first()
         # No enumeration: respond identically whether the phone exists or not.
+        # Delivery failures DO surface (OtpDeliveryFailed) — phone never fails silently.
         if user is not None and not user.is_phone_verified:
-            otp.resend_otp(user)
+            otp.resend_phone_otp(user)
         return Response({"detail": "If the number is registered, a code was sent."})
+
+
+class EmailOtpVerifyView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = s.EmailOtpVerifySerializer
+    throttle_scope = "auth"
+
+    def post(self, request):
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = User.objects.filter(email__iexact=data.validated_data["email"]).first()
+        if user is None:
+            raise OtpInvalid()
+        otp.verify_email_otp(user, data.validated_data["code"])
+        return Response({"detail": "Email verified."}, status=status.HTTP_200_OK)
+
+
+class EmailOtpResendView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = s.EmailOtpResendSerializer
+    throttle_classes = [EmailOtpSendThrottle]
+
+    def post(self, request):
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = User.objects.filter(email__iexact=data.validated_data["email"]).first()
+        # No enumeration: respond identically whether the email exists or not.
+        if user is not None and not user.is_email_verified:
+            otp.resend_email_otp(user)
+        return Response({"detail": "If the email is registered, a code was sent."})
 
 
 class LoginView(GenericAPIView):

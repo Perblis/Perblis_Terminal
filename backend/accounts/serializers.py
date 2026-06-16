@@ -96,6 +96,15 @@ class OtpResendSerializer(serializers.Serializer):
         return normalize_ng_phone(value)
 
 
+class EmailOtpVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+
+
+class EmailOtpResendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)
@@ -129,6 +138,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class MeSerializer(serializers.ModelSerializer):
     is_verified = serializers.BooleanField(read_only=True)
     is_phone_verified = serializers.BooleanField(read_only=True)
+    is_email_verified = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
@@ -141,6 +151,7 @@ class MeSerializer(serializers.ModelSerializer):
             "is_hirer",
             "account_level",
             "is_phone_verified",
+            "is_email_verified",
             "is_verified",
         ]
         read_only_fields = [

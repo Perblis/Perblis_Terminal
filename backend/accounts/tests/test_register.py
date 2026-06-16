@@ -36,9 +36,13 @@ def test_register_creates_hirer_basic_with_consent(api, django_capture_on_commit
     assert user.phone == "+2348031234567"  # normalised to E.164
     assert user.tos_accepted_at is not None and user.privacy_accepted_at is not None
     assert not user.is_phone_verified
-    # OTP issued and welcome email dispatched on commit.
-    assert OtpCode.objects.filter(user=user).count() == 1
+    assert not user.is_email_verified
+    # A phone OTP and an email OTP are issued (one per channel), plus the
+    # welcome email. The phone code is delivered by SMS, never email.
+    assert OtpCode.objects.filter(user=user, purpose="phone_verify").count() == 1
+    assert OtpCode.objects.filter(user=user, purpose="email_verify").count() == 1
     assert any("Welcome" in m.subject for m in mail.outbox)
+    assert any("verification code" in m.subject.lower() for m in mail.outbox)
 
 
 def test_register_rejects_duplicate_email(api, user):

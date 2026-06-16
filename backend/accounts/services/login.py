@@ -18,6 +18,7 @@ from django.core.cache import cache
 from accounts.errors import (
     AccountDeleted,
     AccountSuspended,
+    EmailNotVerified,
     InvalidCredentials,
     LoginLocked,
     PhoneNotVerified,
@@ -78,8 +79,11 @@ def authenticate(*, request, email: str, password: str) -> User:
         raise AccountDeleted()
     if user.is_suspended:
         raise AccountSuspended()
+    # Basic = OTP + email (FSD §4.1): both channels must be verified.
     if not user.is_phone_verified:
         raise PhoneNotVerified()
+    if not user.is_email_verified:
+        raise EmailNotVerified()
 
     _clear_failures(ip)
     return user

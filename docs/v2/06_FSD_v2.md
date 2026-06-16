@@ -111,8 +111,8 @@ Rules:
 The ₦250k Basic cap is evaluated at request time against `hire_value`; the request screen surfaces the verification prompt when exceeded.
 
 ### 4.2 Registration & authentication
-- Register: full name, email (unique), Nigerian phone (unique, E.164 normalised), password ≥8 chars incl. 1 uppercase + 1 number. **Real SMS OTP via Termii** (6 digits, 10-min expiry, 3 resends/hour, 5 verify attempts then new code required). Welcome email via Resend.
-- Login: email+password → JWT access (60 min) + refresh (7 days, rotating, blacklist on logout). 5 failed logins / 15-min IP lockout. Password reset: single-use emailed link, 1-hour expiry, invalidates sessions.
+- Register: full name, email (unique), Nigerian phone (unique, E.164 normalised), password ≥8 chars incl. 1 uppercase + 1 number. **Both channels verified independently** (6-digit OTP each, 10-min expiry, 3 resends/hour, 5 verify attempts then new code): the **phone** code is sent **only by SMS via Termii**, the **email** code **only by email via Resend** — codes are never crossed. Phone delivery never fails silently: if SMS can't be sent it surfaces an error rather than substituting another channel (dev without keys prints to console). Welcome email via Resend.
+- Login: email+password → JWT access (60 min) + refresh (7 days, rotating, blacklist on logout). Requires **both** phone and email verified (Basic = OTP + email, §4.1). 5 failed logins / 15-min IP lockout. Password reset: single-use emailed link, 1-hour expiry, invalidates sessions.
 - JWT payload: `user_id, is_supplier, is_hirer, account_level, is_active`.
 - One account per person (PB §2.4). Suspension blocks login, hides listings, freezes payouts. Deletion is soft (30-day recovery) then hard, except: financial records retained 7 years, verification documents 5 years (NDPR).
 
