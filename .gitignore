@@ -69,5 +69,6 @@ packages/tokens/admin.css
 Thumbs.db
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
