@@ -112,8 +112,9 @@ FSD §3.1 worked examples are the canonical test vectors; add hypothesis propert
 
 ### 3.3 Schema (normative; all tables UUID PK + timestamps unless noted)
 
-**users** — email citext uniq · phone uniq (E.164) · password (bcrypt 12) · is_supplier, is_hirer · account_level enum(basic, verified, business_verified) · is_active · suspended_at/reason · deleted_at (soft).
-**otp_codes** — user FK · code_hash · purpose · expires_at · attempts. (Rate limits enforced in service.)
+**users** — full_name · email citext uniq · phone uniq (E.164) · password (bcrypt 12) · is_supplier, is_hirer · account_level enum(basic, verified, business_verified) · is_active · phone_verified_at · tos_accepted_at, privacy_accepted_at (NDPR consent) · token_version (session-invalidation lever, carried as the JWT `tv` claim) · suspended_at/reason · deleted_at (soft) · purged_at (set by the daily purge after PII scrub).
+**otp_codes** — user FK · code_hash (HMAC-SHA256, no plaintext at rest) · purpose · expires_at · attempts · consumed_at. (Rate limits enforced in service.)
+**password_reset_tokens** — user FK · token_hash · expires_at (1h) · used_at (single-use).
 **supplier_profiles** — user 1:1 · business_name/description/logo_key · bank_name · `bank_account_number_enc` (Fernet) · bank_account_name · notif prefs (4 × bool) · strike_count.
 **yards** — supplier FK · name · `point geography(Point,4326)` GIST · address_text · city.
 **spec_templates** — asset_class · asset_type · version · `fields jsonb` (defs per doc 05) · uniq(class, type, version). Seeded by data migration from `docs/v2/05`.
@@ -129,7 +130,7 @@ FSD §3.1 worked examples are the canonical test vectors; add hypothesis propert
 **payouts** — hire FK uniq · supplier FK · amount · state(pending, due, paid, frozen) · paid_ref · paid_at · frozen_reason.
 **conversations** — kind(enquiry, hire) · listing FK null · hire FK null uniq · supplier FK, hirer FK · partial uniq (listing, hirer) where kind=enquiry and listing not null.
 **messages** — conversation FK · sender FK · body · body_masked null · sent_at · read_at null. Serving rule: `body_masked or body` until conversation unmask condition (hire paid); enquiry conversations always masked.
-**verification_requests** — user FK · kind(identity, business) · doc_keys jsonb (private bucket) · state(pending, approved, rejected) · reviewer FK null · reason.
+**verification_requests** — user FK · kind(identity, business) · doc_keys jsonb (private bucket) · state(pending, approved, rejected) · reviewer FK null · reason · rc_number (business) · decided_at. One pending request per (user, kind) (partial-unique).
 **reports** — listing FK · reporter FK · reason enum · state(open, dismissed, warned, removed) · resolution note.
 
 ### 3.4 Availability & the concurrency contract
@@ -172,10 +173,12 @@ SELECT count(*) FROM hires
 - Base `/api/v1/`; OpenAPI at `/api/docs/` (drf-spectacular) — **each module's schema is published before its frontend wave starts; the schema is the cross-team handshake.**
 - Auth: `Authorization: Bearer <access>`; simplejwt rotating refresh + blacklist. Errors: `{"error":{"code","message","fields?"}}` with stable `code` strings (e.g. `availability_conflict`, `payment_window_expired`, `verification_required`, `basic_cap_exceeded`). Cursor pagination on lists. Throttles: anon search 60/min · auth 120/min · OTP send 3/h/phone · login 5/15min/IP · report 5/day/user.
 
+> **Wave 1 build notes (accounts, shipped):** the `login 5/15min/IP` limit is realised as two complementary mechanisms — a coarse `login` request-throttle (5/min) plus a cache-based **failure** lockout (5 failures / 15 min / IP). Session invalidation on logout-all / password-reset-confirm uses a `token_version` (`tv`) claim checked in a custom `JWTAuthentication`, so access tokens die immediately (blacklist alone only kills refresh). OTP codes are stored HMAC-hashed. `me/verification` accepts **direct multipart** uploads (the generic `media/presign` flow is deferred to Wave 2); private docs are served via 15-min presigned GETs (R2) or an Ops-only signed stream view (local dev). The lockout cache is per-process in dev — prod multi-worker needs a shared cache (DB-cache, no Redis) before launch. New runtime deps: `boto3` (R2), `httpx` (Termii/Resend).
+
 | Area | Endpoints |
 |---|---|
 | auth | `POST register` · `POST otp/verify` · `POST otp/resend` · `POST login` · `POST token/refresh` · `POST logout` · `POST password-reset` · `POST password-reset/confirm` |
-| me | `GET/PATCH me` · `POST me/activate-supplier` · `POST me/verification` (presigned docs) · `GET me/verification` |
+| me | `GET/PATCH me` · `DELETE me` (soft-delete, 30-day recovery; blocked by `active_hire_guard`) · `POST me/activate-supplier` · `POST me/verification` (docs to private bucket) · `GET me/verification` |
 | suppliers | `GET/PATCH suppliers/me/profile` · `GET/POST yards` · `PATCH/DELETE yards/:id` · `GET storefronts/:supplier_id` (public) |
 | listings | `GET/POST listings` (mine) · `GET listings/:id` (public if Live) · `PATCH listings/:id` · `POST :id/publish|pause|archive|duplicate` · `POST :id/photos` (presign+attach) · `PATCH :id/photos/order` · `POST :id/reports` · `GET spec-templates?class=&type=` |
 | search | `GET search/map` · `GET search/list` (same params + cursor + group_by=asset\|location) |

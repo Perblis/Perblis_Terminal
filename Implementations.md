@@ -8,7 +8,7 @@ the session-start protocol that drives this file live in `CLAUDE.md`.
 
 ## Current status — _keep this section current_
 
-**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) implemented on branch `claude/festive-sagan-ig5yk5`** — founder-approved 2026-06-16; PR open, awaiting CI + review/merge.
+**Wave:** Wave 0 built + deployed. **Wave 1 (accounts/auth/verification) MERGED to `main`** (PR #7, 2026-06-16) — auto-deploys backend. TSD §3.3/§3.8 reconciled to match (PR pending).
 
 - **Built:** backend `core`; `accounts` now full Wave 1 — register + Termii OTP, JWT login/refresh/logout, password reset, me/roles, verification + Ops admin queue, soft-delete + purge. `packages/tokens`; `portal` hello-world; CI green on `main`.
 - **Not built:** domain apps `suppliers listings search hires payments messaging ops` still empty (Waves 2+).
@@ -17,7 +17,7 @@ the session-start protocol that drives this file live in `CLAUDE.md`.
 - **Decisions since specs:** D-017 = MVP payment provider **Bachs.io** (collect-only), supersedes Paystack in D-006; integration lands in Wave 4.
 
 **Next:**
-1. CI green on the Wave 1 PR → review → merge; set live Termii/Resend/R2 keys in Railway; run the founder demo (register→OTP→verify→login→submit ID→approve→Verified).
+1. Set live Termii/Resend/R2 keys in Railway; run the founder demo (register→OTP→verify→login→submit ID→approve→Verified).
 2. Finish Wave 0 exit — deploy the Supplier Portal to Cloudflare Workers.
 3. **Wave 2** — _gated, needs founder approval_.
 
@@ -89,3 +89,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder approved starting Wave 1 (D: 2026-06-16). Builds the identity foundation Waves 2/4/7/8 depend on; contract freezes at wave end.
 - change_ref: 2026-06-16 06:30 - Session-start protocol + progress-tracking convention
 - notes: All gates green locally — 80 tests / 93% cov (gate 70%), ruff+format, mypy, makemigrations --check, .env.example. OpenAPI committed at backend/openapi/schema.yml (auth/* + me + verification, frozen). Dev integrations only — set Termii/Resend/R2 keys in Railway for the prod demo. SPEC GAPS flagged in PR: DELETE /api/v1/me missing from TSD §3.8; added User columns (full_name, phone_verified_at, consent, token_version, purged_at); new deps boto3+httpx; dedicated PasswordResetToken model; direct-multipart verification upload (generic presign deferred to Wave 2); login-lockout(failures) vs login throttle(requests) are complementary; prod needs a shared cache (DB-cache) for multi-worker lockout. Tests use local PostGIS — env injects a remote Supabase DATABASE_URL that can't build a test DB; override DATABASE_URL to localhost when running tests/migrations locally.
+
+## 2026-06-16 10:50 - TSD reconciliation for Wave 1 deltas
+- tag: DECISION
+- area: docs/v2/07_TSD.md (§3.3 schema, §3.8 inventory)
+- summary: Closed the spec gaps flagged when Wave 1 merged. §3.8 inventory now lists DELETE me (soft-delete + active_hire_guard). §3.3 users gains full_name, phone_verified_at, consent timestamps, token_version, purged_at; otp_codes notes HMAC code_hash + consumed_at; added password_reset_tokens; verification_requests gains rc_number/decided_at + one-pending-per-kind. Added a "Wave 1 build notes" callout: login throttle(5/min)+failure-lockout(5/15min) split, tv-claim session invalidation, direct-multipart verification upload (presign deferred to Wave 2), prod shared-cache note, boto3+httpx deps.
+- reason: Founder requested reconciling the implemented-vs-spec deltas in the docs (PR #7 follow-up item).
+- change_ref: 2026-06-16 07:30 - Wave 1: accounts identity, auth, verification
+- notes: PDF mirrors in docs/v2/pdf/ NOT regenerated (scripts/md2pdf.py) — run if the PDF snapshot matters. No code change.
