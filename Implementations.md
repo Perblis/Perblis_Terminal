@@ -97,3 +97,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder requested reconciling the implemented-vs-spec deltas in the docs (PR #7 follow-up item).
 - change_ref: 2026-06-16 07:30 - Wave 1: accounts identity, auth, verification
 - notes: PDF mirrors in docs/v2/pdf/ NOT regenerated (scripts/md2pdf.py) — run if the PDF snapshot matters. No code change.
+
+## 2026-06-16 12:45 - Wave 1 test run + bcrypt dependency fix
+- tag: FIX
+- area: backend/pyproject.toml, backend/uv.lock
+- summary: Ran full Wave 1 test suite locally (80 tests, 93% cov, ruff/mypy/migrations green). Found runtime registration broken in dev/prod settings: `BCryptSHA256PasswordHasher` requires the `bcrypt` package but it was missing from dependencies (tests masked this via MD5 hasher). Added `bcrypt>=4.2`; verified register → OTP verify → login smoke test passes.
+- reason: User requested Wave 1 tests and functional verification.
+- change_ref: 2026-06-16 07:30 - Wave 1: accounts identity, auth, verification
+- notes: Local test env needs PostGIS (`DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal`). Integration keys (Termii/Resend/R2) optional in dev — console/Mailpit fallbacks work. PR: cursor/wave1-test-bcrypt-fix-5d9a.
