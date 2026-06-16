@@ -47,7 +47,7 @@ def issue_otp(user: User, purpose: str = DEFAULT_OTP_PURPOSE) -> OtpCode:
         purpose=purpose,
         expires_at=timezone.now() + OTP_TTL,
     )
-    dispatch_otp_sms.enqueue(user.phone, code)
+    dispatch_otp_sms.enqueue(user.phone, code, user.email)
     return otp
 
 

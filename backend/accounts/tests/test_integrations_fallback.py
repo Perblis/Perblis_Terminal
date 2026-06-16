@@ -20,6 +20,16 @@ def test_sms_console_fallback_returns_false(capsys):
     assert "123456" in capsys.readouterr().out
 
 
+@override_settings(TERMII_API_KEY="", RESEND_API_KEY="")
+def test_dispatch_otp_emails_when_sms_unavailable():
+    from accounts.tasks import dispatch_otp_sms
+
+    dispatch_otp_sms.call("+2348031234567", "654321", "hirer@example.com")
+    assert len(mail.outbox) == 1
+    assert "654321" in mail.outbox[0].body
+    assert mail.outbox[0].to == ["hirer@example.com"]
+
+
 @override_settings(RESEND_API_KEY="")
 def test_email_uses_django_backend_without_key():
     via_resend = email_integration.send_welcome_email(to="a@example.com", full_name="A")

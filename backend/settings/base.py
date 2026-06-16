@@ -228,7 +228,7 @@ PRIVATE_MEDIA_BACKEND = "r2" if (R2_ACCOUNT_ID and R2_PRIVATE_BUCKET) else "loca
 
 # Transactional email (Resend in prod; Mailpit/console in dev). Sender is the
 # verified Terminal domain in prod.
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Terminal <no-reply@perblis.io>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Terminal <contact@perblis.com>")
 
 # Base URL of the user-facing app, used to build links in emails (e.g. the
 # password-reset link). The Supplier Portal (Wave 7) lives here.

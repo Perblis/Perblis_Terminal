@@ -59,6 +59,18 @@ def send_welcome_email(*, to: str, full_name: str) -> bool:
     )
 
 
+def send_otp_email(*, to: str, code: str) -> bool:
+    """Deliver an OTP by email when SMS is unavailable (dev/demo fallback)."""
+    return send_email(
+        to=to,
+        subject="Your Terminal verification code",
+        body=(
+            f"Your verification code is {code}.\n\n"
+            "It expires in 10 minutes. Enter it in the app to verify your phone.\n"
+        ),
+    )
+
+
 def send_password_reset_email(*, to: str, reset_url: str) -> bool:
     return send_email(
         to=to,
