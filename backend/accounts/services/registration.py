@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from accounts.services.otp import issue_otp
-from accounts.tasks import send_welcome_email
+from accounts.services.delivery import deliver_welcome
 
 
 @transaction.atomic
@@ -37,5 +37,5 @@ def register_user(
     # Issue OTP + welcome email after the row commits so the worker never races
     # an uncommitted user.
     transaction.on_commit(lambda: issue_otp(user))
-    transaction.on_commit(lambda: send_welcome_email.call(user.email, user.full_name))
+    transaction.on_commit(lambda: deliver_welcome(to=user.email, full_name=user.full_name))
     return user

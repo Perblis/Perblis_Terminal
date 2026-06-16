@@ -25,10 +25,10 @@ SOFT_DELETE_RETENTION = timedelta(days=30)
 
 @task()
 def dispatch_otp_sms(phone: str, code: str, email: str = "") -> None:
-    """Send OTP via SMS; email it too when no SMS provider is configured."""
-    sent_via_provider = sms_integration.send_otp_sms(phone, code)
-    if not sent_via_provider and email:
-        email_integration.send_otp_email(to=email, code=code)
+    """Worker entrypoint — delegates to inline delivery."""
+    from accounts.services.delivery import deliver_otp
+
+    deliver_otp(phone=phone, code=code, email=email)
 
 
 @task()

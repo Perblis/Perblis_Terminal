@@ -19,7 +19,7 @@ from django.utils.crypto import salted_hmac
 from accounts.enums import OtpPurpose
 from accounts.errors import OtpAttemptsExceeded, OtpExpired, OtpInvalid, OtpResendThrottled
 from accounts.models import OtpCode, User
-from accounts.tasks import dispatch_otp_sms
+from accounts.services.delivery import deliver_otp
 
 OTP_LENGTH = 6
 OTP_TTL = timedelta(minutes=10)
@@ -47,7 +47,7 @@ def issue_otp(user: User, purpose: str = DEFAULT_OTP_PURPOSE) -> OtpCode:
         purpose=purpose,
         expires_at=timezone.now() + OTP_TTL,
     )
-    dispatch_otp_sms.call(user.phone, code, user.email)
+    deliver_otp(phone=user.phone, code=code, email=user.email)
     return otp
 
 
