@@ -138,6 +138,14 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - change_ref: 2026-06-16 13:20 - Two-channel verification (separate email + phone OTP)
 - notes: Next instance: read Implementations.md → design.md → docs/waves/wave-2.md → FSD/TSD §5–6. Wave 1 auth contract is frozen (breaking it needs founder sign-off). Known non-blocking nit recorded: send_otp_email copy says "phone" instead of "email". Local DB for tests needs PostGIS + DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal (env injects a remote Supabase URL that can't build a test DB).
 
+## 2026-06-17 - Wave 2 Slice 0: media presign pipeline + supplier profile
+- tag: FEATURE
+- area: backend/core (media.py, fields.py, encryption.py, views.py, serializers.py, urls.py, tests/test_media.py), backend/suppliers (models, services/profile, serializers, views, urls, admin, factories, migrations/0001, tests), backend/conftest.py, settings/base.py, backend/openapi/schema.yml
+- summary: First Wave 2 slice. Added the cross-cutting media pipeline `POST /api/v1/media/presign` (kind-scoped presigned PUT: listing_photo/avatar/logo/verification_doc/handover_photo with per-kind content-type + size caps per TSD §3.9; public vs private bucket; stable codes media_kind_invalid/media_content_type_invalid/media_too_large) in `core/media.py`, plus dev/CI local upload+serve receivers (excluded from schema) so the round-trip works without R2. Added `core.encryption` (Fernet, FIELD_ENCRYPTION_KEY with SECRET_KEY-derived dev fallback) + `core.fields.EncryptedTextField`. Built `suppliers.SupplierProfile` (business name, description, logo_key, bank_name, bank_account_number_enc **encrypted at rest**, bank_account_name, 4 notif bools, strike_count) with `GET/PATCH /api/v1/suppliers/me/profile` (IsSupplier; bank number write-only in / masked `****1234` out; is_complete gate helper for publish). Added shared root `conftest.py` (api/auth/supplier/hirer fixtures).
+- reason: Wave 2 §2.1 + §2.5 — supplier business profile with encrypted bank details and the media pipeline every later slice (logos, listing photos) consumes.
+- change_ref: 2026-06-16 14:00 - Wave 1 close-out + Wave 2 handoff doc sync
+- notes: Green locally — 107 tests / 91.67% cov, ruff+format+mypy clean, makemigrations --check clean, OpenAPI regenerated (0 errors). Pinned ENUM_NAME_OVERRIDES so the new media `kind` enum (MediaKindEnum) does NOT rename the frozen Wave-1 verification `KindEnum` — verified no `kind` drift vs main. Local test/dev DB needs PostGIS + `DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal` and `DJANGO_SETTINGS_MODULE=settings.test` (env injects a remote Supabase URL + config.settings.production that must be overridden). Next: Slice 1 — Yards.
+
 ## 2026-06-17 - Add "prepare for handoff" protocol to CLAUDE.md
 - tag: CHORE
 - area: CLAUDE.md (new "Handoff protocol" section)

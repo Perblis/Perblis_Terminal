@@ -370,6 +370,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerificationRequest'
           description: ''
+  /api/v1/media/presign:
+    post:
+      operationId: media_presign_create
+      tags:
+      - media
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaPresign'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MediaPresign'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MediaPresign'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaPresignResponse'
+          description: ''
+  /api/v1/suppliers/me/profile:
+    get:
+      operationId: suppliers_me_profile_retrieve
+      tags:
+      - suppliers
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierProfile'
+          description: ''
+    patch:
+      operationId: suppliers_me_profile_partial_update
+      tags:
+      - suppliers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierProfile'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierProfile'
+          description: ''
 components:
   schemas:
     AccountLevelEnum:
@@ -477,6 +541,51 @@ components:
       - is_supplier
       - is_verified
       - phone
+    MediaKindEnum:
+      enum:
+      - avatar
+      - handover_photo
+      - listing_photo
+      - logo
+      - verification_doc
+      type: string
+      description: |-
+        * `avatar` - avatar
+        * `handover_photo` - handover_photo
+        * `listing_photo` - listing_photo
+        * `logo` - logo
+        * `verification_doc` - verification_doc
+    MediaPresign:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/MediaKindEnum'
+        content_type:
+          type: string
+          maxLength: 128
+        file_size:
+          type: integer
+          minimum: 1
+      required:
+      - content_type
+      - file_size
+      - kind
+    MediaPresignResponse:
+      type: object
+      properties:
+        key:
+          type: string
+        bucket:
+          type: string
+        presigned_put_url:
+          type: string
+        expires_in:
+          type: integer
+      required:
+      - bucket
+      - expires_in
+      - key
+      - presigned_put_url
     OtpResend:
       type: object
       properties:
@@ -551,6 +660,59 @@ components:
         is_verified:
           type: boolean
           readOnly: true
+    PatchedSupplierProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        business_name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        logo_key:
+          type: string
+          maxLength: 255
+        logo_url:
+          type: string
+          readOnly: true
+        bank_name:
+          type: string
+          maxLength: 100
+        bank_account_number:
+          type: string
+          writeOnly: true
+          pattern: ^\d{10}$
+        bank_account_number_masked:
+          type: string
+          readOnly: true
+        bank_account_name:
+          type: string
+          maxLength: 200
+        notif_hire_requests:
+          type: boolean
+        notif_messages:
+          type: boolean
+        notif_payouts:
+          type: boolean
+        notif_marketing:
+          type: boolean
+        strike_count:
+          type: integer
+          readOnly: true
+        is_complete:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     Register:
       type: object
       properties:
@@ -587,6 +749,67 @@ components:
         * `pending` - Pending
         * `approved` - Approved
         * `rejected` - Rejected
+    SupplierProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        business_name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        logo_key:
+          type: string
+          maxLength: 255
+        logo_url:
+          type: string
+          readOnly: true
+        bank_name:
+          type: string
+          maxLength: 100
+        bank_account_number:
+          type: string
+          writeOnly: true
+          pattern: ^\d{10}$
+        bank_account_number_masked:
+          type: string
+          readOnly: true
+        bank_account_name:
+          type: string
+          maxLength: 200
+        notif_hire_requests:
+          type: boolean
+        notif_messages:
+          type: boolean
+        notif_payouts:
+          type: boolean
+        notif_marketing:
+          type: boolean
+        strike_count:
+          type: integer
+          readOnly: true
+        is_complete:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - bank_account_number_masked
+      - created_at
+      - id
+      - is_complete
+      - logo_url
+      - strike_count
+      - updated_at
     TerminalTokenRefresh:
       type: object
       description: |-

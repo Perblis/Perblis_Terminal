@@ -205,6 +205,19 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "v1",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": "/api/v1",
+    # Stable enum component names (schema is contract-frozen per wave). Pinning
+    # both "kind" enums keeps the frozen Wave-1 `KindEnum` (verification) name
+    # intact when the Wave-2 media kind enum is introduced.
+    "ENUM_NAME_OVERRIDES": {
+        "KindEnum": "accounts.enums.VerificationKind",
+        "MediaKindEnum": [
+            "listing_photo",
+            "avatar",
+            "logo",
+            "verification_doc",
+            "handover_photo",
+        ],
+    },
 }
 
 # --- Integration keys (absent in dev => console/log fallback, never crash) ---
@@ -223,6 +236,8 @@ R2_PUBLIC_BASE_URL = env("R2_PUBLIC_BASE_URL", default="")
 R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com" if R2_ACCOUNT_ID else ""
 # Presigned-GET lifetime for private docs (TSD §3.9: 15 min).
 R2_PRESIGN_TTL = 15 * 60
+# Presigned-PUT lifetime for client direct uploads (logos, listing photos).
+MEDIA_UPLOAD_TTL = 60 * 60
 # "r2" when credentials are present, else a local-disk fallback (dev/CI).
 PRIVATE_MEDIA_BACKEND = "r2" if (R2_ACCOUNT_ID and R2_PRIVATE_BUCKET) else "local"
 
