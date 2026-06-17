@@ -74,6 +74,11 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # Serves /static/ (incl. the Ops Console theme + Django admin assets) in
+    # prod, where gunicorn would otherwise 404 them. Must sit right after
+    # SecurityMiddleware (WhiteNoise docs). Inert in dev (runserver serves
+    # static itself); the manifest storage backend is wired in prod.py only.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -88,7 +93,11 @@ WSGI_APPLICATION = "wsgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Project-level templates are searched before app templates, so this is
+        # where we override Django's own admin templates (e.g. base_site.html
+        # for the "Terminal Ops Console" branding) — app-dir loading can't, as
+        # django.contrib.admin precedes LOCAL_APPS in INSTALLED_APPS.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -146,6 +155,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Project-level static sources (the Ops Console "Heavy Duty" theme + fonts)
+# collected alongside each app's static/ at build time.
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Private verification documents land in R2 (or MEDIA_ROOT/private in dev).
 # They are NEVER served from STATIC_URL or a public bucket — access is via

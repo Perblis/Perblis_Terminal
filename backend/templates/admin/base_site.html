@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:'Terminal Ops' }}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'admin/css/heavy-duty.css' %}">{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}">
+    <span class="td-mark" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 26 26" role="img" focusable="false">
+        <rect x="0" y="0" width="26" height="26" rx="3" fill="#F59E0B"></rect>
+        <path d="M6 8 H20 V11 H15.5 V20 H10.5 V11 H6 Z" fill="#16181D"></path>
+      </svg>
+    </span>
+    <span class="td-wordmark">Terminal <strong>Ops Console</strong></span>
+  </a>
+</div>
+{% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

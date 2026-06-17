@@ -24,3 +24,13 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# WhiteNoise serves static directly from gunicorn (no CDN, within budget).
+# Compressed + content-hashed manifest gives far-future caching. Manifest
+# storage requires `collectstatic` to have run (it does in the Dockerfile) and
+# every `{% static %}` reference to resolve — so it's prod-only; dev/test keep
+# Django's default storage (no manifest needed for runserver / the test client).
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}

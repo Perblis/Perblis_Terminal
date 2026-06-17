@@ -1,0 +1,245 @@
+/* =============================================================================
+   Heavy Duty — Terminal Ops Console admin theme.
+
+   Re-skins the Django admin onto the "Heavy Duty" design system
+   (docs/v2/08_Design_System.md): industrial, legible, sturdy. It works by
+   remapping Django's own admin CSS custom properties (Django >= 4.2) onto the
+   brand palette, so the whole admin re-themes through documented variables
+   rather than brittle per-widget selectors.
+
+   Palette: amber-500 #F59E0B is accent/fill ONLY — never text on white (it
+   fails WCAG AA); links/active text use amber-600 #D97706. Ink #16181D text,
+   paper #F7F7F5 page, #D7DAE0 borders. Squared (tight radii, 1px borders),
+   high-contrast, no gradients/heavy shadows.
+   ========================================================================== */
+
+/* ---- Fonts: self-hosted, latin subset (no external CDN per design system) -- */
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/archivo-600.woff2') format('woff2'); }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/archivo-700.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/inter-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/inter-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/inter-600.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2'); }
+
+/* ---- Brand tokens + Django variable remap (light) -------------------------
+   Applied to both :root and the forced-light theme so the toggle can't
+   un-brand us (html[data-theme="light"] would otherwise win on specificity). */
+:root,
+html[data-theme="light"] {
+  /* Ops layer (mirrors packages/tokens build.ts --ops-*). */
+  --ops-bg: #F7F7F5;
+  --ops-fg: #16181D;
+  --ops-accent: #F59E0B;
+  --ops-accent-d: #D97706;
+  --ops-border: #D7DAE0;
+  --ops-hairline: #EDEEF1;
+  --ops-paper: #FFFFFF;
+  --ops-ink-700: #3A3F4A;
+  --ops-ink-500: #6B7280;
+  --ops-amber-wash: #FEF3C7;
+  --ops-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ops-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --ops-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Django admin variables → Heavy Duty. */
+  --primary: #16181D;
+  --secondary: #16181D;
+  --accent: #F59E0B;
+  --primary-fg: #FFFFFF;
+
+  --body-fg: #16181D;
+  --body-bg: #F7F7F5;
+  --body-quiet-color: #6B7280;
+  --body-medium-color: #3A3F4A;
+
+  --header-color: #FFFFFF;
+  --header-branding-color: #F59E0B;
+  --header-bg: #16181D;
+  --header-link-color: #FFFFFF;
+
+  --breadcrumbs-fg: #6B7280;
+  --breadcrumbs-link-fg: #16181D;
+  --breadcrumbs-bg: #EDEEF1;
+
+  --link-fg: #D97706;               /* amber-600 passes contrast as text */
+  --link-hover-color: #16181D;
+  --link-selected-fg: #D97706;
+
+  --hairline-color: #EDEEF1;
+  --border-color: #D7DAE0;
+
+  --button-fg: #16181D;             /* ink on amber */
+  --button-bg: #F59E0B;
+  --button-hover-bg: #D97706;
+  --default-button-bg: #16181D;     /* secondary action = ink */
+  --default-button-hover-bg: #3A3F4A;
+  --close-button-bg: #6B7280;
+  --close-button-hover-bg: #16181D;
+  --delete-button-bg: #DC2626;
+  --delete-button-hover-bg: #B91C1C;
+
+  --object-tools-fg: #16181D;
+  --object-tools-bg: #F59E0B;
+  --object-tools-hover-bg: #D97706;
+
+  --selected-row: #FEF3C7;
+  --selected-bg: #EDEEF1;
+  --darkened-bg: #EDEEF1;
+
+  --font-family-primary: var(--ops-sans);
+  --font-family-monospace: var(--ops-mono);
+}
+
+/* ---- Dark mode: keep Django's dark surfaces, carry the amber brand --------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --accent: #F59E0B;
+    --header-branding-color: #F59E0B;
+    --link-fg: #F5B43C;             /* lighter amber for contrast on dark */
+    --link-selected-fg: #F5B43C;
+    --button-bg: #F59E0B;
+    --button-fg: #16181D;
+    --button-hover-bg: #D97706;
+    --object-tools-bg: #F59E0B;
+    --object-tools-fg: #16181D;
+    --object-tools-hover-bg: #D97706;
+    --font-family-primary: var(--ops-sans);
+    --font-family-monospace: var(--ops-mono);
+  }
+}
+html[data-theme="dark"] {
+  --accent: #F59E0B;
+  --header-branding-color: #F59E0B;
+  --link-fg: #F5B43C;
+  --link-selected-fg: #F5B43C;
+  --button-bg: #F59E0B;
+  --button-fg: #16181D;
+  --button-hover-bg: #D97706;
+  --object-tools-bg: #F59E0B;
+  --object-tools-fg: #16181D;
+  --object-tools-hover-bg: #D97706;
+  --font-family-primary: var(--ops-sans);
+  --font-family-monospace: var(--ops-mono);
+}
+
+/* ---- Typography ----------------------------------------------------------- */
+body { font-family: var(--ops-sans); }
+h1, h2, h3, .module h2, .module caption, #content h1,
+.inline-group h2, fieldset h2, .dashboard .module h2 {
+  font-family: var(--ops-display);
+  letter-spacing: .2px;
+}
+
+/* ---- Header bar + branding wordmark --------------------------------------- */
+#header {
+  border-bottom: 3px solid var(--ops-accent);
+  box-shadow: none;
+}
+#branding #site-name { margin: 0; font-weight: 700; }
+#branding #site-name a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #FFFFFF;
+}
+.td-mark { display: inline-flex; }
+.td-mark svg { display: block; }
+.td-wordmark {
+  font-family: var(--ops-display);
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: none;
+}
+.td-wordmark strong { color: var(--ops-accent); font-weight: 700; }
+
+/* ---- Squared geometry: tame Django's rounded corners ---------------------- */
+.button, input[type=submit], input[type=button], .submit-row input, a.button,
+.object-tools a, .module, .form-row, fieldset.module, .results, .paginator a,
+.selector, input, select, textarea, .messagelist li, .login #content-main,
+.card, .help, ul.messagelist li {
+  border-radius: 4px;
+}
+.module, .results { border: 1px solid var(--ops-border); box-shadow: none; }
+
+/* ---- Buttons: flat, ink-on-amber ------------------------------------------ */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  background: var(--ops-accent);
+  color: var(--ops-fg);
+  border: 1px solid var(--ops-accent-d);
+  font-weight: 600;
+  text-shadow: none;
+  box-shadow: none;
+}
+.button:hover, input[type=submit]:hover, input[type=button]:hover,
+.submit-row input:hover, a.button:hover {
+  background: var(--ops-accent-d);
+  color: #FFFFFF;
+}
+.button.default, input[type=submit].default, .submit-row input.default {
+  background: var(--ops-accent);
+  color: var(--ops-fg);
+}
+.submit-row a.deletelink, .deletelink {
+  background: var(--delete-button-bg);
+  color: #FFFFFF;
+  border-radius: 4px;
+}
+
+/* ---- Object tools (Add / History) ----------------------------------------- */
+.object-tools a {
+  background: var(--ops-accent);
+  color: var(--ops-fg);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+.object-tools a:hover { background: var(--ops-accent-d); color: #FFFFFF; }
+
+/* ---- Module captions: ink data-plate bars --------------------------------- */
+.module caption, .module h2, .inline-group h2, .module caption a {
+  background: var(--ops-fg);
+  color: #FFFFFF;
+  font-family: var(--ops-display);
+  text-transform: none;
+  letter-spacing: .2px;
+}
+
+/* ---- Tables: gridlines, zebra, tabular numerals --------------------------- */
+#result_list { border-collapse: collapse; }
+#result_list thead th {
+  background: var(--ops-hairline);
+  border-bottom: 1px solid var(--ops-border);
+  color: var(--ops-ink-700);
+}
+#result_list tbody td, #result_list tbody th {
+  border-bottom: 1px solid var(--ops-hairline);
+}
+#result_list tbody tr:nth-child(even) { background: var(--ops-hairline); }
+td, th { font-variant-numeric: tabular-nums; }
+
+/* ---- "Data plate" voice: mono for ids, timestamps, money/price columns ---- */
+.field-id, .field-id a,
+td[class*="field-"][class*="_at"], td.field-created_at, td.field-updated_at,
+td.field-decided_at, td.field-last_login,
+td.field-daily_price, td.field-weekly_price, td.field-monthly_price,
+td.field-strike_count, td.field-report_count, td.field-completeness_score,
+.readonly time, code, pre {
+  font-family: var(--ops-mono);
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ---- Links ---------------------------------------------------------------- */
+a:link, a:visited { color: var(--ops-accent-d); }
+a:hover { color: var(--ops-fg); }
+#branding #site-name a:link, #branding #site-name a:visited { color: #FFFFFF; }
+
+/* ---- Messages: left status rule (Heavy Duty status hues) ------------------ */
+ul.messagelist li { border-left: 4px solid var(--ops-border); }
+ul.messagelist li.success { border-left-color: #059669; }
+ul.messagelist li.warning { border-left-color: var(--ops-accent-d); }
+ul.messagelist li.error { border-left-color: #DC2626; }
+
+/* ---- Login screen --------------------------------------------------------- */
+.login #header { justify-content: center; }
+.login #branding #site-name a { color: #FFFFFF; }
