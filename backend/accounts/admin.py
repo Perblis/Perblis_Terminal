@@ -35,7 +35,7 @@ class UserAdmin(DjangoUserAdmin):
     )
     list_filter = ("account_level", "is_supplier", "is_hirer", "is_active", "is_staff")
     search_fields = ("email", "phone", "full_name")
-    readonly_fields = ("created_at", "updated_at", "last_login", "phone_verified_at", "purged_at")
+    readonly_fields = ("created_at", "updated_at", "last_login", "purged_at")
     fieldsets = (
         (None, {"fields": ("full_name", "email", "phone", "password")}),
         ("Roles", {"fields": ("is_supplier", "is_hirer", "account_level")}),
@@ -45,6 +45,7 @@ class UserAdmin(DjangoUserAdmin):
                 "fields": (
                     "is_active",
                     "phone_verified_at",
+                    "email_verified_at",
                     "suspended_at",
                     "suspended_reason",
                     "deleted_at",
