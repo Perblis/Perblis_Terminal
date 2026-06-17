@@ -10,4 +10,6 @@ app_name = "suppliers"
 
 urlpatterns = [
     path("suppliers/me/profile", views.SupplierProfileView.as_view(), name="me-profile"),
+    path("yards", views.YardListCreateView.as_view(), name="yards"),
+    path("yards/<uuid:yard_id>", views.YardDetailView.as_view(), name="yard-detail"),
 ]

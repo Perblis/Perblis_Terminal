@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from suppliers.models import SupplierProfile
+from suppliers.models import SupplierProfile, Yard
 
 
 @admin.register(SupplierProfile)
@@ -26,3 +26,9 @@ class SupplierProfileAdmin(admin.ModelAdmin):
     @admin.display(description="Bank account number")
     def masked_bank_account_number(self, obj: SupplierProfile) -> str:
         return obj.masked_bank_account_number
+
+
+@admin.register(Yard)
+class YardAdmin(admin.ModelAdmin):
+    list_display = ("name", "supplier", "city", "created_at")
+    search_fields = ("name", "city", "supplier__email")

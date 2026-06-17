@@ -47,6 +47,12 @@ def supplier(db):
 
 
 @pytest.fixture
+def supplier2(db):
+    """A second verified supplier — for ownership-isolation tests."""
+    return UserFactory(is_supplier=True, account_level="verified")
+
+
+@pytest.fixture
 def hirer(db):
     """A plain hirer (not a supplier)."""
     return UserFactory()

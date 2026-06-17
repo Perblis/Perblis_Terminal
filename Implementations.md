@@ -153,3 +153,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder wants the handoff doc-sync routine codified so any instance runs it on command.
 - change_ref: 2026-06-16 14:00 - Wave 1 close-out + Wave 2 handoff doc sync
 - notes: Added to PR #14 (docs/wave2-handoff). Documentation convention only.
+
+## 2026-06-17 - Wave 2 Slice 1: Yards
+- tag: FEATURE
+- area: backend/suppliers (models.Yard, errors.YardHasListings, services/yards.py, serializers.YardSerializer, views Yard*View, urls, admin, factories.YardFactory, migrations/0002, tests/test_yards.py), backend/conftest.py (supplier2 fixture), .github/workflows/backend.yml (mypy now covers suppliers), backend/openapi/schema.yml
+- summary: Added Yards (FSD §5.1): `GET/POST /api/v1/yards`, `PATCH/DELETE /api/v1/yards/:id` (IsSupplier, owner-scoped). `Yard` has a `geography(Point,4326)` GIST `point`; GeoJSON in/out via rest_framework_gis GeometryField. Delete is guarded by the listing→yard FK being PROTECT (added in the listings slice) — `yard.delete()` ProtectedError surfaces as stable `yard_has_listings`. Added `nearest_yard_within` (100m auto-yard inference helper for the listing form, FSD §5.1). Extended the CI mypy step to include `suppliers`.
+- reason: Wave 2 §2.2 — supplier yards with map pins; listings attach to them next.
+- change_ref: 2026-06-17 - Wave 2 Slice 0: media presign pipeline + supplier profile
+- notes: Green locally — 114 tests / 91.53% cov, ruff+format+mypy clean, makemigrations clean, OpenAPI regenerated (yards paths added, no frozen-enum drift). Tests obtain introspected Yards via the service (typed return) not factory locals, to stay mypy-clean (factory_boy returns aren't typed for mypy). yard_has_listings block-path test lands with the listings slice (no Listing model yet). Next: Slice 2 — spec templates + seed.

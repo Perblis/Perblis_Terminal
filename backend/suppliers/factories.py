@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import factory
+from django.contrib.gis.geos import Point
 
 from accounts.factories import UserFactory
-from suppliers.models import SupplierProfile
+from suppliers.models import SupplierProfile, Yard
 
 
 class SupplierUserFactory(UserFactory):
@@ -26,3 +27,14 @@ class SupplierProfileFactory(factory.django.DjangoModelFactory):
     # Assigned plaintext; the model encrypts it at rest.
     bank_account_number_enc = "0123456789"
     bank_account_name = factory.LazyAttribute(lambda o: o.business_name)
+
+
+class YardFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Yard
+
+    supplier = factory.SubFactory(SupplierUserFactory)
+    name = factory.Sequence(lambda n: f"Yard {n}")
+    # Apapa, Lagos (lng, lat).
+    point = factory.LazyFunction(lambda: Point(3.3792, 6.4433, srid=4326))
+    city = "Lagos"

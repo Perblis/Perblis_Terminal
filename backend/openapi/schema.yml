@@ -434,6 +434,93 @@ paths:
               schema:
                 $ref: '#/components/schemas/SupplierProfile'
           description: ''
+  /api/v1/yards:
+    get:
+      operationId: yards_retrieve
+      tags:
+      - yards
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yard'
+          description: ''
+    post:
+      operationId: yards_create
+      tags:
+      - yards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Yard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Yard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Yard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yard'
+          description: ''
+  /api/v1/yards/{yard_id}:
+    patch:
+      operationId: yards_partial_update
+      parameters:
+      - in: path
+        name: yard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - yards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedYard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedYard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedYard'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yard'
+          description: ''
+    delete:
+      operationId: yards_destroy
+      parameters:
+      - in: path
+        name: yard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - yards
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
     AccountLevelEnum:
@@ -713,6 +800,47 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedYard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        point:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        address_text:
+          type: string
+          maxLength: 300
+        city:
+          type: string
+          maxLength: 120
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     Register:
       type: object
       properties:
@@ -907,6 +1035,53 @@ components:
       required:
       - documents
       - kind
+    Yard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        point:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        address_text:
+          type: string
+          maxLength: 300
+        city:
+          type: string
+          maxLength: 120
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - point
+      - updated_at
   securitySchemes:
     jwtAuth:
       type: http

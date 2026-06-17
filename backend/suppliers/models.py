@@ -10,6 +10,7 @@ details) is one of the gates a listing must pass to go Live (FSD §5.2).
 from __future__ import annotations
 
 from django.conf import settings
+from django.contrib.gis.db import models as gis_models
 from django.db import models
 
 from core.fields import EncryptedTextField
@@ -65,3 +66,30 @@ class SupplierProfile(BaseModel):
             and self.bank_account_number_enc
             and self.bank_account_name
         )
+
+
+class Yard(BaseModel):
+    """A supplier's named geographic location (FSD §5.1).
+
+    Listings attach to 0..1 yard and inherit its coordinates. A yard with
+    listings cannot be deleted — the listing→yard FK is ``PROTECT`` (added in
+    the listings slice), so the DB itself blocks the delete and the service
+    surfaces it as ``yard_has_listings``.
+    """
+
+    supplier = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="yards",
+    )
+    name = models.CharField(max_length=200)
+    point = gis_models.PointField(geography=True, srid=4326)
+    address_text = models.CharField(max_length=300, blank=True, default="")
+    city = models.CharField(max_length=120, blank=True, default="")
+
+    class Meta:
+        db_table = "yards"
+        indexes = [models.Index(fields=["supplier"])]
+
+    def __str__(self) -> str:
+        return self.name

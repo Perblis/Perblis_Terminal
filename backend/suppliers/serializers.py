@@ -8,9 +8,10 @@ The bank account number is **write-only in / masked out**: clients submit it as
 from __future__ import annotations
 
 from rest_framework import serializers
+from rest_framework_gis.fields import GeometryField
 
 from core import media
-from suppliers.models import SupplierProfile
+from suppliers.models import SupplierProfile, Yard
 
 
 class SupplierProfileSerializer(serializers.ModelSerializer):
@@ -48,3 +49,13 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
 
     def get_logo_url(self, obj: SupplierProfile) -> str:
         return media.public_url(obj.logo_key)
+
+
+class YardSerializer(serializers.ModelSerializer):
+    # GeoJSON in/out: {"type": "Point", "coordinates": [lng, lat]}.
+    point = GeometryField()
+
+    class Meta:
+        model = Yard
+        fields = ["id", "name", "point", "address_text", "city", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
