@@ -5,7 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "preDeployCommand": "python manage.py migrate --noinput && python manage.py seed_superuser",
+    "preDeployCommand": "python manage.py deploy --noinput",
     "startCommand": "/bin/sh -c \"gunicorn wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3\"",
     "healthcheckPath": "/healthz",
     "restartPolicyType": "ON_FAILURE"
