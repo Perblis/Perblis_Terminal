@@ -25,6 +25,23 @@ def test_creates_superuser(monkeypatch):
 
 
 @pytest.mark.django_db
+def test_promotes_existing_user(monkeypatch):
+    for k, v in ENV.items():
+        monkeypatch.setenv(k, v)
+    get_user_model().objects.create_user(
+        email="admin@terminal.test",
+        phone="+2348099999999",
+        password="old-password",
+    )
+    call_command("seed_superuser")
+
+    user = get_user_model().objects.get(email="admin@terminal.test")
+    assert user.is_superuser and user.is_staff
+    assert user.check_password("seed-pass-123")
+    assert user.phone == "+2348099999999"  # promotion does not rewrite phone
+
+
+@pytest.mark.django_db
 def test_is_idempotent_and_preserves_password(monkeypatch):
     for k, v in ENV.items():
         monkeypatch.setenv(k, v)
