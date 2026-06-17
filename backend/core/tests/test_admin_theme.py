@@ -30,7 +30,10 @@ def test_admin_index_is_branded_ops_console(ops_client):
     assert resp.status_code == 200
     body = resp.content.decode()
     # Lexicon: the surface is the "Ops Console", not "Django administration".
-    assert "Terminal Ops Console" in body
+    # The wordmark renders as `Terminal <strong>Ops Console</strong>`, so the
+    # contiguous text is "Ops Console"; the site title carries "Terminal Ops".
+    assert "Ops Console" in body
+    assert "Terminal Ops" in body
     assert "Django administration" not in body
 
 
