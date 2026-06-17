@@ -128,7 +128,18 @@ Backend apps (per TSD): `core accounts suppliers listings search hires payments 
 
 ## Wave gating (binding)
 
-Work proceeds in **Waves 0–9** (`docs/waves/`, TSD §10). **Never start the next wave without explicit founder approval** — finishing one wave does not authorize the next. Ship vertical slices within a wave; demonstrate the exit criterion at wave end. If a wave reveals a spec conflict, **stop and surface it** for a `DECISIONS.md` entry rather than improvising. Each wave file is the complete build brief for that wave.
+Work proceeds in **Waves 0–9** (`docs/waves/`, TSD §10). **Never start the next wave without explicit founder approval** — finishing one wave does not authorize the next. Build each wave as ordered vertical slices (see below); demonstrate the exit criterion at wave end. If a wave reveals a spec conflict, **stop and surface it** for a `DECISIONS.md` entry rather than improvising. Each wave file is the complete build brief for that wave.
+
+### Slicing within a wave
+
+A **wave** is the founder-gated unit of value with one demonstrable exit criterion; a **slice** is a vertical increment inside it that ships one real capability end-to-end (model → service → API → tests). Plan and build every wave as an ordered set of slices:
+
+- **Each slice stands alone:** it clears the full **Definition of Done** (below) on its own — lexicon-clean, money/state-machine tested with coverage gates held, OpenAPI regenerated if contracts changed (frozen contracts untouched), reversible migration, `.env.example` exhaustive — and the suite is green before the next slice begins.
+- **Land slices as clear, separately-committed vertical slices** on the wave's branch, each building on the last; append an `Implementations.md` entry per slice.
+- **Wave-frozen contracts freeze only at wave end**, so a later slice may still evolve an earlier slice's not-yet-frozen surface.
+- The slice loop never authorizes the next **wave** — that still needs explicit founder approval.
+
+Worked example — Wave 2 (Supply) shipped as: media+profile → yards → spec-templates+seed → listings CRUD → publish/photos/state-machine → reports/storefronts.
 
 ## Definition of Done (every PR)
 
