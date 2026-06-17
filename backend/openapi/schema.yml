@@ -365,6 +365,181 @@ paths:
               schema:
                 $ref: '#/components/schemas/Listing'
           description: ''
+  /api/v1/listings/{listing_id}/archive:
+    post:
+      operationId: listings_archive_create
+      description: Base for the status-action endpoints (publish / pause / archive).
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+  /api/v1/listings/{listing_id}/duplicate:
+    post:
+      operationId: listings_duplicate_create
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Duplicate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Duplicate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Duplicate'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+  /api/v1/listings/{listing_id}/pause:
+    post:
+      operationId: listings_pause_create
+      description: Base for the status-action endpoints (publish / pause / archive).
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+  /api/v1/listings/{listing_id}/photos:
+    post:
+      operationId: listings_photos_create
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoAttach'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PhotoAttach'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PhotoAttach'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingPhoto'
+          description: ''
+  /api/v1/listings/{listing_id}/photos/order:
+    patch:
+      operationId: listings_photos_order_partial_update
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - listings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoReorder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoReorder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoReorder'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListingPhotoList'
+          description: ''
+  /api/v1/listings/{listing_id}/publish:
+    post:
+      operationId: listings_publish_create
+      description: Base for the status-action endpoints (publish / pause / archive).
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
   /api/v1/me:
     get:
       operationId: me_retrieve
@@ -671,6 +846,12 @@ components:
         * `warehousing` - Warehousing & Storage
         * `terminals_yards` - Terminals & Container Yards
         * `land_staging` - Land & Staging
+    Duplicate:
+      type: object
+      properties:
+        copy_photos:
+          type: boolean
+          default: false
     EmailOtpResend:
       type: object
       properties:
@@ -765,6 +946,11 @@ components:
           items:
             $ref: '#/components/schemas/Unit'
           readOnly: true
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListingPhoto'
+          readOnly: true
         point:
           type: object
           properties:
@@ -816,6 +1002,7 @@ components:
       - id
       - monthly_price
       - monthly_price_display
+      - photos
       - point
       - spec_template_version
       - specs
@@ -886,6 +1073,29 @@ components:
       - daily_price
       - description
       - title
+    ListingPhoto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        r2_key:
+          type: string
+          maxLength: 255
+        url:
+          type: string
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        is_cover:
+          type: boolean
+      required:
+      - id
+      - position
+      - r2_key
+      - url
     Login:
       type: object
       properties:
@@ -1016,6 +1226,25 @@ components:
       required:
       - code
       - phone
+    PaginatedListingPhotoList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListingPhoto'
     PasswordResetConfirm:
       type: object
       properties:
@@ -1109,6 +1338,13 @@ components:
         is_verified:
           type: boolean
           readOnly: true
+    PatchedPhotoReorder:
+      type: object
+      properties:
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/_PhotoOrderItem'
     PatchedSupplierProfile:
       type: object
       properties:
@@ -1203,6 +1439,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PhotoAttach:
+      type: object
+      properties:
+        r2_key:
+          type: string
+          maxLength: 255
+        is_cover:
+          type: boolean
+          default: false
+      required:
+      - r2_key
     Register:
       type: object
       properties:
@@ -1501,6 +1748,21 @@ components:
       - name
       - point
       - updated_at
+    _PhotoOrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 0
+        is_cover:
+          type: boolean
+          default: false
+      required:
+      - id
+      - position
   securitySchemes:
     jwtAuth:
       type: http

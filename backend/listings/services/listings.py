@@ -15,9 +15,10 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from accounts.models import User
-from listings.enums import ListingStatus
+from listings import state
+from listings.enums import ListingStatus, ListingTier
 from listings.errors import ListingNotEditable
-from listings.models import Listing, Unit
+from listings.models import Listing, ListingPhoto, Unit
 from listings.services.geocoding import geocode
 from listings.services.specs import get_template, validate_specs
 from suppliers.models import Yard
@@ -165,3 +166,49 @@ def update_listing(*, user: User, listing_id, **fields) -> Listing:
 
     listing.save()
     return listing
+
+
+@transaction.atomic
+def transition(*, user: User, listing_id, action: str) -> Listing:
+    """Run a status transition through the state machine (the only status writer)."""
+    listing = get_object_or_404(Listing.objects.select_for_update(), id=listing_id, supplier=user)
+    return state.apply(listing, action)
+
+
+@transaction.atomic
+def duplicate_listing(*, user: User, listing_id, copy_photos: bool = False) -> Listing:
+    """Create a new Draft copying class/type, specs, pricing, units, and yard.
+
+    Tier resets to Basic. Copied photos reference the SAME public-bucket keys
+    (no re-upload) — fleet ergonomics per ux/01 F9.
+    """
+    src = get_object_or_404(Listing, id=listing_id, supplier=user)
+    dup = Listing.objects.create(
+        supplier=user,
+        yard=src.yard,
+        asset_class=src.asset_class,
+        asset_type=src.asset_type,
+        title=src.title,
+        description=src.description,
+        specs=src.specs,
+        spec_template_version=src.spec_template_version,
+        daily_price=src.daily_price,
+        weekly_price=src.weekly_price,
+        monthly_price=src.monthly_price,
+        unit_count=src.unit_count,
+        point=src.point,
+        address_text=src.address_text,
+        city=src.city,
+        status=ListingStatus.DRAFT,
+        tier=ListingTier.BASIC,
+        completeness_score=src.completeness_score,
+    )
+    Unit.objects.bulk_create([Unit(listing=dup, label=u.label) for u in src.units.all()])
+    if copy_photos:
+        ListingPhoto.objects.bulk_create(
+            [
+                ListingPhoto(listing=dup, r2_key=p.r2_key, position=p.position, is_cover=p.is_cover)
+                for p in src.photos.all()
+            ]
+        )
+    return dup

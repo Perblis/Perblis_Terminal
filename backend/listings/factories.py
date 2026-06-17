@@ -6,7 +6,7 @@ import factory
 from django.contrib.gis.geos import Point
 
 from listings.enums import AssetClass, ListingStatus
-from listings.models import Listing, SpecTemplate
+from listings.models import Listing, ListingPhoto, SpecTemplate
 from suppliers.factories import SupplierUserFactory
 
 
@@ -43,3 +43,11 @@ class ListingFactory(factory.django.DjangoModelFactory):
     unit_count = 1
     status = ListingStatus.DRAFT
     point = factory.LazyFunction(lambda: Point(3.3792, 6.4433, srid=4326))
+
+
+class ListingPhotoFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ListingPhoto
+
+    listing = factory.SubFactory(ListingFactory)
+    r2_key = factory.Sequence(lambda n: f"listings/photo-{n}.jpg")

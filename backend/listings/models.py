@@ -108,3 +108,20 @@ class Unit(BaseModel):
 
     def __str__(self) -> str:
         return self.label or f"Unit<{self.id}>"
+
+
+class ListingPhoto(BaseModel):
+    """A photo attached to a listing (≤10, ordered, one cover). ≤10 enforced
+    in the service; bytes live in the public bucket (key only here)."""
+
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="photos")
+    r2_key = models.CharField(max_length=255)
+    position = models.PositiveIntegerField(default=0)
+    is_cover = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "listing_photos"
+        ordering = ["position"]
+
+    def __str__(self) -> str:
+        return self.r2_key

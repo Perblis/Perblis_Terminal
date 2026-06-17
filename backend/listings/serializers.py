@@ -5,9 +5,10 @@ from __future__ import annotations
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
+from core import media
 from core.money import display
 from listings.enums import AssetClass
-from listings.models import Listing, SpecTemplate, Unit
+from listings.models import Listing, ListingPhoto, SpecTemplate, Unit
 
 
 class SpecTemplateSerializer(serializers.ModelSerializer):
@@ -22,6 +23,37 @@ class UnitSerializer(serializers.ModelSerializer):
         model = Unit
         fields = ["id", "label"]
         read_only_fields = ["id"]
+
+
+class ListingPhotoSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ListingPhoto
+        fields = ["id", "r2_key", "url", "position", "is_cover"]
+        read_only_fields = ["id", "url", "position"]
+
+    def get_url(self, obj: ListingPhoto) -> str:
+        return media.public_url(obj.r2_key)
+
+
+class PhotoAttachSerializer(serializers.Serializer):
+    r2_key = serializers.CharField(max_length=255)
+    is_cover = serializers.BooleanField(default=False)
+
+
+class _PhotoOrderItem(serializers.Serializer):
+    id = serializers.UUIDField()
+    position = serializers.IntegerField(min_value=0)
+    is_cover = serializers.BooleanField(default=False)
+
+
+class PhotoReorderSerializer(serializers.Serializer):
+    photos = _PhotoOrderItem(many=True, allow_empty=False)
+
+
+class DuplicateSerializer(serializers.Serializer):
+    copy_photos = serializers.BooleanField(default=False)
 
 
 class ListingCreateSerializer(serializers.Serializer):
@@ -66,6 +98,7 @@ def _naira_display(kobo: int | None) -> str | None:
 class ListingSerializer(serializers.ModelSerializer):
     point = GeometryField()
     units = UnitSerializer(many=True, read_only=True)
+    photos = ListingPhotoSerializer(many=True, read_only=True)
     daily_price_display = serializers.SerializerMethodField()
     weekly_price_display = serializers.SerializerMethodField()
     monthly_price_display = serializers.SerializerMethodField()
@@ -90,6 +123,7 @@ class ListingSerializer(serializers.ModelSerializer):
             "monthly_price_display",
             "unit_count",
             "units",
+            "photos",
             "point",
             "address_text",
             "city",

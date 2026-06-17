@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from core.permissions import IsSupplier
 from listings import serializers as s
 from listings.services import listings as listings_service
+from listings.services import photos as photos_service
 from listings.services import specs as specs_service
 
 
@@ -85,3 +86,72 @@ class ListingDetailView(GenericAPIView):
             user=request.user, listing_id=listing_id, **data.validated_data
         )
         return Response(self.get_serializer(listing).data)
+
+
+class ListingPhotoView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.PhotoAttachSerializer
+
+    @extend_schema(responses={201: s.ListingPhotoSerializer})
+    def post(self, request, listing_id):
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        photo = photos_service.attach_photo(
+            user=request.user, listing_id=listing_id, **data.validated_data
+        )
+        return Response(s.ListingPhotoSerializer(photo).data, status=status.HTTP_201_CREATED)
+
+
+class ListingPhotoReorderView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.PhotoReorderSerializer
+
+    @extend_schema(responses={200: s.ListingPhotoSerializer(many=True)})
+    def patch(self, request, listing_id):
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        photos = photos_service.reorder_photos(
+            user=request.user, listing_id=listing_id, items=data.validated_data["photos"]
+        )
+        return Response(s.ListingPhotoSerializer(photos, many=True).data)
+
+
+class _ListingActionView(GenericAPIView):
+    """Base for the status-action endpoints (publish / pause / archive)."""
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.ListingSerializer
+    action = ""
+
+    @extend_schema(request=None, responses={200: s.ListingSerializer})
+    def post(self, request, listing_id):
+        listing = listings_service.transition(
+            user=request.user, listing_id=listing_id, action=self.action
+        )
+        return Response(self.get_serializer(listing).data)
+
+
+class ListingPublishView(_ListingActionView):
+    action = "publish"
+
+
+class ListingPauseView(_ListingActionView):
+    action = "pause"
+
+
+class ListingArchiveView(_ListingActionView):
+    action = "archive"
+
+
+class ListingDuplicateView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.DuplicateSerializer
+
+    @extend_schema(responses={201: s.ListingSerializer})
+    def post(self, request, listing_id):
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        listing = listings_service.duplicate_listing(
+            user=request.user, listing_id=listing_id, copy_photos=data.validated_data["copy_photos"]
+        )
+        return Response(s.ListingSerializer(listing).data, status=status.HTTP_201_CREATED)
