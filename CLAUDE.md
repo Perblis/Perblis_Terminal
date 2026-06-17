@@ -40,6 +40,18 @@ Before acting on a task, build context and locate yourself in the build — do n
 - notes: <follow-ups, blockers, the next step>
 ```
 
+## Handoff protocol (when the founder says "prepare for handoff")
+
+When the founder asks to **"prepare for handoff"** (or "hand off", "ready for the next instance", etc.), run this checklist so a fresh instance can resume cold — then open a **docs-only draft PR** with the result. Do not start the next wave; this is documentation only.
+
+1. **Sync to latest `main`** (`git fetch` + work from a fresh branch off `origin/main`) so the snapshot reflects everything merged — including PRs merged from other instances/tools.
+2. **Reconcile docs to the code that actually shipped.** If the just-finished work changed any wave-frozen contract or schema, update the cited specs (`docs/v2/06_FSD_v2.md`, `docs/v2/07_TSD.md`) and **regenerate + commit the OpenAPI** (`backend/openapi/schema.yml`). Surface genuine spec conflicts as a `DECISIONS.md` entry rather than improvising.
+3. **`Implementations.md`** — refresh the **Current status** block (what's built/deployed, what's pending, the founder-approved **next wave** with a "read `docs/waves/wave-N.md` first" pointer, plus carry-over gotchas: frozen contracts, required prod env vars, local test-DB setup) and **append a log entry** in the standard format.
+4. **`CLAUDE.md`** — update the **"Current state of the repo"** snapshot (waves done/deployed, next wave).
+5. **`docs/waves/README.md`** — update the **status column** (✅ done · 🟡 approved & in progress · ⏸ gated).
+6. **Record known non-blocking follow-ups** (small bugs, copy nits, deferred items) in `Implementations.md` so they aren't lost.
+7. **Commit on a `docs/...` branch → push → open a draft PR.** Keep it docs-only (no behavior change). Verify the new-instance reading path resolves: Implementations.md → design.md → the next wave file → its FSD/TSD sections.
+
 ## Document authority (where truth lives)
 
 Read order for any task: `design.md` → `docs/waves/README.md` → the wave file → the FSD/TSD sections it cites → companion `docs/v2/` docs.

@@ -137,3 +137,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder is about to start Wave 2 in a fresh instance and asked for the handoff docs to be brought current.
 - change_ref: 2026-06-16 13:20 - Two-channel verification (separate email + phone OTP)
 - notes: Next instance: read Implementations.md → design.md → docs/waves/wave-2.md → FSD/TSD §5–6. Wave 1 auth contract is frozen (breaking it needs founder sign-off). Known non-blocking nit recorded: send_otp_email copy says "phone" instead of "email". Local DB for tests needs PostGIS + DATABASE_URL=postgis://postgres:postgres@localhost:5432/terminal (env injects a remote Supabase URL that can't build a test DB).
+
+## 2026-06-17 - Add "prepare for handoff" protocol to CLAUDE.md
+- tag: CHORE
+- area: CLAUDE.md (new "Handoff protocol" section)
+- summary: Documented a repeatable handoff checklist triggered when the founder says "prepare for handoff": sync to main, reconcile FSD/TSD + regenerate OpenAPI if contracts changed, refresh Implementations.md (current status + log entry), CLAUDE.md current-state, docs/waves/README.md status column, record known follow-ups, then open a docs-only draft PR.
+- reason: Founder wants the handoff doc-sync routine codified so any instance runs it on command.
+- change_ref: 2026-06-16 14:00 - Wave 1 close-out + Wave 2 handoff doc sync
+- notes: Added to PR #14 (docs/wave2-handoff). Documentation convention only.
