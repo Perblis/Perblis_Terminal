@@ -8,21 +8,27 @@ the session-start protocol that drives this file live in `CLAUDE.md`.
 
 ## Current status — _keep this section current_
 
-**Wave:** Wave 0 + Wave 1 COMPLETE (merged to `main`). **Wave 2 (Supply) is BUILT on branch `claude/kind-maxwell-6fpbb0` (draft PR #15) — all 6 slices done; awaiting CI/review/merge + founder demo + approval before Wave 3.** Local suite green (156 tests, ~91% cov).
+**Wave:** Waves 0, 1, 2 COMPLETE & merged to `main`; backend deployed on Railway. **Wave 3 (Discovery — Map Search & Yard Aggregation) is the next wave — handoff prepared, GATED on explicit founder go** (wave gating is binding: preparing this handoff is NOT approval to start coding; design.md §7). **Read `docs/waves/wave-3.md` first** (then the FSD §6 / TSD §3.1, §3.7, §3.8 sections it cites). Local suite green (~156 tests, ~91% cov).
 
-- **Built:** backend `core` + full Wave 1 `accounts`. **Wave 2 `suppliers` + `listings`:** supplier profile (Fernet-encrypted bank #), yards (PostGIS pins, delete-guard, 100m inference), 36 spec templates (doc 05 seed + idempotent command/migration), listings CRUD (6-step create, spec validation + version stamp, location precedence), publish gates via `listings/state.py` (the only status writer), photos (≤10, cover, reorder), duplicate, reports (5/day, 3-in-30 priority flag), storefronts (public; suspended→404), cross-cutting media presign pipeline (`core/media`). Migrations: accounts 0001–0005, suppliers 0001–0002, listings 0001–0005. Frozen OpenAPI `backend/openapi/schema.yml`.
-- **Not built:** domain apps `search hires payments messaging ops` still empty (Waves 3+).
-- **Deploy:** Railway api + worker + PostGIS live — `/healthz` + `/readyz` green. Prod **must** keep `TERMII_API_KEY` set (phone OTP fails loudly, no silent fallback). **Portal on Cloudflare Workers: PENDING** (Wave 0 portal exit still open).
-- **Integrations:** R2 + Resend verified working with founder keys. OTP inline (no worker): phone code SMS-only (loud `otp_delivery_failed` on prod failure; console in dev), email code email-only. `DEFAULT_FROM_EMAIL` = contact@perblis.com.
+- **Built:** backend `core` + full Wave 1 `accounts` + **Wave 2 `suppliers` + `listings`** (merged via `claude/kind-maxwell-6fpbb0`): supplier profile (Fernet-encrypted bank #), yards (PostGIS pins, delete-guard, 100m inference), 36 spec templates (doc 05 seed + idempotent command/migration), listings CRUD (6-step create, spec validation + version stamp, location precedence), publish gates via `listings/state.py` (the only status writer), photos (≤10, cover, reorder), duplicate, reports (5/day, 3-in-30 priority flag), storefronts (public; suspended→404), cross-cutting media presign pipeline (`core/media`). Migrations: accounts 0001–0005, suppliers 0001–0002, listings 0001–0005. **Frozen OpenAPI `backend/openapi/schema.yml`** (Wave 2 contracts are breaking-change-locked — search/portal consume them).
+- **Wave 2 exit:** founder demo criterion **met on prod** — full live API E2E green (profile → yard → listing → R2 photo → publish Live → duplicate → storefront). Record explicit founder sign-off when confirming Wave 3 go.
+- **Ops Console (admin):** Django admin is themed as the **"Terminal Ops Console"** (Heavy Duty CSS via WhiteNoise + manifest static storage) and **confirmed styled & live in prod** (`/admin/` 200, theme CSS served). This was **visual-only** — the functional Ops Console (queues, dashboards, 2FA, dispute tools) is still **Wave 6**.
+- **Not built:** domain apps `search hires payments messaging ops` still empty (Waves 3+). Wave 3 builds `search`.
+- **Deploy:** Railway api + worker + PostGIS live — `/healthz` + `/readyz` green. Deploy-time DB work (migrate + seed_superuser) runs via `manage.py deploy` under a Postgres advisory lock (both services' `preDeployCommand`) — race-free. **Static is baked at `docker build`** (collectstatic with build-only env, no `|| true`) so the WhiteNoise manifest ships in the image. Prod **must** keep `TERMII_API_KEY` set (phone OTP fails loudly, no silent fallback).
+- **Integrations:** R2 + Resend verified working with founder keys. OTP inline (no worker): phone code SMS-only (loud `otp_delivery_failed` on prod failure; console in dev), email code email-only. `DEFAULT_FROM_EMAIL` = contact@perblis.com. **Termii sender approval still PENDING** (real SMS returns 502); the Ops admin channel-verify is the interim path to onboard test users.
 - **Decisions since specs:** D-017 = MVP payment provider **Bachs.io** (collect-only), supersedes Paystack in D-006; integration lands in Wave 4.
 
-**Next (Wave 2 close-out, then Wave 3 once founder-approved):**
-1. Merge PR #15 (CI green locally). **Wave-end checklist:** run `manage.py seed_spec_templates` in prod (~36 templates; also applied by migration), demonstrate the founder exit criterion via the prod API, record founder approval before Wave 3 (Search/Map).
-2. DEFERRED in Wave 2 (founder call): "Other (describe)" asset type → Ops review NOT built (unknown types rejected with `invalid_asset_type`; Ops surfaces are Wave 6). Photo orphan-sweep task is a logged no-op until an upload ledger / R2 lifecycle policy lands.
-3. Known minor follow-up (non-blocking): `accounts/integrations/email.py::send_otp_email` copy still reads "verify your phone" / "fallback" — should read "verify your email". One-line copy fix.
-4. Still open from Wave 0: deploy the Supplier Portal to Cloudflare Workers.
+**Next — Wave 3 (Discovery), once founder-approved:**
+1. **Confirm founder go** for Wave 3 and record the explicit approval (and Wave 2 sign-off) before writing code.
+2. Build `search` as the wave brief's slices: `GET /api/v1/search/map` (server-aggregated yards + solo listings; response shape in TSD §3.7 is normative), `GET /api/v1/search/list` (`group_by=asset|location`, cursor pagination), `GET /api/v1/geocode` (LocationIQ proxy, key server-side, 24h cache, no Redis). PostGIS distance/viewport/★-spec filters; FSD §6 acceptance checks as named tests; P95 < 500ms on ~500 seeded listings (record the number in the PR); regenerate + freeze OpenAPI at wave end.
 
-**Live:** https://perblisterminal-production.up.railway.app/healthz
+**Carry-over follow-ups (non-blocking):**
+- `accounts/integrations/email.py::send_otp_email` copy still reads "verify your phone" / "fallback" — should read "verify your email". One-line copy fix.
+- Wave 2 DEFERRED (founder call): "Other (describe)" asset type → Ops review NOT built (unknown types rejected with `invalid_asset_type`; Ops surfaces are Wave 6). Photo orphan-sweep task is a logged no-op until an upload ledger / R2 lifecycle policy lands.
+- Still open from Wave 0: deploy the **Supplier Portal to Cloudflare Workers** (portal exit criterion).
+- Termii SMS sender approval (above) for the real phone-OTP flow.
+
+**Local test-DB:** PostGIS via `docker compose up -d`; `pytest -x` (coverage gates: 85% hires/payments, 70% overall). **Live:** https://perblisterminal-production.up.railway.app/healthz
 
 ---
 
@@ -234,3 +240,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder asked to set up their primary account as the live Wave 2 supplier demo.
 - change_ref: 2026-06-17 15:15 - FIX: promote existing SEED_SUPERUSER + prod Wave 2 E2E via Ops admin
 - notes: Storefront https://perblisterminal-production.up.railway.app/api/v1/storefronts/019ed075-5f3f-7336-8f20-334160a78c41 · Listing `019edb68-44a3-7389-8c20-702f398c7625` Live at ₦95,000/day. Fixed `admin_ops.py` login check (admin title is "Terminal Ops", not "Site administration").
+
+## 2026-06-18 15:50 - CHORE: prepare handoff for Wave 3 (Discovery)
+- tag: CHORE
+- area: Implementations.md, CLAUDE.md, docs/waves/README.md (docs-only)
+- summary: Handoff prep so a fresh instance can resume cold into Wave 3. Reconciled docs to the code that actually shipped: Waves 0–2 are merged to `main` and the backend is deployed; Wave 2's prod API E2E demo criterion was met; the Django admin "Terminal Ops Console" theme + the static-manifest 500 hotfix are merged and confirmed styled & live in prod. Refreshed the Implementations.md **Current status** block (built/deployed, Ops Console is visual-only, Wave 3 is the gated next wave with a "read docs/waves/wave-3.md first" pointer + carry-over gotchas), updated the CLAUDE.md repo-state snapshot, and set the docs/waves/README.md status column (Wave 2 ✅ done & merged; Wave 3 next, gated on explicit founder go).
+- reason: Founder asked to "prepare the handoff for wave 3."
+- change_ref: 2026-06-17 15:35 - FIX: admin 500 in prod — bake static manifest at build + leading-slash STATIC_URL
+- notes: Docs-only, no behavior change. **No OpenAPI regeneration** — nothing since Wave 2's contract freeze touched an API contract (the admin theme + static fix are non-API). Wave gating is binding: this handoff does NOT authorize Wave 3 — the next instance must confirm explicit founder approval (and record Wave 2 sign-off) before coding. New-instance reading path verified: Implementations.md → design.md → docs/waves/wave-3.md → FSD §6 / TSD §3.1, §3.7, §3.8. Opening a docs-only draft PR with this.

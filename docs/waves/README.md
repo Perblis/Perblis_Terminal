@@ -16,8 +16,8 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 |---|---|---|---|
 | 0 | [wave-0.md](wave-0.md) | Monorepo, compose, Django skeleton, tokens package, CI, prod deploy | ✅ Backend done & deployed · ⏸ Supplier-Portal Cloudflare deploy still pending |
 | 1 | [wave-1.md](wave-1.md) | Accounts: register / OTP / JWT / reset · verification requests + queue | ✅ Done & merged (PRs #7–#13; incl. independent email+phone OTP) |
-| 2 | [wave-2.md](wave-2.md) | Supply: supplier profiles, yards, spec templates, listings CRUD + publish | 🟡 Approved & starting |
-| 3 | [wave-3.md](wave-3.md) | Search: map endpoint (yard aggregation), list, filters | ⏸ Gated on Wave 2 |
+| 2 | [wave-2.md](wave-2.md) | Supply: supplier profiles, yards, spec templates, listings CRUD + publish | ✅ Done & merged; deployed (prod API E2E demo met) |
+| 3 | [wave-3.md](wave-3.md) | Search: map endpoint (yard aggregation), list, filters | ⏸ Next — handoff prepared; gated on explicit founder go |
 | 4 | [wave-4.md](wave-4.md) | Hires + money: state machine, availability, fees, Paystack, sweeps, payouts | ⏸ Gated on Wave 3 |
 | 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | ⏸ Gated on Wave 4 |
 | 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ⏸ Gated on Wave 5 |
