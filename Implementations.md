@@ -226,3 +226,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: #19's manifest storage exposed a pre-existing build-time collectstatic failure; without the baked manifest the admin 500s instead of merely being unstyled.
 - change_ref: 2026-06-17 14:40 - FEATURE: brand the Django admin as the "Terminal Ops Console" (Heavy Duty theme)
 - notes: Verified locally by reproducing the build (collectstatic under settings.prod + build env → manifest present) then rendering the admin under settings.prod WITH the manifest → theme resolves to `/static/admin/css/heavy-duty.<hash>.css`, no ValueError. WhiteNoise serves the baked STATIC_ROOT at runtime. Build-only SECRET_KEY is scoped to the RUN command (not persisted as image ENV); Railway injects real values at runtime. URGENT: prod admin is 500ing until this merges + redeploys.
+
+## 2026-06-18 - Prod demo: nwabueze@perblis.com as verified supplier
+- tag: DEPLOY
+- area: production API, scripts/admin_ops.py
+- summary: Founder manually verified phone for `nwabueze@perblis.com`; agent promoted account via Ops admin (`is_supplier`, `account_level=verified`) and completed full supplier demo on prod API — profile (Perblis Plant & Haulage), yard (Apapa Main Yard), listing (CAT 320D published Live), duplicate draft, storefront with 1 live listing. 13/13 live checks passed.
+- reason: Founder asked to set up their primary account as the live Wave 2 supplier demo.
+- change_ref: 2026-06-17 15:15 - FIX: promote existing SEED_SUPERUSER + prod Wave 2 E2E via Ops admin
+- notes: Storefront https://perblisterminal-production.up.railway.app/api/v1/storefronts/019ed075-5f3f-7336-8f20-334160a78c41 · Listing `019edb68-44a3-7389-8c20-702f398c7625` Live at ₦95,000/day. Fixed `admin_ops.py` login check (admin title is "Terminal Ops", not "Site administration").
