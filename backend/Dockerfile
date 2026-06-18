@@ -20,7 +20,16 @@ RUN uv pip install --system --no-cache .
 
 COPY . .
 
-RUN python manage.py collectstatic --noinput || true
+# Collect static (Django admin assets + the Ops Console "Heavy Duty" theme)
+# into STATIC_ROOT, baking the WhiteNoise hashed-manifest into the image so
+# the web container can serve /static/ at runtime. prod.py needs these vars to
+# import — they're build-only throwaways (Railway injects the real values at
+# runtime). No `|| true`: a broken collectstatic must fail the build, not ship
+# a manifest-less image that 500s on every admin page.
+RUN SECRET_KEY=build-only \
+    ALLOWED_HOSTS="*" \
+    CORS_ALLOWED_ORIGINS="https://build.invalid" \
+    python manage.py collectstatic --noinput
 
 EXPOSE 8000
 

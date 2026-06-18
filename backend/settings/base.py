@@ -153,7 +153,9 @@ USE_TZ = True
 
 # --- Static & media ------------------------------------------------------
 
-STATIC_URL = "static/"
+# Leading slash is required: a relative "static/" resolves against the current
+# page path (e.g. /admin/login/static/...), breaking every asset link.
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Project-level static sources (the Ops Console "Heavy Duty" theme + fonts)
 # collected alongside each app's static/ at build time.
