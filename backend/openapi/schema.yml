@@ -491,6 +491,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/HireDetail'
           description: ''
+  /api/v1/hires/{hire_id}/payment:
+    get:
+      operationId: hires_payment_retrieve
+      description: Checkout status + authorization_url for a hire (D-017).
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+          description: ''
   /api/v1/listings:
     get:
       operationId: listings_retrieve
@@ -914,6 +936,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaPresignResponse'
           description: ''
+  /api/v1/payments/webhook:
+    post:
+      operationId: payments_webhook_create
+      description: |-
+        Receive Bachs webhooks: verify the signature, dedup, 200 fast, process async.
+
+        The signature is HMAC-SHA256 over the raw body; a hire is only ever marked
+        paid by the async processor after re-verifying the charge with Bachs — never
+        from this request, and never from a client redirect.
+      tags:
+      - payments
+      security:
+      - {}
+      responses:
+        '200':
+          description: Accepted (or duplicate — idempotent).
+        '400':
+          description: Signature could not be verified.
   /api/v1/search/list:
     get:
       operationId: search_list_retrieve
@@ -2410,6 +2450,39 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PaymentStatus:
+      type: object
+      description: The hirer's view of where checkout stands (status + authorization_url).
+      properties:
+        reference:
+          type: string
+          maxLength: 64
+        state:
+          $ref: '#/components/schemas/PaymentStatusStateEnum'
+        authorization_url:
+          type: string
+        attempt:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - reference
+    PaymentStatusStateEnum:
+      enum:
+      - initiated
+      - success
+      - failed
+      - abandoned
+      type: string
+      description: |-
+        * `initiated` - Initiated
+        * `success` - Success
+        * `failed` - Failed
+        * `abandoned` - Abandoned
     PhotoAttach:
       type: object
       properties:

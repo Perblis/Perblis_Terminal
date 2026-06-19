@@ -120,9 +120,18 @@ def accept_hire(*, user: User, hire_id, acknowledgments: dict | None = None) -> 
     hire = _get_for_actor(hire_id, user, must_be_supplier=True)
     meta = {"acknowledgments": acknowledgments} if acknowledgments else {}
     state.apply(hire, "accept", actor=user, actor_kind=str(ActorKind.USER), **meta)
-    # Payment initialisation (Bachs, 4D) and the hire conversation (messaging,
-    # Wave 5) hang off acceptance; their hooks land in those slices.
+    # Open the Bachs checkout once the acceptance has committed — the external
+    # call stays out of the DB transaction. The hire conversation (messaging,
+    # Wave 5) hangs off the same commit; its hook lands there.
+    transaction.on_commit(lambda: _init_payment(hire))
     return hire
+
+
+def _init_payment(hire: Hire) -> None:
+    """Initialise the checkout post-commit; import locally to avoid a cycle."""
+    from payments.services import initialize_payment
+
+    initialize_payment(hire)
 
 
 @transaction.atomic

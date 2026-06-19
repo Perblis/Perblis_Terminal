@@ -18,6 +18,7 @@ urlpatterns = [
     path("", include("listings.urls")),
     path("", include("search.urls")),
     path("", include("hires.urls")),
+    path("", include("payments.urls")),
     # Cross-cutting media pipeline (TSD §3.9).
     path("media/presign", MediaPresignView.as_view(), name="media-presign"),
     # Local-mode (dev/CI) upload/serve receivers; prod uses R2 directly.

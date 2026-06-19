@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from core.permissions import IsHirer
 from hires import serializers as s
 from hires import services
+from payments.serializers import PaymentStatusSerializer
 
 
 class HireListCreateView(GenericAPIView):
@@ -102,3 +103,20 @@ class HireCancelView(GenericAPIView):
             user=request.user, hire_id=hire_id, reason=data.validated_data["reason"]
         )
         return Response(self.get_serializer(hire).data)
+
+
+class HirePaymentView(GenericAPIView):
+    """Checkout status + authorization_url for a hire (D-017)."""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = PaymentStatusSerializer
+
+    def get(self, request, hire_id):
+        from payments.errors import NoPayment
+        from payments.services import latest_payment
+
+        hire = services.get_hire(user=request.user, hire_id=hire_id)
+        payment = latest_payment(hire)
+        if payment is None:
+            raise NoPayment()
+        return Response(self.get_serializer(payment).data)

@@ -14,4 +14,5 @@ urlpatterns = [
     path("hires/<uuid:hire_id>/accept", views.HireAcceptView.as_view(), name="accept"),
     path("hires/<uuid:hire_id>/decline", views.HireDeclineView.as_view(), name="decline"),
     path("hires/<uuid:hire_id>/cancel", views.HireCancelView.as_view(), name="cancel"),
+    path("hires/<uuid:hire_id>/payment", views.HirePaymentView.as_view(), name="payment"),
 ]
