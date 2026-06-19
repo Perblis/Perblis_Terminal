@@ -120,7 +120,12 @@ class HirePaymentView(GenericAPIView):
         payment = latest_payment(hire)
         if payment is None and hire.status == HireStatus.ACCEPTED:
             # Recovery: checkout init runs post-commit; retry if the Bachs call failed.
-            payment = initialize_payment(hire)
+            from payments.errors import CheckoutUnavailable
+
+            try:
+                payment = initialize_payment(hire)
+            except CheckoutUnavailable:
+                raise
         if payment is None:
             raise NoPayment()
         return Response(self.get_serializer(payment).data)

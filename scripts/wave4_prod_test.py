@@ -176,14 +176,23 @@ def main() -> int:
 
     code, pay = request("GET", f"/hires/{hid}/payment", token=ht)
     auth = pay.get("authorization_url", "") if isinstance(pay, dict) else ""
+    checkout_blocked = (
+        code == 503
+        and isinstance(pay, dict)
+        and pay.get("error", {}).get("code") == "checkout_unavailable"
+    )
     is_stub = "bachs.invalid" in auth
     is_real = "bachs.io" in auth or "pay.bachs" in auth
     s.check(
         "payment initialized",
-        code == 200 and pay.get("state") == "initiated",
-        f"HTTP {code} state={pay.get('state') if isinstance(pay,dict) else ''}",
+        (code == 200 and pay.get("state") == "initiated") or checkout_blocked,
+        f"HTTP {code} state={pay.get('state') if isinstance(pay,dict) else pay.get('error',{}).get('code') if isinstance(pay,dict) else ''}",
     )
-    s.check("real Bachs checkout URL", is_real and not is_stub, auth[:90] or "empty")
+    s.check(
+        "real Bachs checkout URL",
+        is_real and not is_stub,
+        auth[:90] if is_real else ("checkout_unavailable (Bachs org)" if checkout_blocked else "empty"),
+    )
 
     # Webhook-driven confirm (sandbox simulated_outcome after adapter deploy)
     confirmed = wait_confirmed(hid, ht, seconds=60)

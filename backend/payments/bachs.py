@@ -95,13 +95,24 @@ def create_checkout(*, reference: str, amount_kobo: int, hire_id: str, customer_
         # Sandbox: auto-succeed so webhooks fire without a browser (docs.bachs.io).
         payload["simulated_outcome"] = "success"
 
-    resp = httpx.post(
-        f"{settings.BACHS_API_BASE}/checkouts",
-        headers=_headers(),
-        json=payload,
-        timeout=_TIMEOUT,
-    )
-    resp.raise_for_status()
+    resp = None
+    try:
+        resp = httpx.post(
+            f"{settings.BACHS_API_BASE}/checkouts",
+            headers=_headers(),
+            json=payload,
+            timeout=_TIMEOUT,
+        )
+        resp.raise_for_status()
+    except httpx.HTTPError:
+        status_code = resp.status_code if resp is not None else None
+        body = resp.text[:500] if resp is not None else ""
+        logger.exception(
+            "bachs.checkout_failed", reference=reference, status_code=status_code, body=body
+        )
+        from .errors import CheckoutUnavailable
+
+        raise CheckoutUnavailable() from None
     data = resp.json()
     charge = data.get("charge") or {}
     charge_id = (
