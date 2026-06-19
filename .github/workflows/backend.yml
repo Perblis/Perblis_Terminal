@@ -35,10 +35,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install GDAL/GEOS (GeoDjango runtime)
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: binutils libproj-dev gdal-bin
-          version: 1.0
+        # Plain apt install (no deb caching): cache-restore actions skip the
+        # post-install ldconfig, leaving GeoDjango unable to find libgdal.so on
+        # a cache hit. --no-install-recommends trims the tree for some speedup.
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends binutils libproj-dev gdal-bin
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
