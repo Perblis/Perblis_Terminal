@@ -17,6 +17,7 @@ from django.db.models import QuerySet
 from accounts.models import AccountLevel
 from core import media
 from core.money import display
+from hires.availability import availability_map
 from listings.enums import ListingStatus
 from listings.models import Listing
 from suppliers.models import SupplierProfile
@@ -133,6 +134,17 @@ def distance_km(listing: Listing) -> float:
     return round(listing.distance.km, 1)
 
 
+def annotate_availability(listings: list[Listing]) -> None:
+    """Tag each listing with ``_available`` via one bulk query (Wave 4, TSD §3.4).
+
+    Read by the summary builders below; keeps the endpoints N+1-free. Listings
+    with no current hold default to available.
+    """
+    avail = availability_map(listings)
+    for listing in listings:
+        listing._available = avail.get(listing.id, True)
+
+
 def listing_summary(listing: Listing, *, with_distance: bool = True) -> dict:
     """A solo/flat listing pin or row (TSD §3.7 ``listings[]`` shape)."""
     summary = {
@@ -146,7 +158,7 @@ def listing_summary(listing: Listing, *, with_distance: bool = True) -> dict:
         # The listing's own trust tier — the map-pin/list-row badge. A yard's
         # ``supplier.badge`` carries the account verification instead.
         "badge": listing.tier,
-        "available": True,  # stub until Wave 4 availability
+        "available": getattr(listing, "_available", True),
     }
     if with_distance:
         summary["distance_km"] = distance_km(listing)
@@ -162,7 +174,7 @@ def embedded_summary(listing: Listing) -> dict:
         "price_from": listing.daily_price,
         "price_from_display": display(listing.daily_price),
         "photo": cover_url(listing),
-        "available": True,  # stub until Wave 4 availability
+        "available": getattr(listing, "_available", True),
     }
 
 

@@ -29,7 +29,9 @@ GROUP_LOCATION = "location"
 
 def _matching_listings(params: dict) -> list[Listing]:
     star = star_field(params["asset_class"]) if params.get("asset_class") else None
-    return [ln for ln in common.base_listings(params)[0] if common.matches(ln, params, star)]
+    listings = [ln for ln in common.base_listings(params)[0] if common.matches(ln, params, star)]
+    common.annotate_availability(listings)
+    return listings
 
 
 def _asset_items(listings: list[Listing]) -> list[dict]:

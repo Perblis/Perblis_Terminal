@@ -306,6 +306,349 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeocodeResponse'
           description: ''
+  /api/v1/handovers/{handover_id}/confirm:
+    post:
+      operationId: handovers_confirm_create
+      description: The counterparty confirms a handover, advancing the hire.
+      parameters:
+      - in: path
+        name: handover_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - handovers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Handover'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Handover'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Handover'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handover'
+          description: ''
+  /api/v1/hires:
+    get:
+      operationId: hires_list
+      description: '``GET`` the caller''s hires (filterable by role/status); ``POST``
+        a request.'
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - hirer
+          - supplier
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHireList'
+          description: ''
+    post:
+      operationId: hires_create
+      description: '``GET`` the caller''s hires (filterable by role/status); ``POST``
+        a request.'
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}:
+    get:
+      operationId: hires_retrieve
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/accept:
+    post:
+      operationId: hires_accept_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/cancel:
+    post:
+      operationId: hires_cancel_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/decline:
+    post:
+      operationId: hires_decline_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/dispute:
+    post:
+      operationId: hires_dispute_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/handovers:
+    post:
+      operationId: hires_handovers_create
+      description: Submit an on-hire / off-hire handover record (FSD §7.4).
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandoverCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HandoverCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HandoverCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Handover'
+          description: ''
+  /api/v1/hires/{hire_id}/payment:
+    get:
+      operationId: hires_payment_retrieve
+      description: Checkout status + authorization_url for a hire (D-017).
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+          description: ''
+  /api/v1/hires/{hire_id}/resolve-dispute:
+    post:
+      operationId: hires_resolve_dispute_create
+      description: Ops resolves a dispute (Wave 6 gives this a console; the API exists
+        now).
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveDispute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResolveDispute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResolveDispute'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
   /api/v1/listings:
     get:
       operationId: listings_retrieve
@@ -729,6 +1072,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaPresignResponse'
           description: ''
+  /api/v1/payments/webhook:
+    post:
+      operationId: payments_webhook_create
+      description: |-
+        Receive Bachs webhooks: verify the signature, dedup, 200 fast, process async.
+
+        The signature is HMAC-SHA256 over the raw body; a hire is only ever marked
+        paid by the async processor after re-verifying the charge with Bachs — never
+        from this request, and never from a client redirect.
+      tags:
+      - payments
+      security:
+      - {}
+      responses:
+        '200':
+          description: Accepted (or duplicate — idempotent).
+        '400':
+          description: Signature could not be verified.
   /api/v1/search/list:
     get:
       operationId: search_list_retrieve
@@ -1085,6 +1446,16 @@ components:
         * `basic` - Basic
         * `verified` - Verified
         * `business_verified` - Business verified
+    ActorKindEnum:
+      enum:
+      - user
+      - system
+      - ops
+      type: string
+      description: |-
+        * `user` - User
+        * `system` - System
+        * `ops` - Ops
     AssetClassEnum:
       enum:
       - plant_machinery
@@ -1099,6 +1470,28 @@ components:
         * `warehousing` - Warehousing & Storage
         * `terminals_yards` - Terminals & Container Yards
         * `land_staging` - Land & Staging
+    BlankEnum:
+      enum:
+      - ''
+    CancelledByEnum:
+      enum:
+      - hirer
+      - supplier
+      - ops
+      - system
+      type: string
+      description: |-
+        * `hirer` - Hirer
+        * `supplier` - Supplier
+        * `ops` - Ops
+        * `system` - System
+    Dispute:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+      - reason
     Duplicate:
       type: object
       properties:
@@ -1158,6 +1551,333 @@ components:
       - display_name
       - lat
       - lng
+    Handover:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        hire:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/KindCc5Enum'
+        photos: {}
+        reading: {}
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - hire
+      - id
+      - kind
+    HandoverCreate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/KindCc5Enum'
+        photos:
+          type: array
+          items:
+            type: string
+          minItems: 2
+        reading:
+          type: object
+          additionalProperties: {}
+      required:
+      - kind
+      - photos
+    Hire:
+      type: object
+      description: List/summary shape. Fee fields are stripped for the hirer (D-014).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        asset_class:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        duration_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        scheme:
+          $ref: '#/components/schemas/SchemeEnum'
+        status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        hire_value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        hire_value_display:
+          type: string
+          readOnly: true
+        service_fee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        service_fee_display:
+          type: string
+          readOnly: true
+        payout_amount:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payout_amount_display:
+          type: string
+          readOnly: true
+        fee_basis:
+          type: string
+          maxLength: 64
+        cancelled_by:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/CancelledByEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        decline_reason:
+          type: string
+          maxLength: 255
+        cancel_reason:
+          type: string
+          maxLength: 255
+        hirer_note:
+          type: string
+        request_expires_at:
+          type: string
+          format: date-time
+        payment_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - asset_class
+      - created_at
+      - duration_days
+      - end_date
+      - fee_basis
+      - hire_value
+      - hire_value_display
+      - id
+      - listing_id
+      - listing_title
+      - payout_amount
+      - payout_amount_display
+      - request_expires_at
+      - scheme
+      - service_fee
+      - service_fee_display
+      - start_date
+    HireAccept:
+      type: object
+      properties:
+        acknowledgments:
+          type: object
+          additionalProperties: {}
+    HireCancel:
+      type: object
+      properties:
+        reason:
+          type: string
+          default: ''
+    HireCreate:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        hirer_note:
+          type: string
+          default: ''
+        terms_accepted:
+          type: boolean
+      required:
+      - end_date
+      - listing_id
+      - start_date
+      - terms_accepted
+    HireDecline:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+      - reason
+    HireDetail:
+      type: object
+      description: 'Detail shape: adds the append-only event timeline.'
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        asset_class:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        duration_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        scheme:
+          $ref: '#/components/schemas/SchemeEnum'
+        status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        hire_value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        hire_value_display:
+          type: string
+          readOnly: true
+        service_fee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        service_fee_display:
+          type: string
+          readOnly: true
+        payout_amount:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payout_amount_display:
+          type: string
+          readOnly: true
+        fee_basis:
+          type: string
+          maxLength: 64
+        cancelled_by:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/CancelledByEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        decline_reason:
+          type: string
+          maxLength: 255
+        cancel_reason:
+          type: string
+          maxLength: 255
+        hirer_note:
+          type: string
+        request_expires_at:
+          type: string
+          format: date-time
+        payment_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/HireEvent'
+          readOnly: true
+      required:
+      - asset_class
+      - created_at
+      - duration_days
+      - end_date
+      - events
+      - fee_basis
+      - hire_value
+      - hire_value_display
+      - id
+      - listing_id
+      - listing_title
+      - payout_amount
+      - payout_amount_display
+      - request_expires_at
+      - scheme
+      - service_fee
+      - service_fee_display
+      - start_date
+    HireEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        actor_kind:
+          $ref: '#/components/schemas/ActorKindEnum'
+        from_status:
+          oneOf:
+          - $ref: '#/components/schemas/ToStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        to_status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        meta: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actor_kind
+      - created_at
+      - id
+      - to_status
+    KindCc5Enum:
+      enum:
+      - on_hire
+      - off_hire
+      type: string
+      description: |-
+        * `on_hire` - On Hire
+        * `off_hire` - Off Hire
     KindEnum:
       enum:
       - identity
@@ -1283,7 +2003,7 @@ components:
           readOnly: true
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/ListingStatusEnum'
           readOnly: true
         tier:
           allOf:
@@ -1403,6 +2123,20 @@ components:
       - position
       - r2_key
       - url
+    ListingStatusEnum:
+      enum:
+      - draft
+      - live
+      - paused
+      - archived
+      - removed
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `live` - Live
+        * `paused` - Paused
+        * `archived` - Archived
+        * `removed` - Removed
     Login:
       type: object
       properties:
@@ -1464,7 +2198,7 @@ components:
           description: Listing trust tier (basic/verified/inspected).
         available:
           type: boolean
-          description: Stubbed true until Wave 4 availability.
+          description: True iff a unit is free for hire now (TSD §3.4).
       required:
       - asset_class
       - available
@@ -1555,7 +2289,7 @@ components:
           type: string
         available:
           type: boolean
-          description: Stubbed true until Wave 4 availability.
+          description: True iff a unit is free for hire now (TSD §3.4).
       required:
       - asset_class
       - available
@@ -1656,6 +2390,9 @@ components:
       - expires_in
       - key
       - presigned_put_url
+    NullEnum:
+      enum:
+      - null
     OtpResend:
       type: object
       properties:
@@ -1675,6 +2412,33 @@ components:
       required:
       - code
       - phone
+    OutcomeEnum:
+      enum:
+      - complete
+      - cancel
+      type: string
+      description: |-
+        * `complete` - complete
+        * `cancel` - cancel
+    PaginatedHireList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hire'
     PaginatedListingPhotoList:
       type: object
       required:
@@ -1888,6 +2652,39 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PaymentStatus:
+      type: object
+      description: The hirer's view of where checkout stands (status + authorization_url).
+      properties:
+        reference:
+          type: string
+          maxLength: 64
+        state:
+          $ref: '#/components/schemas/PaymentStatusStateEnum'
+        authorization_url:
+          type: string
+        attempt:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - reference
+    PaymentStatusStateEnum:
+      enum:
+      - initiated
+      - success
+      - failed
+      - abandoned
+      type: string
+      description: |-
+        * `initiated` - Initiated
+        * `success` - Success
+        * `failed` - Failed
+        * `abandoned` - Abandoned
     PhotoAttach:
       type: object
       properties:
@@ -1991,6 +2788,26 @@ components:
         * `dismissed` - Dismissed
         * `warned` - Warned
         * `removed` - Removed
+    ResolveDispute:
+      type: object
+      properties:
+        outcome:
+          $ref: '#/components/schemas/OutcomeEnum'
+        reason:
+          type: string
+          default: ''
+      required:
+      - outcome
+    SchemeEnum:
+      enum:
+      - daily
+      - weekly
+      - monthly
+      type: string
+      description: |-
+        * `daily` - Daily
+        * `weekly` - Weekly
+        * `monthly` - Monthly
     SpecTemplate:
       type: object
       properties:
@@ -2012,20 +2829,6 @@ components:
       - asset_type
       - fields
       - version
-    StatusEnum:
-      enum:
-      - draft
-      - live
-      - paused
-      - archived
-      - removed
-      type: string
-      description: |-
-        * `draft` - Draft
-        * `live` - Live
-        * `paused` - Paused
-        * `archived` - Archived
-        * `removed` - Removed
     SupplierProfile:
       type: object
       properties:
@@ -2115,6 +2918,28 @@ components:
         * `basic` - Basic
         * `verified` - Verified
         * `inspected` - Inspected
+    ToStatusEnum:
+      enum:
+      - requested
+      - accepted
+      - confirmed
+      - on_hire
+      - completed
+      - declined
+      - expired
+      - cancelled
+      - in_dispute
+      type: string
+      description: |-
+        * `requested` - Requested
+        * `accepted` - Accepted
+        * `confirmed` - Confirmed
+        * `on_hire` - On Hire
+        * `completed` - Completed
+        * `declined` - Declined
+        * `expired` - Expired
+        * `cancelled` - Cancelled
+        * `in_dispute` - In Dispute
     TokenPair:
       type: object
       properties:
