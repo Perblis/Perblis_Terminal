@@ -35,7 +35,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install GDAL/GEOS (GeoDjango runtime)
-        run: sudo apt-get update && sudo apt-get install -y binutils libproj-dev gdal-bin
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: binutils libproj-dev gdal-bin
+          version: 1.0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
@@ -52,7 +55,7 @@ jobs:
         run: uv run ruff format --check .
 
       - name: mypy (loose)
-        run: uv run mypy core accounts suppliers listings settings
+        run: uv run mypy core accounts suppliers listings search settings
         env:
           DJANGO_SETTINGS_MODULE: settings.dev
 

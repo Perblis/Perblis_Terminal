@@ -696,6 +696,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaPresignResponse'
           description: ''
+  /api/v1/search/map:
+    get:
+      operationId: search_map_retrieve
+      description: |-
+        Server-aggregated yards + solo listings for a viewport/radius (TSD §3.7).
+
+        Anonymous access is allowed (guest browsing, FSD §6); throttled at the
+        ``search_anon`` rate (60/min).
+      parameters:
+      - in: query
+        name: asset_class
+        schema:
+          type: string
+        description: Filter to one asset class.
+      - in: query
+        name: bbox
+        schema:
+          type: string
+        description: Viewport 'min_lng,min_lat,max_lng,max_lat'. Provide this OR lat+lng+radius_km.
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: double
+        description: Reference latitude (radius mode).
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: double
+        description: Reference longitude (radius mode).
+      - in: query
+        name: price_max
+        schema:
+          type: integer
+        description: Daily price ceiling (kobo).
+      - in: query
+        name: price_min
+        schema:
+          type: integer
+        description: Daily price floor (kobo).
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Case-insensitive match on title + description.
+      - in: query
+        name: radius_km
+        schema:
+          type: number
+          format: double
+        description: One of 5/10/25/50/100 or a custom value.
+      - in: query
+        name: spec_max
+        schema:
+          type: number
+          format: double
+        description: Ceiling for the class ★ spec.
+      - in: query
+        name: spec_min
+        schema:
+          type: number
+          format: double
+        description: Floor for the class ★ spec; requires asset_class.
+      tags:
+      - search
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapResponse'
+          description: ''
   /api/v1/spec-templates:
     get:
       operationId: spec_templates_retrieve
@@ -1167,6 +1243,148 @@ components:
           type: string
       required:
       - refresh
+    MapResponse:
+      type: object
+      properties:
+        yards:
+          type: array
+          items:
+            $ref: '#/components/schemas/MapYard'
+        listings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MapSoloListing'
+      required:
+      - listings
+      - yards
+    MapSoloListing:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        asset_class:
+          type: string
+        point:
+          description: GeoJSON Point.
+        price_from:
+          type: integer
+          description: Daily price, integer kobo.
+        price_from_display:
+          type: string
+        distance_km:
+          type: number
+          format: double
+          description: Distance from the reference point, 0.1 km.
+        photo:
+          type: string
+        badge:
+          type: string
+          description: Listing trust tier (basic/verified/inspected).
+        available:
+          type: boolean
+          description: Stubbed true until Wave 4 availability.
+      required:
+      - asset_class
+      - available
+      - badge
+      - distance_km
+      - id
+      - photo
+      - point
+      - price_from
+      - price_from_display
+      - title
+    MapSupplier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        logo:
+          type: string
+        badge:
+          type: string
+          nullable: true
+      required:
+      - badge
+      - id
+      - logo
+      - name
+    MapYard:
+      type: object
+      properties:
+        yard_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        point:
+          description: GeoJSON Point.
+        supplier:
+          $ref: '#/components/schemas/MapSupplier'
+        listing_count:
+          type: integer
+          description: Live listings at the yard (in view).
+        matching_count:
+          type: integer
+          description: Of those, how many pass the filters.
+        class_mix:
+          type: array
+          items:
+            type: string
+        price_from:
+          type: integer
+          description: Cheapest daily price at the yard, kobo.
+        price_from_display:
+          type: string
+        listings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MapYardListing'
+      required:
+      - class_mix
+      - listing_count
+      - listings
+      - matching_count
+      - name
+      - point
+      - price_from
+      - price_from_display
+      - supplier
+      - yard_id
+    MapYardListing:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        asset_class:
+          type: string
+        price_from:
+          type: integer
+          description: Cheapest daily price, integer kobo.
+        price_from_display:
+          type: string
+        photo:
+          type: string
+        available:
+          type: boolean
+          description: Stubbed true until Wave 4 availability.
+      required:
+      - asset_class
+      - available
+      - id
+      - photo
+      - price_from
+      - price_from_display
+      - title
     Me:
       type: object
       properties:

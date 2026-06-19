@@ -385,3 +385,17 @@ def build_templates() -> list[dict]:
                 }
             )
     return templates
+
+
+# The single ★ filterable headline spec per class (doc 05 §7) — the field the
+# map/list search ``spec_min/max`` range filter targets for the active class.
+# Derived from the class-common field sets so it stays the one source of truth.
+_STAR_FIELDS: dict[str, str | None] = {
+    str(asset_class): next((name for name, fdef in common.items() if fdef.get("filterable")), None)
+    for asset_class, common, _ in _CLASSES
+}
+
+
+def star_field(asset_class: str) -> str | None:
+    """The ★ filterable spec field name for a class (None if unknown)."""
+    return _STAR_FIELDS.get(asset_class)
