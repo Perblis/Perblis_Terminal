@@ -306,6 +306,191 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeocodeResponse'
           description: ''
+  /api/v1/hires:
+    get:
+      operationId: hires_list
+      description: '``GET`` the caller''s hires (filterable by role/status); ``POST``
+        a request.'
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - hirer
+          - supplier
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHireList'
+          description: ''
+    post:
+      operationId: hires_create
+      description: '``GET`` the caller''s hires (filterable by role/status); ``POST``
+        a request.'
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}:
+    get:
+      operationId: hires_retrieve
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/accept:
+    post:
+      operationId: hires_accept_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireAccept'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/cancel:
+    post:
+      operationId: hires_cancel_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireCancel'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/{hire_id}/decline:
+    post:
+      operationId: hires_decline_create
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HireDecline'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireDetail'
+          description: ''
   /api/v1/listings:
     get:
       operationId: listings_retrieve
@@ -1085,6 +1270,16 @@ components:
         * `basic` - Basic
         * `verified` - Verified
         * `business_verified` - Business verified
+    ActorKindEnum:
+      enum:
+      - user
+      - system
+      - ops
+      type: string
+      description: |-
+        * `user` - User
+        * `system` - System
+        * `ops` - Ops
     AssetClassEnum:
       enum:
       - plant_machinery
@@ -1099,6 +1294,21 @@ components:
         * `warehousing` - Warehousing & Storage
         * `terminals_yards` - Terminals & Container Yards
         * `land_staging` - Land & Staging
+    BlankEnum:
+      enum:
+      - ''
+    CancelledByEnum:
+      enum:
+      - hirer
+      - supplier
+      - ops
+      - system
+      type: string
+      description: |-
+        * `hirer` - Hirer
+        * `supplier` - Supplier
+        * `ops` - Ops
+        * `system` - System
     Duplicate:
       type: object
       properties:
@@ -1158,6 +1368,282 @@ components:
       - display_name
       - lat
       - lng
+    Hire:
+      type: object
+      description: List/summary shape. Fee fields are stripped for the hirer (D-014).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        asset_class:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        duration_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        scheme:
+          $ref: '#/components/schemas/SchemeEnum'
+        status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        hire_value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        hire_value_display:
+          type: string
+          readOnly: true
+        service_fee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        service_fee_display:
+          type: string
+          readOnly: true
+        payout_amount:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payout_amount_display:
+          type: string
+          readOnly: true
+        fee_basis:
+          type: string
+          maxLength: 64
+        cancelled_by:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/CancelledByEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        decline_reason:
+          type: string
+          maxLength: 255
+        cancel_reason:
+          type: string
+          maxLength: 255
+        hirer_note:
+          type: string
+        request_expires_at:
+          type: string
+          format: date-time
+        payment_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - asset_class
+      - created_at
+      - duration_days
+      - end_date
+      - fee_basis
+      - hire_value
+      - hire_value_display
+      - id
+      - listing_id
+      - listing_title
+      - payout_amount
+      - payout_amount_display
+      - request_expires_at
+      - scheme
+      - service_fee
+      - service_fee_display
+      - start_date
+    HireAccept:
+      type: object
+      properties:
+        acknowledgments:
+          type: object
+          additionalProperties: {}
+    HireCancel:
+      type: object
+      properties:
+        reason:
+          type: string
+          default: ''
+    HireCreate:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        hirer_note:
+          type: string
+          default: ''
+        terms_accepted:
+          type: boolean
+      required:
+      - end_date
+      - listing_id
+      - start_date
+      - terms_accepted
+    HireDecline:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+      - reason
+    HireDetail:
+      type: object
+      description: 'Detail shape: adds the append-only event timeline.'
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        asset_class:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        duration_days:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        scheme:
+          $ref: '#/components/schemas/SchemeEnum'
+        status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        hire_value:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        hire_value_display:
+          type: string
+          readOnly: true
+        service_fee:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        service_fee_display:
+          type: string
+          readOnly: true
+        payout_amount:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payout_amount_display:
+          type: string
+          readOnly: true
+        fee_basis:
+          type: string
+          maxLength: 64
+        cancelled_by:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/CancelledByEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        decline_reason:
+          type: string
+          maxLength: 255
+        cancel_reason:
+          type: string
+          maxLength: 255
+        hirer_note:
+          type: string
+        request_expires_at:
+          type: string
+          format: date-time
+        payment_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/HireEvent'
+          readOnly: true
+      required:
+      - asset_class
+      - created_at
+      - duration_days
+      - end_date
+      - events
+      - fee_basis
+      - hire_value
+      - hire_value_display
+      - id
+      - listing_id
+      - listing_title
+      - payout_amount
+      - payout_amount_display
+      - request_expires_at
+      - scheme
+      - service_fee
+      - service_fee_display
+      - start_date
+    HireEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        actor_kind:
+          $ref: '#/components/schemas/ActorKindEnum'
+        from_status:
+          oneOf:
+          - $ref: '#/components/schemas/ToStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        to_status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        meta: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actor_kind
+      - created_at
+      - id
+      - to_status
     KindEnum:
       enum:
       - identity
@@ -1283,7 +1769,7 @@ components:
           readOnly: true
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/ListingStatusEnum'
           readOnly: true
         tier:
           allOf:
@@ -1403,6 +1889,20 @@ components:
       - position
       - r2_key
       - url
+    ListingStatusEnum:
+      enum:
+      - draft
+      - live
+      - paused
+      - archived
+      - removed
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `live` - Live
+        * `paused` - Paused
+        * `archived` - Archived
+        * `removed` - Removed
     Login:
       type: object
       properties:
@@ -1656,6 +2156,9 @@ components:
       - expires_in
       - key
       - presigned_put_url
+    NullEnum:
+      enum:
+      - null
     OtpResend:
       type: object
       properties:
@@ -1675,6 +2178,25 @@ components:
       required:
       - code
       - phone
+    PaginatedHireList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hire'
     PaginatedListingPhotoList:
       type: object
       required:
@@ -1991,6 +2513,16 @@ components:
         * `dismissed` - Dismissed
         * `warned` - Warned
         * `removed` - Removed
+    SchemeEnum:
+      enum:
+      - daily
+      - weekly
+      - monthly
+      type: string
+      description: |-
+        * `daily` - Daily
+        * `weekly` - Weekly
+        * `monthly` - Monthly
     SpecTemplate:
       type: object
       properties:
@@ -2012,20 +2544,6 @@ components:
       - asset_type
       - fields
       - version
-    StatusEnum:
-      enum:
-      - draft
-      - live
-      - paused
-      - archived
-      - removed
-      type: string
-      description: |-
-        * `draft` - Draft
-        * `live` - Live
-        * `paused` - Paused
-        * `archived` - Archived
-        * `removed` - Removed
     SupplierProfile:
       type: object
       properties:
@@ -2115,6 +2633,28 @@ components:
         * `basic` - Basic
         * `verified` - Verified
         * `inspected` - Inspected
+    ToStatusEnum:
+      enum:
+      - requested
+      - accepted
+      - confirmed
+      - on_hire
+      - completed
+      - declined
+      - expired
+      - cancelled
+      - in_dispute
+      type: string
+      description: |-
+        * `requested` - Requested
+        * `accepted` - Accepted
+        * `confirmed` - Confirmed
+        * `on_hire` - On Hire
+        * `completed` - Completed
+        * `declined` - Declined
+        * `expired` - Expired
+        * `cancelled` - Cancelled
+        * `in_dispute` - In Dispute
     TokenPair:
       type: object
       properties:

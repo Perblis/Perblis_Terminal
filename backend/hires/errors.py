@@ -43,3 +43,21 @@ class PaymentWindowExpired(TerminalError):
     status_code = status.HTTP_409_CONFLICT
     default_code = "payment_window_expired"
     default_detail = "The 4-hour payment window has closed."
+
+
+class HireNotFound(TerminalError):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_code = "not_found"
+    default_detail = "No such hire."
+
+
+class ListingNotHireable(TerminalError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "listing_not_hireable"
+    default_detail = "This listing can't be hired right now."
+
+
+class CannotHireOwnListing(TerminalError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "cannot_hire_own_listing"
+    default_detail = "You can't hire your own listing."
