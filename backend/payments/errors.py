@@ -23,3 +23,9 @@ class NoPayment(TerminalError):
     status_code = status.HTTP_404_NOT_FOUND
     default_code = "no_payment"
     default_detail = "No payment has been initialized for this hire yet."
+
+
+class CheckoutUnavailable(TerminalError):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_code = "checkout_unavailable"
+    default_detail = "Payment checkout could not be opened. Try again shortly."

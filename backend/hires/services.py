@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 
+import structlog
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
@@ -21,6 +22,8 @@ from listings.models import Listing
 from . import availability, errors, fees, state
 from .enums import ActorKind, CancelledBy, HandoverKind, HireStatus
 from .models import HandoverRecord, Hire, HireEvent
+
+logger = structlog.get_logger(__name__)
 
 # A dispute may be raised during On Hire or up to 72h after the hire's end.
 DISPUTE_WINDOW = dt.timedelta(hours=72)
@@ -132,9 +135,13 @@ def accept_hire(*, user: User, hire_id, acknowledgments: dict | None = None) -> 
 
 def _init_payment(hire: Hire) -> None:
     """Initialise the checkout post-commit; import locally to avoid a cycle."""
+    from payments.errors import CheckoutUnavailable
     from payments.services import initialize_payment
 
-    initialize_payment(hire)
+    try:
+        initialize_payment(hire)
+    except CheckoutUnavailable:
+        logger.exception("payments.init_checkout_unavailable", hire=str(hire.id))
 
 
 @transaction.atomic
