@@ -241,6 +241,14 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - change_ref: 2026-06-17 15:15 - FIX: promote existing SEED_SUPERUSER + prod Wave 2 E2E via Ops admin
 - notes: Storefront https://perblisterminal-production.up.railway.app/api/v1/storefronts/019ed075-5f3f-7336-8f20-334160a78c41 · Listing `019edb68-44a3-7389-8c20-702f398c7625` Live at ₦95,000/day. Fixed `admin_ops.py` login check (admin title is "Terminal Ops", not "Site administration").
 
+## 2026-06-19 - Prod E2E demo on new Railway API (api-production-101c8)
+- tag: DEPLOY
+- area: production API (https://api-production-101c8.up.railway.app)
+- summary: Full Waves 0–3 founder demo on the new prod URL after founder promoted `nwabueze@perblis.com` (supplier + verified). 21/21 steps passed: healthz → login → profile (Perblis Plant & Haulage) → Apapa Main Yard → CAT 320D published Live (₦95k/day, R2 photo) → duplicate draft → storefront (1 live) → search/map solo pin + search/list (asset + location) + radius + geocode (LocationIQ live, 2 results for Apapa Lagos). Wave 3 contracts live (31 OpenAPI paths).
+- reason: Founder approved account setup and asked for full prod E2E on the new Railway deployment.
+- change_ref: 2026-06-18 - Prod demo: nwabueze@perblis.com as verified supplier
+- notes: IDs — user `019ede63-eb70-752c-be3e-522af7540bf8`, yard `019edeed-c9f9-7285-b29c-b1e16e41bebb`, listing `019edeed-cac2-7e05-99ea-44f83645355b`, duplicate `019edeed-d049-7bef-a2f7-37ff55aeaf50`. Solo pin (1 listing at yard) — yard aggregation kicks in at ≥2 Live listings per yard. Primary prod URL is now `api-production-101c8.up.railway.app` (old `perblisterminal-production` is stale/pre-Wave-3).
+
 ## 2026-06-18 15:50 - CHORE: prepare handoff for Wave 3 (Discovery)
 - tag: CHORE
 - area: Implementations.md, CLAUDE.md, docs/waves/README.md (docs-only)
