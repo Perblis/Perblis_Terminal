@@ -696,6 +696,98 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaPresignResponse'
           description: ''
+  /api/v1/search/list:
+    get:
+      operationId: search_list_retrieve
+      description: |-
+        The map result set as a distance-ordered, cursor-paginated list (TSD §3.2).
+
+        ``group_by=asset`` (default) → flat listings with ``more_at_yard``;
+        ``group_by=location`` → yard cards interleaved with solo listings.
+        Anonymous access; ``search_anon`` throttle (60/min).
+      parameters:
+      - in: query
+        name: asset_class
+        schema:
+          type: string
+        description: Filter to one asset class.
+      - in: query
+        name: bbox
+        schema:
+          type: string
+        description: Viewport 'min_lng,min_lat,max_lng,max_lat'. Provide this OR lat+lng+radius_km.
+      - in: query
+        name: cursor
+        schema:
+          type: string
+        description: Opaque keyset pagination cursor.
+      - in: query
+        name: group_by
+        schema:
+          type: string
+        description: '''asset'' (default) or ''location''.'
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: double
+        description: Reference latitude (radius mode).
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: double
+        description: Reference longitude (radius mode).
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Items per page (≤100, default 20).
+      - in: query
+        name: price_max
+        schema:
+          type: integer
+        description: Daily price ceiling (kobo).
+      - in: query
+        name: price_min
+        schema:
+          type: integer
+        description: Daily price floor (kobo).
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Case-insensitive match on title + description.
+      - in: query
+        name: radius_km
+        schema:
+          type: number
+          format: double
+        description: One of 5/10/25/50/100 or custom.
+      - in: query
+        name: spec_max
+        schema:
+          type: number
+          format: double
+        description: Ceiling for the class ★ spec.
+      - in: query
+        name: spec_min
+        schema:
+          type: number
+          format: double
+        description: Floor for the class ★ spec.
+      tags:
+      - search
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+          description: ''
   /api/v1/search/map:
     get:
       operationId: search_map_retrieve
@@ -1009,6 +1101,28 @@ components:
       description: |-
         * `identity` - Identity
         * `business` - Business
+    ListResponse:
+      type: object
+      properties:
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: asset mode → ListAssetItem[]; location mode → yard cards +
+            listings.
+      required:
+      - next
+      - previous
+      - results
     Listing:
       type: object
       properties:

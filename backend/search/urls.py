@@ -10,4 +10,5 @@ app_name = "search"
 
 urlpatterns = [
     path("search/map", views.MapSearchView.as_view(), name="map"),
+    path("search/list", views.ListSearchView.as_view(), name="list"),
 ]
