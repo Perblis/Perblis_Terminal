@@ -44,30 +44,36 @@ def test_create_checkout_configured(monkeypatch, settings):
     _mock_httpx(
         monkeypatch,
         capture=captured,
-        json_data={"authorization_url": "https://pay.bachs/abc", "charge_id": "chg_1"},
+        json_data={"checkout_url": "https://pay.bachs.io/c/abc", "checkout_id": "chk_1"},
     )
-    out = bachs.create_checkout(reference="THR-1-1", amount_kobo=24_000_000, hire_id="h1")
-    assert out == {"authorization_url": "https://pay.bachs/abc", "charge_id": "chg_1"}
-    # Money crosses the boundary as a decimal-naira string.
-    assert captured["json"]["amount"] == "240000.00"
-    assert captured["json"]["currency"] == "NGN"
+    out = bachs.create_checkout(
+        reference="THR-1-1",
+        amount_kobo=24_000_000,
+        hire_id="h1",
+        customer_email="hirer@example.com",
+    )
+    assert out == {"authorization_url": "https://pay.bachs.io/c/abc", "charge_id": "chk_1"}
+    assert captured["json"]["pricing"]["amount"] == "240000.00"
+    assert captured["json"]["pricing"]["currency"] == "NGN"
+    assert captured["json"]["customer_email"] == "hirer@example.com"
+    assert captured["json"]["simulated_outcome"] == "success"
 
 
 def test_verify_charge_configured(monkeypatch, settings):
     settings.BACHS_SECRET_KEY = "sk_sandbox_x"
     _mock_httpx(
         monkeypatch,
-        json_data={"status": "SUCCEEDED", "amount": "240000.00", "currency": "NGN"},
+        json_data={"status": "succeeded", "amount": "240000.00", "currency": "NGN"},
         method="get",
     )
-    charge = bachs.verify_charge("chg_1")
-    assert charge.ok and charge.status == "SUCCEEDED"
+    charge = bachs.verify_charge("chr_1")
+    assert charge.ok and bachs.charge_succeeded(charge.status)
     assert charge.amount_kobo == 24_000_000 and charge.currency == "NGN"
 
 
 def test_verify_charge_unconfigured_is_not_ok(settings):
     settings.BACHS_SECRET_KEY = ""
-    assert bachs.verify_charge("chg_1").ok is False
+    assert bachs.verify_charge("chr_1").ok is False
 
 
 def test_verify_charge_http_error_is_not_ok(monkeypatch, settings):
@@ -77,19 +83,38 @@ def test_verify_charge_http_error_is_not_ok(monkeypatch, settings):
         raise httpx.ConnectError("down")
 
     monkeypatch.setattr(httpx, "get", boom)
-    assert bachs.verify_charge("chg_1").ok is False
+    assert bachs.verify_charge("chr_1").ok is False
 
 
 def test_create_refund_configured(monkeypatch, settings):
     settings.BACHS_SECRET_KEY = "sk_sandbox_x"
-    _mock_httpx(monkeypatch, json_data={"id": "rf_1"})
-    out = bachs.create_refund(charge_id="chg_1", amount_kobo=1_000_000, reason="cancel")
+    captured: dict = {}
+    _mock_httpx(monkeypatch, capture=captured, json_data={"refund_id": "rf_1"})
+    out = bachs.create_refund(
+        charge_id="chr_1", amount_kobo=1_000_000, reason="cancel", reference="RFD-abc"
+    )
     assert out == {"ok": True, "provider_ref": "rf_1"}
+    assert captured["json"]["charge_id"] == "chr_1"
+    assert captured["json"]["reference"] == "RFD-abc"
 
 
 def test_create_refund_unconfigured(settings):
     settings.BACHS_SECRET_KEY = ""
-    assert bachs.create_refund(charge_id="chg_1", amount_kobo=1, reason="x")["ok"] is False
+    assert (
+        bachs.create_refund(charge_id="chr_1", amount_kobo=1, reason="x", reference="RFD-x")["ok"]
+        is False
+    )
+
+
+def test_list_ledger_normalizes_status(monkeypatch, settings):
+    settings.BACHS_SECRET_KEY = "sk_sandbox_x"
+    _mock_httpx(
+        monkeypatch,
+        json_data={"items": [{"reference": "THR-1", "amount": "100.00", "status": "succeeded"}]},
+        method="get",
+    )
+    rows = bachs.list_ledger()
+    assert rows == [{"reference": "THR-1", "amount": "100.00", "status": "SUCCEEDED"}]
 
 
 # --- signature verification -------------------------------------------------

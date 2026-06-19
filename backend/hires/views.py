@@ -112,11 +112,15 @@ class HirePaymentView(GenericAPIView):
     serializer_class = PaymentStatusSerializer
 
     def get(self, request, hire_id):
+        from hires.enums import HireStatus
         from payments.errors import NoPayment
-        from payments.services import latest_payment
+        from payments.services import initialize_payment, latest_payment
 
         hire = services.get_hire(user=request.user, hire_id=hire_id)
         payment = latest_payment(hire)
+        if payment is None and hire.status == HireStatus.ACCEPTED:
+            # Recovery: checkout init runs post-commit; retry if the Bachs call failed.
+            payment = initialize_payment(hire)
         if payment is None:
             raise NoPayment()
         return Response(self.get_serializer(payment).data)

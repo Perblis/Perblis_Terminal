@@ -31,12 +31,16 @@ STRIKE_SUSPENSION_THRESHOLD = 3
 
 def initialize_payment(hire: Hire) -> Payment:
     """Open a Bachs checkout for a freshly-accepted hire (≤3 attempts/window)."""
+    hire = Hire.objects.select_related("hirer").get(pk=hire.pk)
     attempt = Payment.objects.filter(hire=hire).count() + 1
     if attempt > MAX_ATTEMPTS:
         raise PaymentAttemptsExceeded()
     reference = f"THR-{hire.id.hex[:12]}-{attempt}"
     checkout = bachs.create_checkout(
-        reference=reference, amount_kobo=hire.hire_value, hire_id=str(hire.id)
+        reference=reference,
+        amount_kobo=hire.hire_value,
+        hire_id=str(hire.id),
+        customer_email=hire.hirer.email,
     )
     return Payment.objects.create(
         hire=hire,
@@ -99,7 +103,7 @@ def process_collection_event(event_id: str) -> None:
     charge = bachs.verify_charge(charge_id)
     verified = (
         charge.ok
-        and charge.status == "SUCCEEDED"
+        and bachs.charge_succeeded(charge.status)
         and charge.amount_kobo == payment.amount
         and charge.currency == bachs.CURRENCY
     )
@@ -145,7 +149,10 @@ def issue_refund(hire: Hire, *, cancelled_by: str, reason: str = "") -> Refund:
     charge_id = payment.charge_id if payment else ""
 
     result = bachs.create_refund(
-        charge_id=charge_id, amount_kobo=plan.amount, reason=reason or plan.kind
+        charge_id=charge_id,
+        amount_kobo=plan.amount,
+        reason=reason or plan.kind,
+        reference=f"RFD-{hire.id.hex[:12]}",
     )
     refund = Refund.objects.create(
         hire=hire,
@@ -253,13 +260,13 @@ def reconcile(ledger: list[dict]) -> dict:
         row = by_ref.get(ref)
         if row is None:
             mismatches.append({"reference": ref, "issue": "missing_in_ledger"})
-        elif row.get("status") != "SUCCEEDED":
+        elif not bachs.charge_succeeded(str(row.get("status", ""))):
             mismatches.append({"reference": ref, "issue": "status_mismatch"})
         elif bachs.naira_str_to_kobo(row.get("amount", "0")) != payment.amount:
             mismatches.append({"reference": ref, "issue": "amount_mismatch"})
 
     for ref, row in by_ref.items():
-        if row.get("status") == "SUCCEEDED" and ref not in local:
+        if bachs.charge_succeeded(str(row.get("status", ""))) and ref not in local:
             mismatches.append({"reference": ref, "issue": "missing_locally"})
 
     if mismatches:
