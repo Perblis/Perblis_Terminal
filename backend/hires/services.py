@@ -250,7 +250,15 @@ def confirm_handover(*, user: User, handover_id) -> HandoverRecord:
         state.apply(hire, "start", actor=user, actor_kind=str(ActorKind.USER))
     elif handover.kind == HandoverKind.OFF_HIRE and hire.status == HireStatus.ON_HIRE:
         state.apply(hire, "complete", actor=user, actor_kind=str(ActorKind.USER))
+        _payouts().create_completion_payout(hire)
     return handover
+
+
+def _payouts():
+    """Local import of the payments service to avoid an import cycle."""
+    from payments import services as payments_services
+
+    return payments_services
 
 
 # --- disputes (FSD §7.3) ----------------------------------------------------
@@ -271,6 +279,7 @@ def raise_dispute(*, user: User, hire_id, reason: str) -> Hire:
     if hire.status == HireStatus.COMPLETED and timezone.now() > _end_plus_window(hire):
         raise errors.InvalidTransition()
     state.apply(hire, "dispute", actor=user, actor_kind=str(ActorKind.USER), reason=reason)
+    _payouts().freeze_payouts(hire)  # any due payout is frozen until resolution
     return hire
 
 
@@ -282,4 +291,7 @@ def resolve_dispute(*, user: User, hire_id, outcome: str, reason: str = "") -> H
         raise errors.TransitionNotPermitted()
     action = "resolve_complete" if outcome == "complete" else "resolve_cancel"
     state.apply(hire, action, actor=user, actor_kind=str(ActorKind.OPS), reason=reason)
+    if outcome == "complete":
+        # Resolution to Completed lifts the freeze and queues the payout.
+        _payouts().create_completion_payout(hire)
     return hire

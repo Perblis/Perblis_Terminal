@@ -136,6 +136,22 @@ def create_refund(*, charge_id: str, amount_kobo: int, reason: str) -> dict:
     return {"ok": True, "provider_ref": data.get("id", "")}
 
 
+def list_ledger() -> list[dict]:
+    """Fetch the charge ledger for daily reconciliation. Empty when unconfigured."""
+    if not configured():
+        return []
+    try:
+        resp = httpx.get(
+            f"{settings.BACHS_API_BASE}/payments/charges", headers=_headers(), timeout=_TIMEOUT
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except httpx.HTTPError:
+        logger.exception("bachs.ledger_failed")
+        return []
+    return data.get("data", data) if isinstance(data, dict) else data
+
+
 def verify_signature(*, timestamp: str | None, raw_body: bytes, signature: str | None) -> bool:
     """HMAC-SHA256 hex over ``"{timestamp}.{raw_body}"`` within the time tolerance."""
     secret = settings.BACHS_WEBHOOK_SECRET

@@ -10,12 +10,13 @@ from __future__ import annotations
 
 from django.core.management.base import BaseCommand
 
-from hires.tasks import run_due_transitions
+from hires.tasks import run_due_transitions, send_due_reminders
 
 
 class Command(BaseCommand):
-    help = "Run the idempotent hire-lifecycle sweeps (expire / auto-cancel / on-hire / complete)."
+    help = "Run the idempotent hire-lifecycle sweeps + due reminders."
 
     def handle(self, *args, **opts):
         result = run_due_transitions()
+        result.update(send_due_reminders())
         self.stdout.write(self.style.SUCCESS(f"Sweeps complete: {result}"))

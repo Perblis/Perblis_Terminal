@@ -176,15 +176,20 @@ def _auto_decline_overflow(confirmed: Hire) -> list[Hire]:
 
 
 def _queue_side_effects(hire: Hire, action: str, from_status: str, to_status: str) -> None:
-    """Side-effects (notifications, payout creation) run after commit.
+    """Fire post-commit side-effects: the FSD §9 notification for the new state.
 
-    Concrete wiring lands in later slices (4D payments, 4F notifications/payouts);
-    for now this records intent so the transition path is exercised end-to-end.
+    Runs after commit so an email is only sent for a transition that actually
+    persisted, and a delivery failure never rolls back the transition. Payout
+    creation is wired explicitly by the completing services (atomic with the
+    transition); notifications are best-effort here.
     """
 
     def _run() -> None:
         logger.info(
             "hire.transition", extra={"hire": str(hire.id), "from": from_status, "to": to_status}
         )
+        from . import notifications
+
+        notifications.dispatch(hire, to_status=to_status)
 
     transaction.on_commit(_run)

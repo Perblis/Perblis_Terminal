@@ -76,11 +76,16 @@ def auto_start_hires(now: dt.datetime | None = None) -> int:
 def auto_complete_hires(now: dt.datetime | None = None) -> int:
     """On Hire past end+48h and undisputed → Completed (payout becomes due in 4F)."""
     now = now or timezone.now()
+    from payments.services import create_completion_payout
+
     count = 0
     for hire in Hire.objects.filter(status=HireStatus.ON_HIRE, end_date__lt=now.date()):
         # The last hired day is inclusive; the clock starts at the next midnight.
         if now - _midnight(hire.end_date + dt.timedelta(days=1)) >= AUTO_COMPLETE_AFTER:
-            count += _safe_apply(hire, "complete")
+            if _safe_apply(hire, "complete"):
+                count += 1
+                hire.refresh_from_db()
+                create_completion_payout(hire)
     return count
 
 
@@ -94,8 +99,40 @@ def run_due_transitions(now: dt.datetime | None = None) -> dict[str, int]:
     }
 
 
+# Reminder windows (~5-min sweep cadence → each hire is nudged once). Supplier
+# nudge ~20h into a 24h request; hirer warning ~60m before the payment deadline.
+_NUDGE_LEAD = dt.timedelta(hours=4)
+_WARN_LEAD = dt.timedelta(minutes=60)
+_WINDOW = dt.timedelta(minutes=5)
+
+
+def send_due_reminders(now: dt.datetime | None = None) -> dict[str, int]:
+    """Supplier 20h nudge + hirer 60-min payment warning (FSD §9). Idempotent by window."""
+    from . import notifications
+
+    now = now or timezone.now()
+    nudged = 0
+    for hire in Hire.objects.filter(
+        status=HireStatus.REQUESTED,
+        request_expires_at__gte=now + _NUDGE_LEAD - _WINDOW,
+        request_expires_at__lt=now + _NUDGE_LEAD,
+    ):
+        notifications.notify_supplier_nudge(hire)
+        nudged += 1
+    warned = 0
+    for hire in Hire.objects.filter(
+        status=HireStatus.ACCEPTED,
+        payment_deadline__gte=now + _WARN_LEAD - _WINDOW,
+        payment_deadline__lt=now + _WARN_LEAD,
+    ):
+        notifications.notify_payment_warning(hire)
+        warned += 1
+    return {"nudged": nudged, "payment_warned": warned}
+
+
 @task()
 def sweep_hires() -> dict[str, int]:
     result = run_due_transitions()
+    result.update(send_due_reminders())
     logger.info("hires.sweep", **result)
     return result

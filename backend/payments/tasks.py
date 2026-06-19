@@ -9,9 +9,15 @@ from __future__ import annotations
 
 from django_tasks import task
 
-from . import services
+from . import bachs, services
 
 
 @task()
 def process_collection_event(event_id: str) -> None:
     services.process_collection_event(event_id)
+
+
+@task()
+def daily_reconciliation() -> dict:
+    """Reconcile the Bachs ledger against local payments (run daily)."""
+    return services.reconcile(bachs.list_ledger())

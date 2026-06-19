@@ -13,7 +13,7 @@ from django.db import models
 from core.models import BaseModel
 from hires.models import Hire
 
-from .enums import PaymentState, RefundState
+from .enums import PaymentState, PayoutKind, PayoutState, RefundState
 
 
 class Payment(BaseModel):
@@ -66,3 +66,37 @@ class Refund(BaseModel):
 
     def __str__(self) -> str:
         return f"refund {self.amount} for hire {self.hire_id} ({self.state})"
+
+
+class Payout(BaseModel):
+    """What Terminal owes a supplier for a hire (FSD §3.2).
+
+    Created ``due`` on completion (``payout_amount``) — the founder pays out
+    weekly via the Ops queue and records a reference. The one exception (D-015)
+    is the withheld-day payout on a late hirer cancellation. A dispute freezes
+    the payout until resolution. One completion payout per hire (unique).
+    """
+
+    hire = models.ForeignKey(Hire, on_delete=models.PROTECT, related_name="payouts")
+    supplier = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="payouts")
+    amount = models.BigIntegerField()  # kobo
+    kind = models.CharField(
+        max_length=16, choices=PayoutKind.choices, default=PayoutKind.COMPLETION
+    )
+    state = models.CharField(
+        max_length=16, choices=PayoutState.choices, default=PayoutState.PENDING
+    )
+    paid_ref = models.CharField(max_length=128, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    frozen_reason = models.CharField(max_length=64, blank=True)
+
+    class Meta:
+        constraints = [
+            # At most one completion payout per hire (the withheld-day payout is
+            # a distinct kind, so both can coexist for a late-cancelled hire).
+            models.UniqueConstraint(fields=["hire", "kind"], name="uniq_payout_per_hire_kind")
+        ]
+        indexes = [models.Index(fields=["supplier", "state"]), models.Index(fields=["state"])]
+
+    def __str__(self) -> str:
+        return f"payout {self.amount} to {self.supplier_id} ({self.state})"

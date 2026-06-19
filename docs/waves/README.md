@@ -18,7 +18,7 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 | 1 | [wave-1.md](wave-1.md) | Accounts: register / OTP / JWT / reset · verification requests + queue | ✅ Done & merged (PRs #7–#13; incl. independent email+phone OTP) |
 | 2 | [wave-2.md](wave-2.md) | Supply: supplier profiles, yards, spec templates, listings CRUD + publish | ✅ Done & merged; deployed (prod API E2E demo met) |
 | 3 | [wave-3.md](wave-3.md) | Search: map endpoint (yard aggregation), list, filters | ✅ Done & merged (PRs #23–#25); deployed. P95 ~170ms/500 listings; demo'd locally. Founder sign-off to record at Wave 4 go |
-| 4 | [wave-4.md](wave-4.md) | Hires + money: state machine, availability, fees, Paystack, sweeps, payouts | ⏸ Next — gated on explicit founder go (Wave 3 done) |
+| 4 | [wave-4.md](wave-4.md) | Hires + money: state machine, availability, fees, **Bachs.io** (D-017), sweeps, payouts | 🟡 Build complete (slices 4A–4F, PR #27): fee engine · hire model/state-machine/availability · request/accept/decline/cancel + D-014 · Bachs collect + §7.6 refunds · sweeps/handovers/disputes · payouts/reconciliation/notifications. Gated on the **founder sandbox demo + sign-off** (needs Bachs egress + `BACHS_WEBHOOK_SECRET`) before Wave 5 |
 | 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | ⏸ Gated on Wave 4 |
 | 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ⏸ Gated on Wave 5 |
 

@@ -14,13 +14,13 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from hires import state
-from hires.enums import ActorKind
+from hires.enums import ActorKind, HireStatus
 from hires.models import Hire
 
 from . import bachs, refunds
-from .enums import PaymentState, RefundState
+from .enums import PaymentState, PayoutKind, PayoutState, RefundState
 from .errors import PaymentAttemptsExceeded
-from .models import Payment, PaymentEvent, Refund
+from .models import Payment, PaymentEvent, Payout, Refund
 
 logger = structlog.get_logger(__name__)
 
@@ -158,9 +158,66 @@ def issue_refund(hire: Hire, *, cancelled_by: str, reason: str = "") -> Refund:
         # Keyless dev or a provider failure — leave it PENDING for Ops to retry.
         logger.warning("payments.refund_unsettled", hire=str(hire.id), amount=plan.amount)
 
+    if plan.withheld_day > 0:
+        # D-015: the withheld day on a late hirer cancellation pays the supplier.
+        Payout.objects.get_or_create(
+            hire=hire,
+            kind=PayoutKind.WITHHELD_DAY,
+            defaults={
+                "supplier_id": hire.supplier_id,
+                "amount": plan.withheld_day,
+                "state": PayoutState.DUE,
+            },
+        )
     if plan.strike:
         _record_supplier_strike(hire)
     return refund
+
+
+# --- payouts (FSD §3.2, D-015) ----------------------------------------------
+@transaction.atomic
+def create_completion_payout(hire: Hire) -> Payout | None:
+    """On completion, a supplier payout enters the Ops queue at ``due``.
+
+    Idempotent (one completion payout per hire). A hire still In Dispute yields a
+    frozen payout instead — the freeze lifts when Ops resolves to Completed.
+    """
+    if hire.status not in (HireStatus.COMPLETED, HireStatus.IN_DISPUTE):
+        return None
+    frozen = hire.status == HireStatus.IN_DISPUTE
+    payout, created = Payout.objects.get_or_create(
+        hire=hire,
+        kind=PayoutKind.COMPLETION,
+        defaults={
+            "supplier_id": hire.supplier_id,
+            "amount": hire.payout_amount,
+            "state": PayoutState.FROZEN if frozen else PayoutState.DUE,
+            "frozen_reason": "in_dispute" if frozen else "",
+        },
+    )
+    if not created and not frozen and payout.state == PayoutState.FROZEN:
+        payout.state = PayoutState.DUE
+        payout.frozen_reason = ""
+        payout.save(update_fields=["state", "frozen_reason", "updated_at"])
+    return payout
+
+
+@transaction.atomic
+def freeze_payouts(hire: Hire, *, reason: str = "in_dispute") -> int:
+    """Freeze any not-yet-paid payouts for a hire (dispute raised)."""
+    return hire.payouts.filter(state__in=[PayoutState.PENDING, PayoutState.DUE]).update(
+        state=PayoutState.FROZEN, frozen_reason=reason
+    )
+
+
+@transaction.atomic
+def mark_payout_paid(payout: Payout, *, reference: str) -> Payout:
+    """Ops records a completed bank transfer (Wave 6 surface; service now)."""
+    payout.state = PayoutState.PAID
+    payout.paid_ref = reference
+    payout.paid_at = timezone.now()
+    payout.save(update_fields=["state", "paid_ref", "paid_at", "updated_at"])
+    return payout
 
 
 def _record_supplier_strike(hire: Hire) -> None:
@@ -171,9 +228,43 @@ def _record_supplier_strike(hire: Hire) -> None:
         return
     profile.strike_count += 1
     profile.save(update_fields=["strike_count", "updated_at"])
+    from hires import notifications
+
+    notifications.notify_supplier_strike(hire, strike_count=profile.strike_count)
     if profile.strike_count >= STRIKE_SUSPENSION_THRESHOLD:
         # Ops surfaces the suspension review in Wave 6; flag it loudly now.
         logger.warning("payments.supplier_suspension_review", supplier=str(hire.supplier_id))
+
+
+def reconcile(ledger: list[dict]) -> dict:
+    """Compare the Bachs ledger against local successful payments (TSD §3.6).
+
+    ``ledger`` is a list of ``{reference, amount, status}`` (amount a
+    decimal-naira string, as Bachs sends). Any divergence — a local success the
+    ledger doesn't confirm, an amount mismatch, or a succeeded charge we never
+    recorded — is a mismatch. Mismatches are logged at error level (Sentry picks
+    them up) and raised to Ops. Zero-mismatch is a launch criterion.
+    """
+    local = {p.reference: p for p in Payment.objects.filter(state=PaymentState.SUCCESS)}
+    by_ref = {row["reference"]: row for row in ledger}
+    mismatches: list[dict] = []
+
+    for ref, payment in local.items():
+        row = by_ref.get(ref)
+        if row is None:
+            mismatches.append({"reference": ref, "issue": "missing_in_ledger"})
+        elif row.get("status") != "SUCCEEDED":
+            mismatches.append({"reference": ref, "issue": "status_mismatch"})
+        elif bachs.naira_str_to_kobo(row.get("amount", "0")) != payment.amount:
+            mismatches.append({"reference": ref, "issue": "amount_mismatch"})
+
+    for ref, row in by_ref.items():
+        if row.get("status") == "SUCCEEDED" and ref not in local:
+            mismatches.append({"reference": ref, "issue": "missing_locally"})
+
+    if mismatches:
+        logger.error("payments.reconciliation_mismatch", count=len(mismatches), items=mismatches)
+    return {"checked": len(local), "mismatches": mismatches}
 
 
 def retained(hire: Hire) -> int:
@@ -190,5 +281,5 @@ def retained(hire: Hire) -> int:
         r.amount
         for r in hire.refunds.filter(state__in=[RefundState.COMPLETED, RefundState.PENDING])
     )
-    paid_out = 0  # Payout model lands in 4F
+    paid_out = sum(p.amount for p in hire.payouts.filter(state=PayoutState.PAID))
     return collected - refunded - paid_out
