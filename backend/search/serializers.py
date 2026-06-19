@@ -91,7 +91,9 @@ class MapYardListingSerializer(serializers.Serializer):
     price_from = serializers.IntegerField(help_text="Cheapest daily price, integer kobo.")
     price_from_display = serializers.CharField()
     photo = serializers.CharField(allow_blank=True)
-    available = serializers.BooleanField(help_text="Stubbed true until Wave 4 availability.")
+    available = serializers.BooleanField(
+        help_text="True iff a unit is free for hire now (TSD §3.4)."
+    )
 
 
 class MapYardSerializer(serializers.Serializer):
@@ -117,7 +119,9 @@ class MapSoloListingSerializer(serializers.Serializer):
     distance_km = serializers.FloatField(help_text="Distance from the reference point, 0.1 km.")
     photo = serializers.CharField(allow_blank=True)
     badge = serializers.CharField(help_text="Listing trust tier (basic/verified/inspected).")
-    available = serializers.BooleanField(help_text="Stubbed true until Wave 4 availability.")
+    available = serializers.BooleanField(
+        help_text="True iff a unit is free for hire now (TSD §3.4)."
+    )
 
 
 class MapResponseSerializer(serializers.Serializer):

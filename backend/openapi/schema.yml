@@ -1464,7 +1464,7 @@ components:
           description: Listing trust tier (basic/verified/inspected).
         available:
           type: boolean
-          description: Stubbed true until Wave 4 availability.
+          description: True iff a unit is free for hire now (TSD §3.4).
       required:
       - asset_class
       - available
@@ -1555,7 +1555,7 @@ components:
           type: string
         available:
           type: boolean
-          description: Stubbed true until Wave 4 availability.
+          description: True iff a unit is free for hire now (TSD §3.4).
       required:
       - asset_class
       - available

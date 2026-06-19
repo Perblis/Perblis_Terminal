@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from .enums import HireStatus
@@ -102,3 +102,28 @@ def can_confirm(
     """True iff a unit is free to *take* (accept/confirm) — counts hard holds only."""
     held = _count(listing, start, end, _hard_q(), exclude_hire_id)
     return held < listing.unit_count
+
+
+def availability_map(listings, *, on_date: dt.date | None = None, now=None) -> dict:
+    """Bulk ``{listing.id: available_now}`` for many listings in **one** query.
+
+    "Available now" means a unit is free over ``on_date`` (default today) against
+    *soft* holds — what the map/list ``available`` flag and the yard sheet's
+    "n of m free" caption show. Computed in a single grouped aggregate so search
+    stays within its N+1-free query budget.
+    """
+    listings = list(listings)
+    if not listings:
+        return {}
+    on_date = on_date or timezone.localdate()
+    now = now or timezone.now()
+    ids = [ln.id for ln in listings]
+    rows = (
+        Hire.objects.filter(listing_id__in=ids)
+        .filter(_soft_q(now))
+        .filter(start_date__lte=on_date, end_date__gte=on_date)
+        .values("listing_id")
+        .annotate(n=Count("id"))
+    )
+    held = {row["listing_id"]: row["n"] for row in rows}
+    return {ln.id: held.get(ln.id, 0) < ln.unit_count for ln in listings}
