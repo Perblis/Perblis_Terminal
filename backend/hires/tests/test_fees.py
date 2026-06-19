@@ -109,7 +109,9 @@ def test_worked_examples(
 
 
 def test_fee_basis_string_is_human_readable():
-    q = fees.quote(AssetClass.WAREHOUSING, days=30, daily_price=None, monthly_price=kobo(350_000))
+    q = fees.quote(
+        str(AssetClass.WAREHOUSING), days=30, daily_price=None, monthly_price=kobo(350_000)
+    )
     assert q.fee_basis == "6% monthly (min ₦2,500)"
 
 
@@ -126,12 +128,12 @@ def test_duration_rejects_end_before_start():
 
 def test_quote_rejects_no_scheme_set():
     with pytest.raises(ValueError):
-        fees.quote(AssetClass.PLANT_MACHINERY, days=3, daily_price=None)
+        fees.quote(str(AssetClass.PLANT_MACHINERY), days=3, daily_price=None)
 
 
 def test_quote_rejects_zero_days():
     with pytest.raises(ValueError):
-        fees.quote(AssetClass.PLANT_MACHINERY, days=0, daily_price=kobo(80_000))
+        fees.quote(str(AssetClass.PLANT_MACHINERY), days=0, daily_price=kobo(80_000))
 
 
 def test_quote_rejects_unknown_asset_class():
@@ -142,7 +144,10 @@ def test_quote_rejects_unknown_asset_class():
 def test_tie_resolves_to_longer_scheme():
     # daily×7 == weekly×1 exactly → the longer (weekly, lower-rate) scheme wins.
     q = fees.quote(
-        AssetClass.PLANT_MACHINERY, days=7, daily_price=kobo(10_000), weekly_price=kobo(70_000)
+        str(AssetClass.PLANT_MACHINERY),
+        days=7,
+        daily_price=kobo(10_000),
+        weekly_price=kobo(70_000),
     )
     assert q.scheme == Scheme.WEEKLY
     assert q.hire_value == kobo(70_000)
