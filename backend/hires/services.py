@@ -19,8 +19,11 @@ from listings.enums import ListingStatus
 from listings.models import Listing
 
 from . import availability, errors, fees, state
-from .enums import ActorKind, CancelledBy, HireStatus
-from .models import Hire, HireEvent
+from .enums import ActorKind, CancelledBy, HandoverKind, HireStatus
+from .models import HandoverRecord, Hire, HireEvent
+
+# A dispute may be raised during On Hire or up to 72h after the hire's end.
+DISPUTE_WINDOW = dt.timedelta(hours=72)
 
 # The Basic-account hire-value ceiling (FSD §4.1): ₦250,000 in kobo.
 BASIC_CAP = 25_000_000
@@ -203,4 +206,80 @@ def list_hires(*, user: User, role: str | None = None, status: str | None = None
 def get_hire(*, user: User, hire_id) -> Hire:
     """A single hire with its event timeline, visible only to its parties."""
     hire = _get_for_actor(hire_id, user)
+    return hire
+
+
+# --- handovers (FSD §7.4) ---------------------------------------------------
+@transaction.atomic
+def submit_handover(
+    *, user: User, hire_id, kind: str, photos: list[str], reading: dict | None = None
+) -> HandoverRecord:
+    """Record on-hire / off-hire evidence. Non-blocking; absence = no-show proof."""
+    hire = _get_for_actor(hire_id, user)
+    if kind == HandoverKind.ON_HIRE and hire.status not in (
+        HireStatus.CONFIRMED,
+        HireStatus.ON_HIRE,
+    ):
+        raise errors.InvalidTransition()
+    if kind == HandoverKind.OFF_HIRE and hire.status != HireStatus.ON_HIRE:
+        raise errors.InvalidTransition()
+    return HandoverRecord.objects.create(
+        hire=hire, kind=kind, photos=photos, reading=reading or {}, submitted_by=user
+    )
+
+
+@transaction.atomic
+def confirm_handover(*, user: User, handover_id) -> HandoverRecord:
+    """The counterparty confirms a handover, advancing the hire's lifecycle."""
+    try:
+        handover = HandoverRecord.objects.select_related("hire").get(id=handover_id)
+    except HandoverRecord.DoesNotExist as exc:
+        raise errors.HireNotFound() from exc
+    hire = handover.hire
+    if user.id not in (hire.hirer_id, hire.supplier_id) and not user.is_staff:
+        raise errors.HireNotFound()
+    if user.id == handover.submitted_by_id and not user.is_staff:
+        raise errors.TransitionNotPermitted()  # the *other* party confirms
+
+    handover.confirmed_by = user
+    handover.confirmed_at = timezone.now()
+    handover.save(update_fields=["confirmed_by", "confirmed_at", "updated_at"])
+
+    # A confirmed on-hire handover starts the hire; an off-hire one completes it.
+    if handover.kind == HandoverKind.ON_HIRE and hire.status == HireStatus.CONFIRMED:
+        state.apply(hire, "start", actor=user, actor_kind=str(ActorKind.USER))
+    elif handover.kind == HandoverKind.OFF_HIRE and hire.status == HireStatus.ON_HIRE:
+        state.apply(hire, "complete", actor=user, actor_kind=str(ActorKind.USER))
+    return handover
+
+
+# --- disputes (FSD §7.3) ----------------------------------------------------
+def _end_plus_window(hire: Hire) -> dt.datetime:
+    end_midnight = timezone.make_aware(
+        dt.datetime.combine(hire.end_date + dt.timedelta(days=1), dt.time.min),
+        timezone.get_current_timezone(),
+    )
+    return end_midnight + DISPUTE_WINDOW
+
+
+@transaction.atomic
+def raise_dispute(*, user: User, hire_id, reason: str) -> Hire:
+    """Either party flags a dispute (On Hire, or ≤72h after end). Freezes payout."""
+    if not reason:
+        raise errors.ReasonRequired()
+    hire = _get_for_actor(hire_id, user)
+    if hire.status == HireStatus.COMPLETED and timezone.now() > _end_plus_window(hire):
+        raise errors.InvalidTransition()
+    state.apply(hire, "dispute", actor=user, actor_kind=str(ActorKind.USER), reason=reason)
+    return hire
+
+
+@transaction.atomic
+def resolve_dispute(*, user: User, hire_id, outcome: str, reason: str = "") -> Hire:
+    """Ops resolves a dispute to Completed or Cancelled (Wave 6 surface; service now)."""
+    hire = _get_for_actor(hire_id, user)
+    if not user.is_staff:
+        raise errors.TransitionNotPermitted()
+    action = "resolve_complete" if outcome == "complete" else "resolve_cancel"
+    state.apply(hire, action, actor=user, actor_kind=str(ActorKind.OPS), reason=reason)
     return hire

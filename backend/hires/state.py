@@ -68,7 +68,9 @@ TRANSITIONS: dict[str, _T] = {
     "cancel": _T((_REQUESTED, _ACCEPTED, _CONFIRMED), _CANCELLED),
     "start": _T((_CONFIRMED,), _ON_HIRE),
     "complete": _T((_ON_HIRE,), _COMPLETED),
-    "dispute": _T((_ON_HIRE,), _IN_DISPUTE),
+    # Disputable during On Hire, or shortly after completion (the ≤72h-after-end
+    # window is enforced by the service).
+    "dispute": _T((_ON_HIRE, _COMPLETED), _IN_DISPUTE),
     "resolve_complete": _T((_IN_DISPUTE,), _COMPLETED),
     "resolve_cancel": _T((_IN_DISPUTE,), _CANCELLED),
 }

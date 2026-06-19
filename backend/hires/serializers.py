@@ -12,7 +12,8 @@ from rest_framework import serializers
 
 from core.money import display
 
-from .models import Hire, HireEvent
+from .enums import HandoverKind
+from .models import HandoverRecord, Hire, HireEvent
 
 # Fields visible only to the supplier (and Ops/staff) — never to the hirer.
 _SUPPLIER_ONLY = ("service_fee", "service_fee_display", "payout_amount", "fee_basis")
@@ -125,3 +126,25 @@ class HireDetailSerializer(HireSerializer):
 
     class Meta(HireSerializer.Meta):
         fields = (*HireSerializer.Meta.fields, "events")
+
+
+class HandoverCreateSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=HandoverKind.choices)
+    # Private-bucket object keys (uploaded via the presign pipeline); ≥2 (FSD §7.4).
+    photos = serializers.ListField(child=serializers.CharField(), min_length=2)
+    reading = serializers.DictField(required=False, default=dict)
+
+
+class HandoverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HandoverRecord
+        fields = ("id", "hire", "kind", "photos", "reading", "confirmed_at", "created_at")
+
+
+class DisputeSerializer(serializers.Serializer):
+    reason = serializers.CharField()
+
+
+class ResolveDisputeSerializer(serializers.Serializer):
+    outcome = serializers.ChoiceField(choices=["complete", "cancel"])
+    reason = serializers.CharField(required=False, allow_blank=True, default="")

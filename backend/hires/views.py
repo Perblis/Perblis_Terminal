@@ -5,7 +5,7 @@ from __future__ import annotations
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from core.permissions import IsHirer
@@ -120,3 +120,58 @@ class HirePaymentView(GenericAPIView):
         if payment is None:
             raise NoPayment()
         return Response(self.get_serializer(payment).data)
+
+
+class HireHandoverView(GenericAPIView):
+    """Submit an on-hire / off-hire handover record (FSD §7.4)."""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = s.HandoverSerializer
+
+    @extend_schema(request=s.HandoverCreateSerializer, responses={201: s.HandoverSerializer})
+    def post(self, request, hire_id):
+        data = s.HandoverCreateSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        handover = services.submit_handover(
+            user=request.user, hire_id=hire_id, **data.validated_data
+        )
+        return Response(self.get_serializer(handover).data, status=status.HTTP_201_CREATED)
+
+
+class HandoverConfirmView(GenericAPIView):
+    """The counterparty confirms a handover, advancing the hire."""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = s.HandoverSerializer
+
+    def post(self, request, handover_id):
+        handover = services.confirm_handover(user=request.user, handover_id=handover_id)
+        return Response(self.get_serializer(handover).data)
+
+
+class HireDisputeView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = s.HireDetailSerializer
+
+    @extend_schema(request=s.DisputeSerializer, responses={200: s.HireDetailSerializer})
+    def post(self, request, hire_id):
+        data = s.DisputeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        hire = services.raise_dispute(
+            user=request.user, hire_id=hire_id, reason=data.validated_data["reason"]
+        )
+        return Response(self.get_serializer(hire).data)
+
+
+class HireResolveDisputeView(GenericAPIView):
+    """Ops resolves a dispute (Wave 6 gives this a console; the API exists now)."""
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = s.HireDetailSerializer
+
+    @extend_schema(request=s.ResolveDisputeSerializer, responses={200: s.HireDetailSerializer})
+    def post(self, request, hire_id):
+        data = s.ResolveDisputeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        hire = services.resolve_dispute(user=request.user, hire_id=hire_id, **data.validated_data)
+        return Response(self.get_serializer(hire).data)

@@ -15,4 +15,16 @@ urlpatterns = [
     path("hires/<uuid:hire_id>/decline", views.HireDeclineView.as_view(), name="decline"),
     path("hires/<uuid:hire_id>/cancel", views.HireCancelView.as_view(), name="cancel"),
     path("hires/<uuid:hire_id>/payment", views.HirePaymentView.as_view(), name="payment"),
+    path("hires/<uuid:hire_id>/handovers", views.HireHandoverView.as_view(), name="handovers"),
+    path(
+        "handovers/<uuid:handover_id>/confirm",
+        views.HandoverConfirmView.as_view(),
+        name="handover-confirm",
+    ),
+    path("hires/<uuid:hire_id>/dispute", views.HireDisputeView.as_view(), name="dispute"),
+    path(
+        "hires/<uuid:hire_id>/resolve-dispute",
+        views.HireResolveDisputeView.as_view(),
+        name="resolve-dispute",
+    ),
 ]
