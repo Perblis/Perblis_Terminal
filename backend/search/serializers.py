@@ -123,3 +123,46 @@ class MapSoloListingSerializer(serializers.Serializer):
 class MapResponseSerializer(serializers.Serializer):
     yards = MapYardSerializer(many=True)
     listings = MapSoloListingSerializer(many=True)
+
+
+# --- List endpoint ---------------------------------------------------------
+
+
+class ListSearchParamsSerializer(MapSearchParamsSerializer):
+    """Map params + the list grouping. Pagination uses ``cursor``/``page_size``."""
+
+    group_by = serializers.ChoiceField(
+        choices=["asset", "location"],
+        required=False,
+        default="asset",
+        help_text="asset = flat listings (with more_at_yard); location = yard cards + solos.",
+    )
+
+
+class ListAssetItemSerializer(MapSoloListingSerializer):
+    yard_id = serializers.UUIDField(allow_null=True)
+    more_at_yard = serializers.IntegerField(
+        help_text="Other matching listings at the same yard ('+N more at this yard')."
+    )
+
+
+class ListLocationYardSerializer(MapYardSerializer):
+    type = serializers.CharField(help_text="Always 'yard'.")
+    distance_km = serializers.FloatField(help_text="Distance to the nearest listing, 0.1 km.")
+    # ``matching_count`` doesn't apply to a filtered list card; listing_count is
+    # the matching count here.
+    matching_count = None  # type: ignore[assignment]
+
+
+class ListLocationListingSerializer(MapSoloListingSerializer):
+    type = serializers.CharField(help_text="Always 'listing'.")
+    yard_id = serializers.UUIDField(allow_null=True)
+
+
+class ListResponseSerializer(serializers.Serializer):
+    next = serializers.URLField(allow_null=True)
+    previous = serializers.URLField(allow_null=True)
+    results = serializers.ListField(
+        child=serializers.DictField(),
+        help_text="asset mode → ListAssetItem[]; location mode → yard cards + listings.",
+    )
