@@ -163,6 +163,7 @@ def cancel_hire(*, user: User, hire_id, reason: str = "") -> Hire:
     if hire.status == HireStatus.REQUESTED and cancelled_by == CancelledBy.SUPPLIER:
         raise errors.TransitionNotPermitted()
 
+    was_paid = hire.status == HireStatus.CONFIRMED
     state.apply(
         hire,
         "cancel",
@@ -171,7 +172,19 @@ def cancel_hire(*, user: User, hire_id, reason: str = "") -> Hire:
         cancelled_by=str(cancelled_by),
         reason=reason,
     )
+    # A paid hire's cancellation triggers the §7.6 refund (+ supplier strike).
+    # Runs post-commit so the Bachs refund call stays out of the transaction.
+    if was_paid:
+        transaction.on_commit(
+            lambda: _issue_refund(hire, cancelled_by=str(cancelled_by), reason=reason)
+        )
     return hire
+
+
+def _issue_refund(hire: Hire, *, cancelled_by: str, reason: str) -> None:
+    from payments.services import issue_refund
+
+    issue_refund(hire, cancelled_by=cancelled_by, reason=reason)
 
 
 def list_hires(*, user: User, role: str | None = None, status: str | None = None) -> QuerySet[Hire]:

@@ -17,15 +17,16 @@ from hires import state
 from hires.enums import ActorKind
 from hires.models import Hire
 
-from . import bachs
-from .enums import PaymentState
+from . import bachs, refunds
+from .enums import PaymentState, RefundState
 from .errors import PaymentAttemptsExceeded
-from .models import Payment, PaymentEvent
+from .models import Payment, PaymentEvent, Refund
 
 logger = structlog.get_logger(__name__)
 
 MAX_ATTEMPTS = 3
 COLLECTION_SUCCEEDED = "collection.succeeded"
+STRIKE_SUSPENSION_THRESHOLD = 3
 
 
 def initialize_payment(hire: Hire) -> Payment:
@@ -128,3 +129,66 @@ def process_collection_event(event_id: str) -> None:
 def _mark_processed(event: PaymentEvent) -> None:
     event.processed_at = timezone.now()
     event.save(update_fields=["processed_at", "updated_at"])
+
+
+# --- refunds (FSD §7.6) -----------------------------------------------------
+def successful_payment(hire: Hire) -> Payment | None:
+    return hire.payments.filter(state=PaymentState.SUCCESS).order_by("-paid_at").first()
+
+
+@transaction.atomic
+def issue_refund(hire: Hire, *, cancelled_by: str, reason: str = "") -> Refund:
+    """Refund a cancelled paid hire per §7.6, recording a strike if the supplier
+    cancelled. The withheld-day supplier payout (D-015) is created in slice 4F."""
+    plan = refunds.compute_refund_plan(hire, cancelled_by=cancelled_by)
+    payment = successful_payment(hire)
+    charge_id = payment.charge_id if payment else ""
+
+    result = bachs.create_refund(
+        charge_id=charge_id, amount_kobo=plan.amount, reason=reason or plan.kind
+    )
+    refund = Refund.objects.create(
+        hire=hire,
+        amount=plan.amount,
+        state=RefundState.COMPLETED if result["ok"] else RefundState.PENDING,
+        provider_ref=result.get("provider_ref", ""),
+        reason=plan.kind,
+    )
+    if not result["ok"]:
+        # Keyless dev or a provider failure — leave it PENDING for Ops to retry.
+        logger.warning("payments.refund_unsettled", hire=str(hire.id), amount=plan.amount)
+
+    if plan.strike:
+        _record_supplier_strike(hire)
+    return refund
+
+
+def _record_supplier_strike(hire: Hire) -> None:
+    from suppliers.models import SupplierProfile
+
+    profile = SupplierProfile.objects.select_for_update().filter(user_id=hire.supplier_id).first()
+    if profile is None:
+        return
+    profile.strike_count += 1
+    profile.save(update_fields=["strike_count", "updated_at"])
+    if profile.strike_count >= STRIKE_SUSPENSION_THRESHOLD:
+        # Ops surfaces the suspension review in Wave 6; flag it loudly now.
+        logger.warning("payments.supplier_suspension_review", supplier=str(hire.supplier_id))
+
+
+def retained(hire: Hire) -> int:
+    """``collected − refunded − paid_out`` — the kobo Terminal currently holds.
+
+    ``collected`` = successful payments, ``refunded`` = refunds (completed or
+    pending-but-owed), ``paid_out`` = paid supplier payouts (Wave 4F; 0 until
+    then). Money is conserved when this equals the fee Terminal should keep — the
+    service fee at completion, or the processing fee on a late cancellation once
+    the withheld-day payout settles (4F). Tests assert the books balance.
+    """
+    collected = sum(p.amount for p in hire.payments.filter(state=PaymentState.SUCCESS))
+    refunded = sum(
+        r.amount
+        for r in hire.refunds.filter(state__in=[RefundState.COMPLETED, RefundState.PENDING])
+    )
+    paid_out = 0  # Payout model lands in 4F
+    return collected - refunded - paid_out
