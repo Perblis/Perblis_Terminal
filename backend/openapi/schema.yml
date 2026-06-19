@@ -273,6 +273,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/TerminalTokenRefresh'
           description: ''
+  /api/v1/geocode:
+    get:
+      operationId: geocode_retrieve
+      description: |-
+        Server-side LocationIQ forward-geocode proxy (TSD §3.8).
+
+        The API key stays server-side; results are 24h-cached. Anonymous access;
+        ``search_anon`` throttle (60/min). Degrades to empty results when the
+        provider key is absent (dev/CI).
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max results (1–10, default 5).
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Free-text place/address query.
+        required: true
+      tags:
+      - geocode
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
+          description: ''
   /api/v1/listings:
     get:
       operationId: listings_retrieve
@@ -1093,6 +1126,38 @@ components:
       required:
       - code
       - email
+    GeocodeResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        provider_configured:
+          type: boolean
+          description: False when LOCATIONIQ_KEY is unset (dev/CI) — results will
+            be empty.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeocodeResult'
+      required:
+      - provider_configured
+      - query
+      - results
+    GeocodeResult:
+      type: object
+      properties:
+        display_name:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+      required:
+      - display_name
+      - lat
+      - lng
     KindEnum:
       enum:
       - identity

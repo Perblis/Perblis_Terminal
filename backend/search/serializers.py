@@ -166,3 +166,25 @@ class ListResponseSerializer(serializers.Serializer):
         child=serializers.DictField(),
         help_text="asset mode → ListAssetItem[]; location mode → yard cards + listings.",
     )
+
+
+# --- Geocode proxy ---------------------------------------------------------
+
+
+class GeocodeParamsSerializer(serializers.Serializer):
+    q = serializers.CharField(min_length=2, help_text="Free-text place / address query.")
+    limit = serializers.IntegerField(required=False, min_value=1, max_value=10, default=5)
+
+
+class GeocodeResultSerializer(serializers.Serializer):
+    display_name = serializers.CharField()
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+
+
+class GeocodeResponseSerializer(serializers.Serializer):
+    query = serializers.CharField()
+    provider_configured = serializers.BooleanField(
+        help_text="False when LOCATIONIQ_KEY is unset (dev/CI) — results will be empty."
+    )
+    results = GeocodeResultSerializer(many=True)
