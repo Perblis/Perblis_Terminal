@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from search import pagination
 from search import serializers as s
+from search.services import geocode as geocode_service
 from search.services.aggregation import search_map
 from search.services.listing import search_list
 
@@ -97,3 +98,31 @@ class ListSearchView(GenericAPIView):
         group_by = params.validated_data.get("group_by", "asset")
         items = search_list(params.validated_data, group_by)
         return Response(pagination.paginate(items, request))
+
+
+class GeocodeView(GenericAPIView):
+    """Server-side LocationIQ forward-geocode proxy (TSD §3.8).
+
+    The API key stays server-side; results are 24h-cached. Anonymous access;
+    ``search_anon`` throttle (60/min). Degrades to empty results when the
+    provider key is absent (dev/CI).
+    """
+
+    permission_classes = [AllowAny]
+    throttle_scope = "search_anon"
+    serializer_class = s.GeocodeParamsSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("q", str, required=True, description="Free-text place/address query."),
+            OpenApiParameter("limit", int, description="Max results (1–10, default 5)."),
+        ],
+        responses={200: s.GeocodeResponseSerializer},
+    )
+    def get(self, request):
+        params = self.get_serializer(data=request.query_params)
+        params.is_valid(raise_exception=True)
+        data = geocode_service.geocode(
+            query=params.validated_data["q"], limit=params.validated_data["limit"]
+        )
+        return Response(data)
