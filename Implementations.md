@@ -321,3 +321,19 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder: "demo run, pull latest code from git and then do the wave 4 handoff."
 - change_ref: 2026-06-19 05:35 - Wave 3 Slice 4: performance pass (wave build complete)
 - notes: Docs-only, no behavior change; no OpenAPI regeneration (search contracts already committed/frozen at Slice 4). Pulled latest `main` (9a72cfd — incl. the natural-cat Railway bring-up + main→Railway auto-deploy, so Wave 3 is live in prod once #25's merge built). Wave gating remains binding: this handoff is NOT Wave 4 authorization — the next instance must record explicit founder go (+ Wave 3 sign-off) before coding `hires`/`payments`. New-instance reading path: Implementations.md → design.md → docs/waves/wave-4.md → FSD §3/§7/§9 + TSD §3.2–§3.6. Opening a docs-only draft PR.
+
+## 2026-06-19 - Wave 4 authorized (founder go) + Slice 4A: fee engine
+- tag: DECISION
+- area: wave gating
+- summary: Founder gave explicit approval to start **Wave 4 (Hires & Money)** ("let's start wave 4"). Recording the Wave 3 sign-off (exit criterion demonstrated — see prior demo entry) and Wave 4 authorization together. Building per docs/waves/wave-4.md as six ordered slices (4A fee engine → 4B model/state/availability → 4C request/accept/decline → 4D Bachs payments → 4E timers/handovers/disputes → 4F payouts/reconciliation/notifications), each its own PR, 85% coverage gate on hires+payments. Naming default (flagged to founder): webhook-dedup table is provider-neutral `payment_events` (not TSD's `paystack_events`) since D-017 supersedes Paystack with Bachs.io.
+- reason: Founder authorization; wave gating is binding (CLAUDE.md / design.md §7).
+- change_ref: 2026-06-19 06:00 - Wave 3 demo run + Wave 4 handoff (docs-only)
+- notes: Wave-4.md/TSD text still says "Paystack" — treat as Bachs.io per D-017 (HMAC-SHA256 hex, decimal-naira strings at the adapter boundary only).
+
+## 2026-06-19 - Wave 4 Slice 4A: fee engine (hires/fees.py, pure)
+- tag: FEATURE
+- area: backend/hires (fees.py [new], enums.py [new — Scheme], tests/test_fees.py [new])
+- summary: FSD §3.1 / TSD §3.2 fee engine, pure (no I/O, no ORM, no clock). Integer per-mille `RATE_TABLE` by (asset class, scheme); `FEE_FLOOR = 250_000` kobo (₦2,500). `quote(asset_class, *, days, daily_price, weekly_price?, monthly_price?) -> FeeQuote(hire_value, service_fee, payout_amount, fee_basis, scheme)`: best-price over only the set schemes (`min(daily×d, weekly×ceil(d/7), monthly×ceil(d/30))`, D-008), ties → longer scheme; `service_fee = max(value×rate//1000, FEE_FLOOR)` (D-002); `payout = value − fee` (D-005); `fee_basis` e.g. "10% weekly (min ₦2,500)". `duration_days(start,end) = (end−start).days+1` inclusive. Money is integer kobo throughout; rates as ‰ so no float/Decimal ever.
+- reason: Wave 4 slice 4A — the locked-at-acceptance financial truth every downstream slice depends on.
+- change_ref: 2026-06-19 - Wave 4 authorized (founder go)
+- notes: Green — the **five FSD §3.1 worked examples are named test vectors** (₦240k/₦28,800; ₦900k/₦90,000; ₦640k/₦76,800; ₦15k→₦2,500 floor; ₦350k/₦21,000), all pass byte-exact; + hypothesis properties (accounting identity payout+fee≡value, floor honoured, monotonic-in-days, best-price optimality) + tie-break + guard rejects. 16 tests, **hires.fees + hires.enums at 100%** coverage. ruff+format+mypy clean (TextChoices members are `tuple[str,str]` to mypy without django-stubs → tables keyed by `str(member)`; fee_basis built from the scheme code word, no `.label`). No models/migrations yet (4B). Next: Slice 4B — Hire model + state machine + availability engine.
