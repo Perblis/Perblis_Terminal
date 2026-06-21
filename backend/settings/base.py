@@ -263,8 +263,16 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Terminal <contact@perbli
 # password-reset link). The Supplier Portal (Wave 7) lives here.
 FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default="http://localhost:3000")
 
-# Payments: Bachs.io, collect-only (D-017, supersedes Paystack in D-006).
-# Keys absent in dev => degraded, never crash. Integration lands in Wave 4.
+# Payments: collect-only. Provider is pluggable (D-018, supersedes D-017):
+# `paystack` (current MVP) | `bachs`. Keys absent in dev => degraded, never crash.
+PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="paystack")
+
+# Paystack (D-018). Amounts are integer kobo; webhooks HMAC-SHA512 the raw body
+# with the secret key; verification is by reference.
+PAYSTACK_API_BASE = env("PAYSTACK_API_BASE", default="https://api.paystack.co")
+PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
+
+# Bachs.io (D-017) — retained behind the gateway as the alternate provider.
 BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1")
 BACHS_SECRET_KEY = env("BACHS_SECRET_KEY", default="")
 BACHS_WEBHOOK_SECRET = env("BACHS_WEBHOOK_SECRET", default="")

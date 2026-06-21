@@ -18,7 +18,7 @@ Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plan
 - **Admin:** the Django admin is themed as the **"Terminal Ops Console"** (Heavy Duty CSS via WhiteNoise + manifest static storage), live in prod. This is **visual-only** — the functional Ops Console (queues, dashboards, 2FA, disputes) remains **Wave 6**.
 - `packages/tokens/` — token build pipeline (WCAG contrast gate + emitted artifacts). `portal/` — Next.js hello-world proving the token pipeline. CI (`backend.yml`, `portal.yml`) green on `main`.
 - **Deploy:** backend api + worker + PostGIS live on Railway, **natural-cat** project (api `https://api-production-101c8.up.railway.app`, `/healthz`+`/readyz` green); both services **auto-deploy on merge to `main`**. Static is baked at `docker build` (collectstatic + WhiteNoise manifest in the image). Prod **must** have `TERMII_API_KEY` set (phone OTP fails loudly); **`LOCATIONIQ_KEY` is not yet set in prod** so `/api/v1/geocode` returns empty until it is. **Termii sender approval is still pending** (real SMS 502 → Ops admin channel-verify is the interim onboarding path). The Supplier Portal on Cloudflare Workers is **still pending** — Wave 0's portal exit criterion remains open.
-- **Decisions since the specs:** D-017 switched the MVP payment provider to **Bachs.io** (collect-only), superseding Paystack in D-006.
+- **Decisions since the specs:** D-017 switched the MVP payment provider to Bachs.io; **D-018 switched it back to Paystack (collect-only) and made the provider pluggable** behind `payments.gateway` (`PAYMENT_PROVIDER=paystack|bachs`; Paystack default). The Bachs adapter is retained behind the gateway.
 
 ## Session start protocol (do this first, every session)
 

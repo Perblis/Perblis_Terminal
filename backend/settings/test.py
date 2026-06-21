@@ -17,6 +17,10 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # "configured" path set these explicitly via the pytest ``settings`` fixture.
 BACHS_SECRET_KEY = ""
 BACHS_WEBHOOK_SECRET = ""
+PAYSTACK_SECRET_KEY = ""
+# Tests pin the provider explicitly via the ``settings`` fixture; default to the
+# current MVP provider so the suite mirrors production.
+PAYMENT_PROVIDER = "paystack"
 
 # Run enqueued tasks immediately so task round-trips are testable without a
 # separate worker process. The compose-backed integration test overrides this.
