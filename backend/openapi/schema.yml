@@ -273,6 +273,128 @@ paths:
               schema:
                 $ref: '#/components/schemas/TerminalTokenRefresh'
           description: ''
+  /api/v1/conversations:
+    get:
+      operationId: conversations_list
+      description: '``GET`` the caller''s conversations (+ aggregate unread); ``POST``
+        an enquiry.'
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - conversations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConversationList'
+          description: ''
+    post:
+      operationId: conversations_create
+      description: '``GET`` the caller''s conversations (+ aggregate unread); ``POST``
+        an enquiry.'
+      tags:
+      - conversations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnquiryCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EnquiryCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnquiryCreate'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+  /api/v1/conversations/{conversation_id}/messages:
+    get:
+      operationId: conversations_messages_list
+      description: '``GET`` a conversation''s messages (cursor); ``POST`` a new message.'
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - conversations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMessageList'
+          description: ''
+    post:
+      operationId: conversations_messages_create
+      description: '``GET`` a conversation''s messages (cursor); ``POST`` a new message.'
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - conversations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: ''
   /api/v1/geocode:
     get:
       operationId: geocode_retrieve
@@ -1072,6 +1194,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaPresignResponse'
           description: ''
+  /api/v1/messages/read:
+    post:
+      operationId: messages_read_create
+      description: Bulk mark-read for a conversation.
+      tags:
+      - messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkRead'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarkRead'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkRead'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/payments/webhook:
     post:
       operationId: payments_webhook_create
@@ -1091,6 +1236,22 @@ paths:
           description: Accepted (or duplicate — idempotent).
         '400':
           description: Signature could not be verified.
+  /api/v1/realtime/token:
+    get:
+      operationId: realtime_token_retrieve
+      description: |-
+        Ably TokenRequest scoped to the caller's own channels (TSD §4).
+
+        Capabilities: ``subscribe`` on each ``conv:{id}`` the caller participates in,
+        plus their ``user:{id}`` badge/hire-status channel. Keyless → ``not_configured``
+        so clients fall back to 15s polling.
+      tags:
+      - realtime
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/search/list:
     get:
       operationId: search_list_retrieve
@@ -1486,6 +1647,52 @@ components:
         * `supplier` - Supplier
         * `ops` - Ops
         * `system` - System
+    Conversation:
+      type: object
+      description: |-
+        A conversation-list row (FSD §8). ``unread_count`` and the masked preview
+        are computed for the requesting user (passed via context ``request``).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        counterparty:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        listing:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        yard_name:
+          type: string
+          nullable: true
+          readOnly: true
+        last_message_preview:
+          type: string
+          nullable: true
+          readOnly: true
+        last_message_at:
+          type: string
+          format: date-time
+          readOnly: true
+        unread_count:
+          type: integer
+          readOnly: true
+      required:
+      - counterparty
+      - id
+      - kind
+      - last_message_at
+      - last_message_preview
+      - listing
+      - unread_count
+      - yard_name
     Dispute:
       type: object
       properties:
@@ -1520,6 +1727,15 @@ components:
       required:
       - code
       - email
+    EnquiryCreate:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+        supplier_id:
+          type: string
+          format: uuid
     GeocodeResponse:
       type: object
       properties:
@@ -2299,6 +2515,14 @@ components:
       - price_from
       - price_from_display
       - title
+    MarkRead:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+      required:
+      - conversation_id
     Me:
       type: object
       properties:
@@ -2391,6 +2615,50 @@ components:
       - expires_in
       - key
       - presigned_put_url
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        conversation_id:
+          type: string
+          format: uuid
+          readOnly: true
+        sender_id:
+          type: string
+          format: uuid
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        masked:
+          type: boolean
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body
+      - conversation_id
+      - id
+      - masked
+      - read_at
+      - sender_id
+      - sent_at
+    MessageCreate:
+      type: object
+      properties:
+        body:
+          type: string
+      required:
+      - body
     NullEnum:
       enum:
       - null
@@ -2421,6 +2689,25 @@ components:
       description: |-
         * `complete` - complete
         * `cancel` - cancel
+    PaginatedConversationList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conversation'
     PaginatedHireList:
       type: object
       required:
@@ -2459,6 +2746,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ListingPhoto'
+    PaginatedMessageList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
     PasswordResetConfirm:
       type: object
       properties:
