@@ -191,5 +191,12 @@ def _queue_side_effects(hire: Hire, action: str, from_status: str, to_status: st
         from . import notifications
 
         notifications.dispatch(hire, to_status=to_status)
+        # Realtime fan-out of the status change to both parties' badge channels
+        # (TSD §4). Via core.realtime so hires never imports messaging.
+        from core import realtime
+
+        payload = {"hire_id": str(hire.id), "status": to_status}
+        realtime.publish(f"user:{hire.hirer_id}", "hire_status", payload)
+        realtime.publish(f"user:{hire.supplier_id}", "hire_status", payload)
 
     transaction.on_commit(_run)

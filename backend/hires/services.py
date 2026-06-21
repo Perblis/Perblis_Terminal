@@ -126,11 +126,27 @@ def accept_hire(*, user: User, hire_id, acknowledgments: dict | None = None) -> 
     hire = _get_for_actor(hire_id, user, must_be_supplier=True)
     meta = {"acknowledgments": acknowledgments} if acknowledgments else {}
     state.apply(hire, "accept", actor=user, actor_kind=str(ActorKind.USER), **meta)
-    # Open the Bachs checkout once the acceptance has committed — the external
-    # call stays out of the DB transaction. The hire conversation (messaging,
-    # Wave 5) hangs off the same commit; its hook lands there.
+    # Open the checkout once the acceptance has committed — the external call
+    # stays out of the DB transaction. The hire conversation (messaging, Wave 5)
+    # hangs off the same commit; the backfill command is the safety net.
     transaction.on_commit(lambda: _init_payment(hire))
+    transaction.on_commit(lambda: _ensure_hire_conversation(hire))
     return hire
+
+
+def _ensure_hire_conversation(hire: Hire) -> None:
+    """Auto-create the hire's conversation post-commit (Wave 4C → Wave 5).
+
+    Local import keeps ``hires`` free of a module-load dependency on
+    ``messaging``. Idempotent (unique hire) and best-effort — a hiccup never
+    breaks acceptance, and ``backfill_hire_conversations`` recovers any gap.
+    """
+    from messaging.services import ensure_hire_conversation
+
+    try:
+        ensure_hire_conversation(hire)
+    except Exception:
+        logger.exception("messaging.ensure_hire_conversation_failed", hire=str(hire.id))
 
 
 def _init_payment(hire: Hire) -> None:
