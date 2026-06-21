@@ -1,10 +1,11 @@
 """Payment services — checkout init, webhook ingest, verify-before-transition.
 
-Business logic for the collect-only money flow (D-017). Webhooks are
-load-bearing: the only path that marks a hire paid is a verified
-``collection.succeeded`` event — never a client redirect. Idempotency is layered
-(envelope dedup → ``processed_at`` guard → the state machine's transition guard)
-so duplicate/replayed deliveries are safe.
+Business logic for the collect-only money flow, provider-neutral via
+``payments.gateway`` (Paystack by default, D-018). Webhooks are load-bearing:
+the only path that marks a hire paid is a provider-verified success event —
+never a client redirect. Idempotency is layered (envelope dedup → ``processed_at``
+guard → the state machine's transition guard) so duplicate/replayed deliveries
+are safe.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from hires import state
 from hires.enums import ActorKind, HireStatus
 from hires.models import Hire
 
-from . import bachs, refunds
+from . import gateway, refunds
 from .enums import PaymentState, PayoutKind, PayoutState, RefundState
 from .errors import PaymentAttemptsExceeded
 from .models import Payment, PaymentEvent, Payout, Refund
@@ -25,18 +26,17 @@ from .models import Payment, PaymentEvent, Payout, Refund
 logger = structlog.get_logger(__name__)
 
 MAX_ATTEMPTS = 3
-COLLECTION_SUCCEEDED = "collection.succeeded"
 STRIKE_SUSPENSION_THRESHOLD = 3
 
 
 def initialize_payment(hire: Hire) -> Payment:
-    """Open a Bachs checkout for a freshly-accepted hire (≤3 attempts/window)."""
+    """Open a checkout for a freshly-accepted hire (≤3 attempts/window)."""
     hire = Hire.objects.select_related("hirer").get(pk=hire.pk)
     attempt = Payment.objects.filter(hire=hire).count() + 1
     if attempt > MAX_ATTEMPTS:
         raise PaymentAttemptsExceeded()
     reference = f"THR-{hire.id.hex[:12]}-{attempt}"
-    checkout = bachs.create_checkout(
+    checkout = gateway.create_checkout(
         reference=reference,
         amount_kobo=hire.hire_value,
         hire_id=str(hire.id),
@@ -80,7 +80,7 @@ def _resolve_payment(payload: dict) -> Payment | None:
 
 
 def process_collection_event(event_id: str) -> None:
-    """Verify the charge with Bachs, then confirm the hire (verify-before-transition).
+    """Verify the charge with the provider, then confirm the hire (verify-before-transition).
 
     Idempotent: a processed event short-circuits, an unverifiable charge does not
     transition, and a hire that's already past Accepted is skipped by the state
@@ -89,7 +89,8 @@ def process_collection_event(event_id: str) -> None:
     event = PaymentEvent.objects.filter(event_id=event_id).first()
     if event is None or event.processed_at is not None:
         return
-    if event.event_type != COLLECTION_SUCCEEDED:
+    parsed = gateway.parse_webhook(event.payload)
+    if not parsed.succeeded:
         _mark_processed(event)
         return
 
@@ -99,13 +100,13 @@ def process_collection_event(event_id: str) -> None:
         _mark_processed(event)
         return
 
-    charge_id = event.payload.get("data", {}).get("charge_id") or payment.charge_id
-    charge = bachs.verify_charge(charge_id)
+    charge_id = parsed.charge_id or payment.charge_id
+    charge = gateway.verify_charge(reference=payment.reference, charge_id=charge_id)
     verified = (
         charge.ok
-        and bachs.charge_succeeded(charge.status)
+        and charge.succeeded
         and charge.amount_kobo == payment.amount
-        and charge.currency == bachs.CURRENCY
+        and charge.currency == gateway.CURRENCY
     )
     if not verified:
         # Don't transition on an unverifiable charge; leave unprocessed so a
@@ -148,11 +149,11 @@ def issue_refund(hire: Hire, *, cancelled_by: str, reason: str = "") -> Refund:
     payment = successful_payment(hire)
     charge_id = payment.charge_id if payment else ""
 
-    result = bachs.create_refund(
+    result = gateway.create_refund(
+        reference=payment.reference if payment else "",
         charge_id=charge_id,
         amount_kobo=plan.amount,
         reason=reason or plan.kind,
-        reference=f"RFD-{hire.id.hex[:12]}",
     )
     refund = Refund.objects.create(
         hire=hire,
@@ -244,13 +245,13 @@ def _record_supplier_strike(hire: Hire) -> None:
 
 
 def reconcile(ledger: list[dict]) -> dict:
-    """Compare the Bachs ledger against local successful payments (TSD §3.6).
+    """Compare the provider ledger against local successful payments (TSD §3.6).
 
-    ``ledger`` is a list of ``{reference, amount, status}`` (amount a
-    decimal-naira string, as Bachs sends). Any divergence — a local success the
-    ledger doesn't confirm, an amount mismatch, or a succeeded charge we never
-    recorded — is a mismatch. Mismatches are logged at error level (Sentry picks
-    them up) and raised to Ops. Zero-mismatch is a launch criterion.
+    ``ledger`` is the gateway-normalised list of ``{reference, amount_kobo,
+    succeeded}``. Any divergence — a local success the ledger doesn't confirm, an
+    amount mismatch, or a succeeded charge we never recorded — is a mismatch.
+    Mismatches are logged at error level (Sentry picks them up) and raised to
+    Ops. Zero-mismatch is a launch criterion.
     """
     local = {p.reference: p for p in Payment.objects.filter(state=PaymentState.SUCCESS)}
     by_ref = {row["reference"]: row for row in ledger}
@@ -260,13 +261,13 @@ def reconcile(ledger: list[dict]) -> dict:
         row = by_ref.get(ref)
         if row is None:
             mismatches.append({"reference": ref, "issue": "missing_in_ledger"})
-        elif not bachs.charge_succeeded(str(row.get("status", ""))):
+        elif not row.get("succeeded"):
             mismatches.append({"reference": ref, "issue": "status_mismatch"})
-        elif bachs.naira_str_to_kobo(row.get("amount", "0")) != payment.amount:
+        elif int(row.get("amount_kobo", 0)) != payment.amount:
             mismatches.append({"reference": ref, "issue": "amount_mismatch"})
 
     for ref, row in by_ref.items():
-        if bachs.charge_succeeded(str(row.get("status", ""))) and ref not in local:
+        if row.get("succeeded") and ref not in local:
             mismatches.append({"reference": ref, "issue": "missing_locally"})
 
     if mismatches:

@@ -101,9 +101,8 @@ def test_late_cancel_creates_withheld_day_payout():
 def test_reconcile_clean_when_ledger_matches():
     hire = _paid_hire(status=HireStatus.COMPLETED)
     payment = hire.payments.first()
-    ledger = [{"reference": payment.reference, "amount": "240000.00", "status": "SUCCEEDED"}]
-    # 5-day @ ₦80k = ₦400k; fix the ledger amount to the real one.
-    ledger[0]["amount"] = f"{hire.hire_value // 100}.00"
+    # The gateway normalises ledger rows to {reference, amount_kobo, succeeded}.
+    ledger = [{"reference": payment.reference, "amount_kobo": hire.hire_value, "succeeded": True}]
     report = services.reconcile(ledger)
     assert report["mismatches"] == []
 
@@ -111,7 +110,7 @@ def test_reconcile_clean_when_ledger_matches():
 def test_reconcile_flags_amount_mismatch():
     hire = _paid_hire(status=HireStatus.COMPLETED)
     payment = hire.payments.first()
-    ledger = [{"reference": payment.reference, "amount": "1.00", "status": "SUCCEEDED"}]
+    ledger = [{"reference": payment.reference, "amount_kobo": 1, "succeeded": True}]
     report = services.reconcile(ledger)
     assert report["mismatches"] == [{"reference": payment.reference, "issue": "amount_mismatch"}]
 

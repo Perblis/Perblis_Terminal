@@ -1076,11 +1076,12 @@ paths:
     post:
       operationId: payments_webhook_create
       description: |-
-        Receive Bachs webhooks: verify the signature, dedup, 200 fast, process async.
+        Receive provider webhooks: verify the signature, dedup, 200 fast, process async.
 
-        The signature is HMAC-SHA256 over the raw body; a hire is only ever marked
-        paid by the async processor after re-verifying the charge with Bachs — never
-        from this request, and never from a client redirect.
+        The signature scheme is the active provider's (Paystack: HMAC-SHA512 of the
+        raw body). A hire is only ever marked paid by the async processor after
+        re-verifying the charge with the provider — never from this request, and
+        never from a client redirect.
       tags:
       - payments
       security:
