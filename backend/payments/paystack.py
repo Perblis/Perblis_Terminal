@@ -51,18 +51,24 @@ def create_checkout(*, reference: str, amount_kobo: int, customer_email: str, hi
         logger.info("paystack.checkout_stub", reference=reference, url=stub)
         return {"authorization_url": stub, "charge_id": ""}
 
+    payload = {
+        "email": customer_email,
+        "amount": amount_kobo,  # Paystack amounts are integer kobo
+        "currency": CURRENCY,
+        "reference": reference,
+        "channels": ["card", "bank", "ussd", "bank_transfer"],
+        "metadata": {"hire_id": hire_id},
+    }
+    # Where Paystack redirects the payer's browser after checkout (UX only;
+    # confirmation stays webhook-driven). Paystack appends ?reference=&trxref=.
+    if settings.PAYSTACK_CALLBACK_URL:
+        payload["callback_url"] = settings.PAYSTACK_CALLBACK_URL
+
     try:
         resp = httpx.post(
             f"{_base()}/transaction/initialize",
             headers=_headers(),
-            json={
-                "email": customer_email,
-                "amount": amount_kobo,  # Paystack amounts are integer kobo
-                "currency": CURRENCY,
-                "reference": reference,
-                "channels": ["card", "bank", "ussd", "bank_transfer"],
-                "metadata": {"hire_id": hire_id},
-            },
+            json=payload,
             timeout=_TIMEOUT,
         )
         resp.raise_for_status()

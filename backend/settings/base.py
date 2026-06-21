@@ -271,6 +271,11 @@ PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="paystack")
 # with the secret key; verification is by reference.
 PAYSTACK_API_BASE = env("PAYSTACK_API_BASE", default="https://api.paystack.co")
 PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
+# Where Paystack redirects the payer after checkout (UX only — confirmation is
+# webhook-driven). Defaults to the deployed Supplier Portal; override per env.
+PAYSTACK_CALLBACK_URL = env(
+    "PAYSTACK_CALLBACK_URL", default="https://terminal-portal.nwabueze.workers.dev/"
+)
 
 # Bachs.io (D-017) — retained behind the gateway as the alternate provider.
 BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1")

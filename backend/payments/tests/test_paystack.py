@@ -42,6 +42,32 @@ def test_create_checkout_sends_integer_kobo(monkeypatch, settings):
     assert captured["json"]["currency"] == "NGN"
 
 
+def test_create_checkout_sends_callback_url_when_set(monkeypatch, settings):
+    settings.PAYSTACK_SECRET_KEY = SECRET
+    settings.PAYSTACK_CALLBACK_URL = "https://terminal-portal.nwabueze.workers.dev/"
+    captured: dict = {}
+    _mock_httpx(
+        monkeypatch, capture=captured, json_data={"data": {"authorization_url": "u", "id": 1}}
+    )
+    paystack.create_checkout(
+        reference="THR-1-1", amount_kobo=1, customer_email="h@example.com", hire_id="h1"
+    )
+    assert captured["json"]["callback_url"] == "https://terminal-portal.nwabueze.workers.dev/"
+
+
+def test_create_checkout_omits_callback_url_when_unset(monkeypatch, settings):
+    settings.PAYSTACK_SECRET_KEY = SECRET
+    settings.PAYSTACK_CALLBACK_URL = ""
+    captured: dict = {}
+    _mock_httpx(
+        monkeypatch, capture=captured, json_data={"data": {"authorization_url": "u", "id": 1}}
+    )
+    paystack.create_checkout(
+        reference="THR-1-1", amount_kobo=1, customer_email="h@example.com", hire_id="h1"
+    )
+    assert "callback_url" not in captured["json"]
+
+
 def test_create_checkout_stub_when_unconfigured(settings):
     settings.PAYSTACK_SECRET_KEY = ""
     out = paystack.create_checkout(
