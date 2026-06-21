@@ -417,3 +417,19 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder requested full Waves 0-4 production validation.
 - change_ref: 2026-06-21 - Switch payment provider to Paystack (D-018, pluggable gateway)
 - notes: Gaps: (1) Termii sender Terminal pending - phone OTP 502 for fresh registrations. (2) Payment-Confirmed needs real Paystack sandbox payment + webhook. (3) Update wave4_prod_test.py for Paystack. (4) Add portal URL to CORS_ALLOWED_ORIGINS before Wave 7. (5) Local suite needs docker compose + GDAL (~1001 test functions; CI green on main).
+
+## 2026-06-21 - Wire Paystack callback/redirect URL
+- tag: FEATURE
+- area: backend/payments/paystack.py (create_checkout), backend/settings/{base,test}.py, backend/.env.example, backend/payments/tests/test_paystack.py
+- summary: `transaction/initialize` now sends `callback_url` (where Paystack redirects the payer's browser after checkout) when `settings.PAYSTACK_CALLBACK_URL` is set; default = the deployed Supplier Portal `https://terminal-portal.nwabueze.workers.dev/`, env-overridable. UX only — confirmation stays webhook-driven (`charge.success` → verify-before-transition); the callback/redirect is never trusted to mark a hire paid. settings.test pins it empty (hermetic). Bachs adapter + gateway untouched (callback is Paystack-only).
+- reason: Founder: point callback/redirect at the portal so a real hosted-checkout payment returns to Terminal.
+- change_ref: 2026-06-21 - Switch payment provider to Paystack (D-018)
+- notes: **Manual founder steps (not code):** (1) Paystack dashboard → API Keys & Webhooks → **Webhook URL** = `https://api-production-101c8.up.railway.app/api/v1/payments/webhook`; (2) Railway natural-cat env — confirm `PAYMENT_PROVIDER=paystack`, `PAYSTACK_SECRET_KEY`, optionally override `PAYSTACK_CALLBACK_URL`. **Out of scope / gated:** the portal-side `/payment/callback` page is Hirer-app/Portal work (Waves 7/8, gated); for the demo it's optional since confirmation is webhook-driven. Tests: callback present-when-set / absent-when-empty. On branch `claude/paystack-callback-url` → PR.
+
+## 2026-06-21 - Merged PR #31 Paystack callback_url
+- tag: DEPLOY
+- area: backend/payments/paystack.py, settings/base.py; PR #31 → main (ad093e5)
+- summary: Merged `payments: send Paystack callback_url (redirect to the portal)`. Paystack `transaction/initialize` now includes `callback_url` defaulting to `https://terminal-portal.nwabueze.workers.dev/`; confirmation remains webhook-driven.
+- reason: Founder approved proceeding after review.
+- change_ref: 2026-06-21 - Wire Paystack callback/redirect URL
+- notes: Railway natural-cat auto-deploy from main. Founder: confirm Paystack dashboard webhook URL = `https://api-production-101c8.up.railway.app/api/v1/payments/webhook`. Portal callback UI still Wave 7/8.
