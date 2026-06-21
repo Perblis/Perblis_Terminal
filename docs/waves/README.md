@@ -19,8 +19,8 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 | 2 | [wave-2.md](wave-2.md) | Supply: supplier profiles, yards, spec templates, listings CRUD + publish | ✅ Done & merged; deployed (prod API E2E demo met) |
 | 3 | [wave-3.md](wave-3.md) | Search: map endpoint (yard aggregation), list, filters | ✅ Done & merged (PRs #23–#25); deployed. P95 ~170ms/500 listings; demo'd locally. Founder sign-off to record at Wave 4 go |
 | 4 | [wave-4.md](wave-4.md) | Hires + money: state machine, availability, fees, **Paystack** (D-018), sweeps, payouts | ✅ **Done & signed off** (founder, 2026-06-21). Slices 4A–4F merged (PR #27); provider switched to Paystack behind a pluggable gateway (D-018, PR #30) + callback wiring (PR #31). Deployed to natural-cat. Carry-over (deploy-only): set the Paystack dashboard webhook URL |
-| 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | 🟡 **Built** (branch `main-u2o18d` → draft PR): `messaging` app + `core/realtime.py` (Ably, keyless-degraded) + Wave 4C hire-conversation hookup. 422 tests green, OpenAPI regen. Pending **founder demo + sign-off** (set `ABLY_API_KEY` in prod for the realtime half) |
-| 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ⏸ Gated on Wave 5 |
+| 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | ✅ **Done & signed off** (founder, 2026-06-21). `messaging` app + `core/realtime.py` (Ably, keyless-degraded) + Wave 4C hire-conversation hookup; PR #35 merged & deployed (natural-cat). Carry-over (deploy-only): set `ABLY_API_KEY` for live realtime (works by polling without it) |
+| 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ⏸ **Unblocked** by Wave 5 sign-off — needs explicit founder go to start |
 
 ## Frontend & launch waves
 
