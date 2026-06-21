@@ -410,6 +410,14 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - change_ref: 2026-06-19 - Wave 4 Slice 4F
 - notes: Paystack test secret key stored in **gitignored .env** (never committed); `.env.example` documents `PAYMENT_PROVIDER` + `PAYSTACK_*`. settings.test pins keys empty + `PAYMENT_PROVIDER=paystack` (hermetic). Webhook/processor tests rewritten Paystack-flavored + new `test_paystack.py` adapter unit tests + gateway provider-selection test; Bachs adapter tests retained. **Live validation still blocked by this env's egress allowlist** (`api.paystack.co` 403 — same as Bachs); set egress + `PAYSTACK_SECRET_KEY`/`PAYMENT_PROVIDER=paystack` in Railway natural-cat for the live demo. On a feature branch `claude/switch-to-paystack` → PR.
 
+## 2026-06-21 - Production E2E test pass (Waves 0-4)
+- tag: TEST
+- area: scripts/{wave0_3_prod_test,wave4_prod_test,live_api_test,comprehensive_prod_test}.py; prod API; portal Workers
+- summary: Ran extensive production smoke/E2E against natural-cat. W0 13/14 (healthz/readyz all integrations configured incl. LocationIQ; admin/static/portal live; OpenAPI schema OK). W1 12/12 (supplier+hirer login, JWT refresh, /me, validation, password-reset no-enumeration). W2 12/12 (all 5 spec templates, yards, live listing, storefront, R2 presign). W3 8/8 (map/list/radius/geocode with results, availability flag present). W4 17/17 comprehensive (hire create-accept, D-014, Paystack checkout URLs, state-machine guards, decline/cancel, events trail, availability_conflict on overlap). wave0_3_prod_test 14/14; live_api_test 20/21 (Termii SMS 502 on new register). wave4_prod_test 15/17 (script still asserts Bachs URLs; prod uses Paystack per D-018). Paystack authorization_url confirmed live. Fee spot-check: 285k hire / 34.2k fee / 250.8k payout. CORS preflight from portal origin 200. Local pytest blocked (no Docker/GDAL).
+- reason: Founder requested full Waves 0-4 production validation.
+- change_ref: 2026-06-21 - Switch payment provider to Paystack (D-018, pluggable gateway)
+- notes: Gaps: (1) Termii sender Terminal pending - phone OTP 502 for fresh registrations. (2) Payment-Confirmed needs real Paystack sandbox payment + webhook. (3) Update wave4_prod_test.py for Paystack. (4) Add portal URL to CORS_ALLOWED_ORIGINS before Wave 7. (5) Local suite needs docker compose + GDAL (~1001 test functions; CI green on main).
+
 ## 2026-06-21 - Wire Paystack callback/redirect URL
 - tag: FEATURE
 - area: backend/payments/paystack.py (create_checkout), backend/settings/{base,test}.py, backend/.env.example, backend/payments/tests/test_paystack.py
