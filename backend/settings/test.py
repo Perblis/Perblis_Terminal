@@ -18,6 +18,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 BACHS_SECRET_KEY = ""
 BACHS_WEBHOOK_SECRET = ""
 PAYSTACK_SECRET_KEY = ""
+PAYSTACK_CALLBACK_URL = ""
 # Tests pin the provider explicitly via the ``settings`` fixture; default to the
 # current MVP provider so the suite mirrors production.
 PAYMENT_PROVIDER = "paystack"

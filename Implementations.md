@@ -409,3 +409,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder decision to use Paystack for the MVP.
 - change_ref: 2026-06-19 - Wave 4 Slice 4F
 - notes: Paystack test secret key stored in **gitignored .env** (never committed); `.env.example` documents `PAYMENT_PROVIDER` + `PAYSTACK_*`. settings.test pins keys empty + `PAYMENT_PROVIDER=paystack` (hermetic). Webhook/processor tests rewritten Paystack-flavored + new `test_paystack.py` adapter unit tests + gateway provider-selection test; Bachs adapter tests retained. **Live validation still blocked by this env's egress allowlist** (`api.paystack.co` 403 — same as Bachs); set egress + `PAYSTACK_SECRET_KEY`/`PAYMENT_PROVIDER=paystack` in Railway natural-cat for the live demo. On a feature branch `claude/switch-to-paystack` → PR.
+
+## 2026-06-21 - Wire Paystack callback/redirect URL
+- tag: FEATURE
+- area: backend/payments/paystack.py (create_checkout), backend/settings/{base,test}.py, backend/.env.example, backend/payments/tests/test_paystack.py
+- summary: `transaction/initialize` now sends `callback_url` (where Paystack redirects the payer's browser after checkout) when `settings.PAYSTACK_CALLBACK_URL` is set; default = the deployed Supplier Portal `https://terminal-portal.nwabueze.workers.dev/`, env-overridable. UX only — confirmation stays webhook-driven (`charge.success` → verify-before-transition); the callback/redirect is never trusted to mark a hire paid. settings.test pins it empty (hermetic). Bachs adapter + gateway untouched (callback is Paystack-only).
+- reason: Founder: point callback/redirect at the portal so a real hosted-checkout payment returns to Terminal.
+- change_ref: 2026-06-21 - Switch payment provider to Paystack (D-018)
+- notes: **Manual founder steps (not code):** (1) Paystack dashboard → API Keys & Webhooks → **Webhook URL** = `https://api-production-101c8.up.railway.app/api/v1/payments/webhook`; (2) Railway natural-cat env — confirm `PAYMENT_PROVIDER=paystack`, `PAYSTACK_SECRET_KEY`, optionally override `PAYSTACK_CALLBACK_URL`. **Out of scope / gated:** the portal-side `/payment/callback` page is Hirer-app/Portal work (Waves 7/8, gated); for the demo it's optional since confirmation is webhook-driven. Tests: callback present-when-set / absent-when-empty. On branch `claude/paystack-callback-url` → PR.
