@@ -509,3 +509,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave 6 wave-end checklist (runbooks, OpenAPI regen, status reconciliation).
 - change_ref: 2026-06-22 - Wave 6 Slice 6F
 - notes: **Wave 6 BUILD COMPLETE (6A–6G).** Full suite GREEN — **476 passed**, ruff+format clean, migrations reversible (ops 0001, accounts 0006), `.env.example` coverage passes, OpenAPI unchanged. Wave-end checklist: [x] every FSD §10.3 surface exists, [x] runbooks drafted, [x] OpenAPI regenerated/committed, [ ] 2FA live in prod (deploy step — enrol device first), [ ] **founder demo + sign-off before Wave 7**. Branch `claude/focused-mccarthy-69u1ju` → draft PR.
+
+## 2026-06-22 - Full re-test after Wave 6 merge (main @ a6068f5)
+- tag: TEST
+- area: local pytest (476); prod scripts; W5 messaging; W6 admin; portal
+- summary: Pulled latest `main` (Wave 6 Ops Console merged via PR #37). **Local:** 476/476 passed, 91.3% overall coverage (gate 70%), hires+payments gates held. **CI:** backend `test` green on a6068f5. **Prod scripts:** `wave0_3_prod_test` 14/14; `comprehensive_prod_test` 65/66 (OpenAPI docs 406 with JSON Accept — browser OK); `live_api_test` 20/21 (Termii SMS 502); `wave4_prod_test` 15/17 (stale Bachs URL assertion + webhook confirm needs real payment). **W4 manual:** create→accept→Paystack checkout ✓, D-014 ✓, availability_conflict ✓. **W5:** conversations auth 401; Ably token; enquiry idempotent; masking (`•••`); mark-read ✓. **W6:** admin login "Terminal Ops" title; 302→login; static theme 200; runbooks on disk; no new public API routes. **Portal:** 200.
+- reason: Founder requested pull-latest + extensive re-test.
+- change_ref: 2026-06-22 - Full re-test after Wave 5 merge (main @ d4fac1d)
+- notes: Local env: native Postgres 16 + PostGIS + `GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so.34`. Follow-ups unchanged: update `wave4_prod_test.py` for Paystack; fix comprehensive summary TypeError; Termii sender pending; complete one Paystack sandbox payment for webhook→Confirmed demo; Wave 6 founder demo (TOTP enroll before `ADMIN_2FA_REQUIRED`, digest cron).
