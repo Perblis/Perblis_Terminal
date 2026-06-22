@@ -22,7 +22,19 @@ from django_otp.admin import OTPAdminSite
 
 
 class OpsAdminSite(admin.AdminSite):
-    """Ops Console site (dashboard index added in Slice 6B)."""
+    """Ops Console site with the founder dashboard on the landing page (§6.2)."""
+
+    # Distinct name so the template can {% extends "admin/index.html" %} (the
+    # stock Django index) without shadowing/recursing into itself.
+    index_template = "admin/ops_index.html"
+
+    def index(self, request, extra_context=None):
+        # Lazy import: metrics pulls in domain models; importing at module load
+        # would run before app registry is ready (admin_site is imported early).
+        from ops.services.metrics import dashboard_metrics
+
+        extra_context = {**(extra_context or {}), "ops_dashboard": dashboard_metrics()}
+        return super().index(request, extra_context)
 
 
 class OpsOTPAdminSite(OTPAdminSite, OpsAdminSite):
