@@ -303,6 +303,10 @@ BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1"
 BACHS_SECRET_KEY = env("BACHS_SECRET_KEY", default="")
 BACHS_WEBHOOK_SECRET = env("BACHS_WEBHOOK_SECRET", default="")
 
+# Recipient for the weekly founder digest + reconciliation-mismatch alerts
+# (Ops emails). Falls back to DEFAULT_FROM_EMAIL's address if unset.
+OPS_DIGEST_RECIPIENT = env("OPS_DIGEST_RECIPIENT", default="")
+
 ABLY_API_KEY = env("ABLY_API_KEY", default="")
 TERMII_API_KEY = env("TERMII_API_KEY", default="")
 TERMII_SENDER_ID = env("TERMII_SENDER_ID", default="")

@@ -76,6 +76,25 @@ def queue_counts() -> dict[str, int]:
     }
 
 
+def _oldest_age_hours(qs) -> float | None:
+    oldest = qs.order_by("created_at").values_list("created_at", flat=True).first()
+    if oldest is None:
+        return None
+    return round((timezone.now() - oldest).total_seconds() / 3600, 1)
+
+
+def queue_ages() -> dict[str, float | None]:
+    """Age in hours of the oldest open item per queue (None if the queue is empty)."""
+    return {
+        "verifications": _oldest_age_hours(
+            VerificationRequest.objects.filter(state=VerificationState.PENDING)
+        ),
+        "payouts": _oldest_age_hours(Payout.objects.filter(state=PayoutState.DUE)),
+        "reports": _oldest_age_hours(Report.objects.filter(state=ReportState.OPEN)),
+        "disputes": _oldest_age_hours(Hire.objects.filter(status=HireStatus.IN_DISPUTE)),
+    }
+
+
 def reconciliation_status() -> dict[str, Any] | None:
     """Last reconciliation run summary, or None if none has run yet."""
     run = ReconciliationRun.objects.order_by("-run_at").first()

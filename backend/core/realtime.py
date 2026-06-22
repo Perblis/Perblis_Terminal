@@ -33,6 +33,12 @@ _TIMEOUT = 5.0
 _REST_BASE = "https://rest.ably.io"
 _TOKEN_TTL_MS = 3_600_000  # 1 hour
 
+# Ably free tier (TSD §4): 200 concurrent connections, 6M messages/month.
+# The weekly digest alerts when usage crosses 70% of either.
+ABLY_FREE_CONNECTIONS = 200
+ABLY_FREE_MESSAGES = 6_000_000
+ABLY_ALERT_PCT = 70
+
 
 def is_configured() -> bool:
     return bool(settings.ABLY_API_KEY)
@@ -66,6 +72,44 @@ def publish(channel: str, name: str, data: dict[str, Any]) -> bool:
         logger.exception("ably.publish_failed", channel=channel, name=name)
         return False
     return True
+
+
+def ably_usage() -> dict[str, Any] | None:
+    """Current-month Ably usage vs the free tier (for the weekly digest).
+
+    Best-effort: returns ``None`` when keyless or on any error — the digest
+    degrades to "n/a" rather than failing. ``alert`` is True at ≥70% of either
+    the connection or message ceiling.
+    """
+    if not is_configured():
+        return None
+    key_name, key_secret = _key_parts()
+    try:
+        resp = httpx.get(
+            f"{_REST_BASE}/stats",
+            params={"limit": 1, "unit": "month", "direction": "backwards"},
+            auth=(key_name, key_secret),
+            timeout=_TIMEOUT,
+        )
+        resp.raise_for_status()
+        rows = resp.json()
+    except (httpx.HTTPError, ValueError):
+        logger.exception("ably.stats_failed")
+        return None
+
+    row = rows[0] if rows else {}
+    peak = ((row.get("connections") or {}).get("peak")) or 0
+    messages = (((row.get("messages") or {}).get("all") or {}).get("count")) or 0
+    pct = max(
+        round(100 * peak / ABLY_FREE_CONNECTIONS, 1),
+        round(100 * messages / ABLY_FREE_MESSAGES, 1),
+    )
+    return {
+        "concurrent_peak": peak,
+        "messages_month": messages,
+        "pct": pct,
+        "alert": pct >= ABLY_ALERT_PCT,
+    }
 
 
 def _canonical_capability(capability: dict[str, list[str]]) -> str:

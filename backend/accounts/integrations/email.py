@@ -47,6 +47,11 @@ def send_email(*, to: str, subject: str, body: str) -> bool:
     return True
 
 
+def send_ops_email(*, to: str, subject: str, body: str) -> bool:
+    """Send an Ops/founder email (weekly digest, reconciliation alert)."""
+    return send_email(to=to, subject=subject, body=body)
+
+
 def send_payout_paid_email(*, to: str, amount_display: str, reference: str, hire_ref: str) -> bool:
     """Notify a supplier that their payout was paid (FSD §9 — supplier-only)."""
     return send_email(
