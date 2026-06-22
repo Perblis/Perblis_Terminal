@@ -219,6 +219,14 @@ def freeze_payouts(hire: Hire, *, reason: str = "in_dispute") -> int:
 
 
 @transaction.atomic
+def freeze_supplier_payouts(supplier, *, reason: str = "account_suspended") -> int:
+    """Freeze all of a supplier's not-yet-paid payouts (suspension cascade)."""
+    return Payout.objects.filter(
+        supplier=supplier, state__in=[PayoutState.PENDING, PayoutState.DUE]
+    ).update(state=PayoutState.FROZEN, frozen_reason=reason)
+
+
+@transaction.atomic
 def mark_payout_paid(payout: Payout, *, reference: str) -> Payout:
     """Ops records a completed bank transfer; the supplier is emailed (FSD §9).
 

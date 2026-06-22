@@ -86,6 +86,7 @@ class PayoutAdmin(admin.ModelAdmin):
                 for payout in payable:
                     try:
                         services.mark_payout_paid(payout, reference=reference)
+                        self.log_change(request, payout, f"Ops: marked paid (ref {reference})")
                         done += 1
                     except (PayoutFrozen, PayoutAlreadyPaid) as exc:
                         self.message_user(request, str(exc), messages.WARNING)
@@ -106,6 +107,7 @@ class PayoutAdmin(admin.ModelAdmin):
                 reason = form.cleaned_data["reason"]
                 for payout in freezable:
                     services.freeze_payout(payout, reason=reason)
+                    self.log_change(request, payout, f"Ops: froze ({reason})")
                 self.message_user(
                     request, f"Froze {freezable.count()} payout(s).", messages.SUCCESS
                 )
@@ -121,6 +123,7 @@ class PayoutAdmin(admin.ModelAdmin):
         done = 0
         for payout in queryset.filter(state=PayoutState.FROZEN):
             services.unfreeze_payout(payout)
+            self.log_change(request, payout, "Ops: unfroze")
             done += 1
         self.message_user(request, f"Unfroze {done} payout(s).", messages.SUCCESS)
 

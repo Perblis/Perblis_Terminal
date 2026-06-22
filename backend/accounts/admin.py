@@ -19,7 +19,31 @@ from django.utils.html import format_html, format_html_join
 from accounts.enums import VerificationState
 from accounts.integrations import media
 from accounts.models import User, VerificationRequest
-from accounts.services import verification
+from accounts.services import moderation, verification
+
+
+class SuspendReasonForm(forms.Form):
+    reason = forms.CharField(widget=forms.Textarea, label="Suspension reason (required)")
+
+
+class StrikeAdjustForm(forms.Form):
+    delta = forms.IntegerField(label="Strike change (e.g. +1 or -1)")
+    reason = forms.CharField(widget=forms.Textarea, label="Reason (required)")
+
+
+def _user_action_form(model_admin, request, queryset, form, action_name, title, submit_label):
+    return TemplateResponse(
+        request,
+        "admin/accounts/user_action.html",
+        {
+            "title": title,
+            "queryset": queryset,
+            "form": form,
+            "action_name": action_name,
+            "submit_label": submit_label,
+            "opts": model_admin.model._meta,
+        },
+    )
 
 
 @admin.register(User)
@@ -36,7 +60,15 @@ class UserAdmin(DjangoUserAdmin):
     )
     list_filter = ("account_level", "is_supplier", "is_hirer", "is_active", "is_staff")
     search_fields = ("email", "phone", "full_name")
-    readonly_fields = ("created_at", "updated_at", "last_login", "purged_at")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "last_login",
+        "purged_at",
+        "suspended_at",
+        "is_suspended",
+    )
+    actions = ("suspend_users", "reactivate_users", "adjust_strikes")
     fieldsets = (
         (None, {"fields": ("full_name", "email", "phone", "password")}),
         ("Roles", {"fields": ("is_supplier", "is_hirer", "account_level")}),
@@ -47,6 +79,7 @@ class UserAdmin(DjangoUserAdmin):
                     "is_active",
                     "phone_verified_at",
                     "email_verified_at",
+                    "is_suspended",
                     "suspended_at",
                     "suspended_reason",
                     "deleted_at",
@@ -54,9 +87,66 @@ class UserAdmin(DjangoUserAdmin):
                 )
             },
         ),
+        ("Ops notes", {"fields": ("internal_notes",)}),
         ("Permissions", {"fields": ("is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Timestamps", {"fields": ("last_login", "created_at", "updated_at")}),
     )
+
+    @admin.display(boolean=True, description="Suspended")
+    def is_suspended(self, obj: User) -> bool:
+        return obj.is_suspended
+
+    @admin.action(description="Suspend selected (blocks login, freezes payouts)")
+    def suspend_users(self, request, queryset):
+        if "apply" in request.POST:
+            form = SuspendReasonForm(request.POST)
+            if form.is_valid():
+                reason = form.cleaned_data["reason"]
+                for user in queryset:
+                    moderation.suspend_user(user, reason=reason)
+                    self.log_change(request, user, f"Ops: suspended ({reason})")
+                self.message_user(
+                    request, f"Suspended {queryset.count()} user(s).", messages.SUCCESS
+                )
+                return None
+        else:
+            form = SuspendReasonForm()
+        return _user_action_form(
+            self, request, queryset, form, "suspend_users", "Suspend users", "Suspend"
+        )
+
+    @admin.action(description="Reactivate selected (payouts stay frozen)")
+    def reactivate_users(self, request, queryset):
+        for user in queryset:
+            moderation.reactivate_user(user)
+            self.log_change(request, user, "Ops: reactivated")
+        self.message_user(request, f"Reactivated {queryset.count()} user(s).", messages.SUCCESS)
+
+    @admin.action(description="Adjust supplier strikes (+/- with reason)")
+    def adjust_strikes(self, request, queryset):
+        if "apply" in request.POST:
+            form = StrikeAdjustForm(request.POST)
+            if form.is_valid():
+                delta = form.cleaned_data["delta"]
+                reason = form.cleaned_data["reason"]
+                done = 0
+                for user in queryset:
+                    try:
+                        moderation.adjust_strikes(user, delta=delta, reason=reason)
+                        self.log_change(request, user, f"Ops: strike {delta:+d} ({reason})")
+                        done += 1
+                    except ValueError as exc:
+                        self.message_user(request, f"{user.email}: {exc}", messages.WARNING)
+                self.message_user(
+                    request, f"Adjusted strikes for {done} user(s).", messages.SUCCESS
+                )
+                return None
+        else:
+            form = StrikeAdjustForm()
+        return _user_action_form(
+            self, request, queryset, form, "adjust_strikes", "Adjust strikes", "Apply"
+        )
+
     add_fieldsets = (
         (
             None,
@@ -129,6 +219,7 @@ class VerificationRequestAdmin(admin.ModelAdmin):
         done = 0
         for req in queryset.filter(state=VerificationState.PENDING):
             verification.approve(req, reviewer=request.user)
+            self.log_change(request, req, "Ops: approved verification")
             done += 1
         self.message_user(request, f"Approved {done} request(s).", messages.SUCCESS)
 
@@ -141,6 +232,7 @@ class VerificationRequestAdmin(admin.ModelAdmin):
                 reason = form.cleaned_data["reason"]
                 for req in pending:
                     verification.reject(req, reviewer=request.user, reason=reason)
+                    self.log_change(request, req, f"Ops: rejected verification ({reason})")
                 self.message_user(
                     request, f"Rejected {pending.count()} request(s).", messages.SUCCESS
                 )

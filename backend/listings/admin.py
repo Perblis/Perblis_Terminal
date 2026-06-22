@@ -85,6 +85,7 @@ class ListingAdmin(admin.ModelAdmin):
         for listing in queryset:
             try:
                 moderation.pause_listing(listing)
+                self.log_change(request, listing, "Ops: paused")
                 done += 1
             except InvalidTransition:
                 self.message_user(
@@ -104,6 +105,7 @@ class ListingAdmin(admin.ModelAdmin):
                 for listing in queryset:
                     try:
                         moderation.remove_listing(listing, reason=reason)
+                        self.log_change(request, listing, f"Ops: removed ({reason})")
                         done += 1
                     except InvalidTransition:
                         self.message_user(
@@ -127,6 +129,7 @@ class ListingAdmin(admin.ModelAdmin):
                 tier = form.cleaned_data["tier"]
                 for listing in queryset:
                     moderation.award_tier(listing, tier=tier)
+                    self.log_change(request, listing, f"Ops: awarded tier {tier}")
                 self.message_user(
                     request,
                     f"Awarded {tier} to {queryset.count()} listing(s).",
@@ -171,6 +174,7 @@ class ReportAdmin(admin.ModelAdmin):
         done = 0
         for report in queryset.filter(state=ReportState.OPEN):
             resolve_report(report, outcome=ReportState.DISMISSED)
+            self.log_change(request, report, "Ops: dismissed report")
             done += 1
         self.message_user(request, f"Dismissed {done} report(s).", messages.SUCCESS)
 
@@ -196,6 +200,7 @@ class ReportAdmin(admin.ModelAdmin):
                 for report in open_reports:
                     try:
                         resolve_report(report, outcome=outcome, note=note)
+                        self.log_change(request, report, f"Ops: {outcome} ({note})")
                         done += 1
                     except InvalidTransition as exc:
                         self.message_user(request, str(exc), messages.WARNING)
