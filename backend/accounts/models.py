@@ -117,7 +117,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email_verified_at is not None
 
     @property
-    def is_verified(self) -> bool:
+    def is_account_verified(self) -> bool:
+        # Account verification *level* (identity/business reviewed by Ops) — not
+        # to be confused with phone/email OTP or django-otp's request-level
+        # ``is_verified()`` (admin 2FA), whose name this deliberately avoids.
         return self.account_level in {
             AccountLevel.VERIFIED,
             AccountLevel.BUSINESS_VERIFIED,

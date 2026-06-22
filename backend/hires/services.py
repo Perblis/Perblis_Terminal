@@ -70,7 +70,7 @@ def create_hire(
     )
 
     # Basic-account cap, evaluated at request time against hire_value (FSD §4.1).
-    if not user.is_verified and quote.hire_value > BASIC_CAP:
+    if not user.is_account_verified and quote.hire_value > BASIC_CAP:
         raise errors.BasicCapExceeded()
 
     # The dates must be free to a new hirer (soft availability, TSD §3.4).

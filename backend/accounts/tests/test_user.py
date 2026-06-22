@@ -19,7 +19,7 @@ def test_create_user_sets_password_and_uuid_pk():
     assert user.check_password("s3cret-pass")
     assert user.id is not None
     assert user.account_level == AccountLevel.BASIC
-    assert user.is_verified is False
+    assert user.is_account_verified is False
 
 
 @pytest.mark.django_db
@@ -37,7 +37,7 @@ def test_verified_levels():
         password="x",
         account_level=AccountLevel.BUSINESS_VERIFIED,
     )
-    assert user.is_verified is True
+    assert user.is_account_verified is True
 
 
 @pytest.mark.django_db

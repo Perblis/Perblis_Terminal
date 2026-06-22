@@ -28,7 +28,7 @@ def _check_publish_gates(listing: Listing) -> None:
     missing = missing_required_specs(template, listing.specs)
     if missing:
         raise errors.PublishRequiresSpecs(fields=dict.fromkeys(missing, "Required."))
-    if not listing.supplier.is_verified:
+    if not listing.supplier.is_account_verified:
         raise errors.VerificationRequired()
     if not profile_complete(listing.supplier):
         raise errors.BusinessProfileIncomplete()

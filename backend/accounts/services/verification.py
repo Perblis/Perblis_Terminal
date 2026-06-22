@@ -89,7 +89,7 @@ def approve(request: VerificationRequest, *, reviewer: User) -> VerificationRequ
     target = _target_level(request.kind)
     # Never downgrade: a Business-Verified user approving an identity doc stays
     # Business Verified.
-    if target == str(AccountLevel.BUSINESS_VERIFIED) or not user.is_verified:
+    if target == str(AccountLevel.BUSINESS_VERIFIED) or not user.is_account_verified:
         user.account_level = target
         user.save(update_fields=["account_level", "updated_at"])
 
