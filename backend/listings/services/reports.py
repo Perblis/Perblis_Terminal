@@ -13,9 +13,11 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from accounts.models import User
-from listings.enums import ListingStatus
-from listings.errors import ListingNotReportable
+from listings import notifications
+from listings.enums import ListingStatus, ReportState
+from listings.errors import InvalidTransition, ListingNotReportable
 from listings.models import Listing, Report
+from listings.services import moderation
 
 REPORT_WINDOW = timedelta(days=30)
 PRIORITY_THRESHOLD = 3
@@ -35,4 +37,31 @@ def create_report(*, user: User, listing_id, reason: str, note: str = "") -> Rep
     if recent >= PRIORITY_THRESHOLD:
         listing.priority_review_flag = True
     listing.save(update_fields=["report_count", "priority_review_flag", "updated_at"])
+    return report
+
+
+@transaction.atomic
+def resolve_report(report: Report, *, outcome: str, note: str = "") -> Report:
+    """Ops resolves a report (wave-6 §6.5): dismissed | warned | removed.
+
+    ``warned`` emails the supplier a warning; ``removed`` requires a reason and
+    takes the listing down (supplier notified, hire history preserved).
+    """
+    if outcome == ReportState.DISMISSED:
+        report.state = ReportState.DISMISSED
+    elif outcome == ReportState.WARNED:
+        report.state = ReportState.WARNED
+        transaction.on_commit(
+            lambda: notifications.notify_listing_warned(report.listing, note=note)
+        )
+    elif outcome == ReportState.REMOVED:
+        if not note.strip():
+            raise InvalidTransition()  # removal reason is mandatory
+        moderation.remove_listing(report.listing, reason=note)
+        report.state = ReportState.REMOVED
+    else:
+        raise InvalidTransition()
+
+    report.resolution_note = note
+    report.save(update_fields=["state", "resolution_note", "updated_at"])
     return report

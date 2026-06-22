@@ -469,3 +469,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave 6 §6.3/§6.4 — the verification SLA surface and the Friday payout batch.
 - change_ref: 2026-06-22 - Wave 6 Slice 6B
 - notes: Full suite GREEN — **447 passed**; ruff+format clean; no new migrations. Mandatory tests covered: mark-paid stores reference + emails + state→paid; freeze blocks mark-paid; bank number full-only-on-payout-queue vs masked in SupplierProfileAdmin. Next: Slice 6D (reports/listing moderation: resolve/warn/remove + tier award + listings/state.py `remove`).
+
+## 2026-06-22 - Wave 6 Slice 6D — Listings & reports moderation
+- tag: FEATURE
+- area: backend/listings/{state.py, admin.py, notifications.py [new], services/moderation.py [new], services/reports.py, templates/admin/listings/reason_action.html [new]}, listings/tests/test_moderation_admin.py
+- summary: Wave 6 §6.5. Extended `listings/state.py::apply` with the Ops-only **`remove`** transition (live|paused|draft → removed, stores `removed_reason`; still the only status writer). New `listings/services/moderation.py`: `remove_listing` (reason mandatory, notifies supplier post-commit, hire history preserved — no cascade), `pause_listing`, `award_tier` (Basic/Verified/Inspected; tier ≠ status so set directly). New `listings/services/reports.py::resolve_report` (dismissed | warned | removed; warned/removed email the supplier; removed takes the listing down). New `listings/notifications.py` (best-effort supplier emails). `ListingAdmin` actions: pause / remove (reason form) / award tier (choice form) + `priority_review_flag` surfaced in list display/filter; `ReportAdmin` actions: dismiss / warn / remove (note/reason forms via shared `reason_action.html`).
+- reason: Wave 6 §6.5 — reports queue + listing moderation surfaces over existing models.
+- change_ref: 2026-06-22 - Wave 6 Slice 6C
+- notes: Full suite GREEN — **455 passed**; ruff+format clean; no new migrations (REMOVED status + ReportState resolution values already existed in enums). Mandatory tests: remove reason-required + supplier-notified + status→removed + hires intact; tier award changes tier only; report dismiss/warn/remove write state + note. Next: Slice 6E (hires admin + dispute resolution + users admin/suspension cascade).
