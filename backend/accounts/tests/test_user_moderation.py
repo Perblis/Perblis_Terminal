@@ -9,16 +9,19 @@ from django.test import RequestFactory
 
 from accounts.errors import AccountSuspended
 from accounts.factories import UserFactory
+from accounts.models import User
 from accounts.services import login, moderation
 from hires.factories import HireFactory
 from hires.models import Hire
 from listings.enums import ListingStatus
 from listings.factories import ListingFactory
+from listings.models import Listing
 from listings.services.storefront import get_storefront
 from payments.enums import PayoutKind, PayoutState
 from payments.models import Payout
 from search.services.common import base_listings
 from suppliers.factories import SupplierProfileFactory
+from suppliers.models import SupplierProfile
 
 pytestmark = pytest.mark.django_db
 
@@ -28,9 +31,9 @@ WORLD_BBOX = {"bbox": (2.0, 3.0, 15.0, 14.0)}
 
 def test_suspension_cascade_blocks_login_search_storefront_and_freezes_payouts():
     """One walk through all four suspension effects (wave-6 mandatory)."""
-    profile = SupplierProfileFactory()
+    profile = cast(SupplierProfile, SupplierProfileFactory())
     supplier = profile.user
-    listing = ListingFactory(supplier=supplier, status=ListingStatus.LIVE)
+    listing = cast(Listing, ListingFactory(supplier=supplier, status=ListingStatus.LIVE))
     hire = cast(Hire, HireFactory(listing=listing, supplier=supplier))
     payout = Payout.objects.create(
         hire=hire,
@@ -67,7 +70,7 @@ def test_suspension_cascade_blocks_login_search_storefront_and_freezes_payouts()
 
 
 def test_reactivate_lifts_suspension_but_leaves_payouts_frozen():
-    profile = SupplierProfileFactory()
+    profile = cast(SupplierProfile, SupplierProfileFactory())
     supplier = profile.user
     hire = cast(Hire, HireFactory(supplier=supplier))
     payout = Payout.objects.create(
@@ -87,7 +90,7 @@ def test_reactivate_lifts_suspension_but_leaves_payouts_frozen():
 
 
 def test_suspend_bumps_token_version():
-    user = UserFactory()
+    user = cast(User, UserFactory())
     before = user.token_version
     moderation.suspend_user(user, reason="x")
     user.refresh_from_db()

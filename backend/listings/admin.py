@@ -32,12 +32,7 @@ class RemoveReasonForm(forms.Form):
 
 
 class AwardTierForm(forms.Form):
-    tier = forms.ChoiceField(
-        choices=[
-            (t, t.label) for t in (ListingTier.BASIC, ListingTier.VERIFIED, ListingTier.INSPECTED)
-        ],
-        label="Award tier",
-    )
+    tier = forms.ChoiceField(choices=ListingTier.choices, label="Award tier")
 
 
 def _action_form(model_admin, request, queryset, form, action_name, title, submit_label):

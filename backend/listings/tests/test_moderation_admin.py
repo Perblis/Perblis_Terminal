@@ -48,7 +48,7 @@ def test_remove_requires_reason():
 
 
 def test_remove_sets_status_notifies_and_preserves_hires(django_capture_on_commit_callbacks):
-    listing = ListingFactory(status=ListingStatus.LIVE)
+    listing = cast(Listing, ListingFactory(status=ListingStatus.LIVE))
     hire = cast(Hire, HireFactory(listing=listing))
     with django_capture_on_commit_callbacks(execute=True):
         moderation.remove_listing(listing, reason="Fraudulent listing")
@@ -60,7 +60,7 @@ def test_remove_sets_status_notifies_and_preserves_hires(django_capture_on_commi
 
 
 def test_award_tier_changes_tier_only():
-    listing = ListingFactory(status=ListingStatus.LIVE, tier=ListingTier.BASIC)
+    listing = cast(Listing, ListingFactory(status=ListingStatus.LIVE, tier=ListingTier.BASIC))
     moderation.award_tier(listing, tier=ListingTier.INSPECTED)
     listing.refresh_from_db()
     assert listing.tier == ListingTier.INSPECTED
@@ -114,7 +114,7 @@ def test_report_remove_takes_down_listing(staff, django_capture_on_commit_callba
 
 # --- listing admin actions --------------------------------------------------
 def test_pause_action(staff):
-    listing = ListingFactory(status=ListingStatus.LIVE)
+    listing = cast(Listing, ListingFactory(status=ListingStatus.LIVE))
     ListingAdmin(Listing, AdminSite()).pause_listings(
         _request(staff), Listing.objects.filter(pk=listing.pk)
     )
