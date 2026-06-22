@@ -20,7 +20,7 @@ from hires.models import Hire
 
 from . import gateway, refunds
 from .enums import PaymentState, PayoutKind, PayoutState, RefundState
-from .errors import PaymentAttemptsExceeded
+from .errors import PaymentAttemptsExceeded, PayoutAlreadyPaid, PayoutFrozen
 from .models import Payment, PaymentEvent, Payout, Refund
 
 logger = structlog.get_logger(__name__)
@@ -219,12 +219,53 @@ def freeze_payouts(hire: Hire, *, reason: str = "in_dispute") -> int:
 
 
 @transaction.atomic
+def freeze_supplier_payouts(supplier, *, reason: str = "account_suspended") -> int:
+    """Freeze all of a supplier's not-yet-paid payouts (suspension cascade)."""
+    return Payout.objects.filter(
+        supplier=supplier, state__in=[PayoutState.PENDING, PayoutState.DUE]
+    ).update(state=PayoutState.FROZEN, frozen_reason=reason)
+
+
+@transaction.atomic
 def mark_payout_paid(payout: Payout, *, reference: str) -> Payout:
-    """Ops records a completed bank transfer (Wave 6 surface; service now)."""
+    """Ops records a completed bank transfer; the supplier is emailed (FSD §9).
+
+    A frozen payout must be unfrozen first — paying out on a live dispute is a
+    bug, not a workflow.
+    """
+    if payout.state == PayoutState.FROZEN:
+        raise PayoutFrozen()
     payout.state = PayoutState.PAID
     payout.paid_ref = reference
     payout.paid_at = timezone.now()
     payout.save(update_fields=["state", "paid_ref", "paid_at", "updated_at"])
+
+    # Notify post-commit (lazy import avoids the tasks<->services import cycle).
+    from payments import tasks
+
+    transaction.on_commit(lambda: tasks.notify_payout_paid.enqueue(str(payout.id)))
+    return payout
+
+
+@transaction.atomic
+def freeze_payout(payout: Payout, *, reason: str) -> Payout:
+    """Freeze a single payout (Ops, e.g. pending investigation)."""
+    if payout.state == PayoutState.PAID:
+        raise PayoutAlreadyPaid()
+    payout.state = PayoutState.FROZEN
+    payout.frozen_reason = reason
+    payout.save(update_fields=["state", "frozen_reason", "updated_at"])
+    return payout
+
+
+@transaction.atomic
+def unfreeze_payout(payout: Payout) -> Payout:
+    """Lift a freeze, returning the payout to the ``due`` queue."""
+    if payout.state != PayoutState.FROZEN:
+        return payout
+    payout.state = PayoutState.DUE
+    payout.frozen_reason = ""
+    payout.save(update_fields=["state", "frozen_reason", "updated_at"])
     return payout
 
 

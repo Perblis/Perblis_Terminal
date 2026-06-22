@@ -23,8 +23,8 @@ def test_is_hirer():
 
 
 def test_is_verified():
-    assert IsVerified().has_permission(_request(is_verified=True), None) is True
-    assert IsVerified().has_permission(_request(is_verified=False), None) is False
+    assert IsVerified().has_permission(_request(is_account_verified=True), None) is True
+    assert IsVerified().has_permission(_request(is_account_verified=False), None) is False
 
 
 def test_anonymous_is_denied():

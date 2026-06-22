@@ -63,6 +63,24 @@ def test_approve_action_upgrades_and_notifies(staff_user, user, django_capture_o
     assert len(mail.outbox) >= 1
 
 
+def test_age_flags_pending_over_12h(staff_user, user):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    req = verification.submit_verification(user=user, kind="identity", files=[PNG])
+    # Backdate creation past the 12h SLA.
+    VerificationRequest.objects.filter(pk=req.pk).update(
+        created_at=timezone.now() - timedelta(hours=20)
+    )
+    req.refresh_from_db()
+    rendered = str(_admin().age(req))
+    assert "color:#B91C1C" in rendered  # highlighted as breaching SLA
+
+    decided = verification.reject(req, reviewer=staff_user, reason="x")
+    assert _admin().age(decided) == "—"  # only pending rows carry an age
+
+
 def test_reject_action_with_reason(staff_user, user, django_capture_on_commit_callbacks):
     req = verification.submit_verification(
         user=user,

@@ -1,0 +1,86 @@
+{% extends "admin/index.html" %}
+{% comment %}
+Ops Console dashboard (FSD §10.3 / wave-6 §6.2). Renders the founder cockpit
+metrics above the standard app list. `ops_dashboard` is injected by
+OpsAdminSite.index (ops/admin_site.py). Money is pre-formatted naira from
+ops.services.metrics (integer kobo never reaches the template).
+{% endcomment %}
+
+{% block content %}
+{% if ops_dashboard %}
+<style>
+  .ops-dash { margin-bottom: 28px; }
+  .ops-dash h2 { font-family: var(--ops-display); font-size: 13px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--ops-ink-500); margin: 18px 0 8px; }
+  .ops-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; }
+  .ops-card { border: 1px solid var(--border-color, #D7DAE0); background: var(--ops-paper, #fff);
+    padding: 14px 16px; }
+  .ops-card .label { font-size: 12px; color: var(--ops-ink-500); text-transform: uppercase;
+    letter-spacing: .04em; }
+  .ops-card .value { font-family: var(--ops-mono); font-size: 22px; font-weight: 500;
+    color: var(--body-fg); margin-top: 6px; }
+  .ops-card.alert { border-color: #B91C1C; }
+  .ops-card .value.count { font-size: 26px; }
+  .ops-state { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px; }
+  .ops-state .cell { border: 1px solid var(--border-color, #D7DAE0); padding: 8px 10px; }
+  .ops-state .cell .n { font-family: var(--ops-mono); font-size: 18px; }
+  .ops-state .cell .t { font-size: 11px; color: var(--ops-ink-500); }
+  .ops-recon.bad { color: #B91C1C; font-weight: 600; }
+  .ops-recon.good { color: #15803D; }
+</style>
+
+<div class="ops-dash module">
+  <h2>Money</h2>
+  <div class="ops-cards">
+    <div class="ops-card"><div class="label">GMV (collected)</div>
+      <div class="value">{{ ops_dashboard.gmv_display }}</div></div>
+    <div class="ops-card"><div class="label">Fees collected</div>
+      <div class="value">{{ ops_dashboard.fees_display }}</div></div>
+    <div class="ops-card"><div class="label">Payout liability</div>
+      <div class="value">{{ ops_dashboard.payout_liability_display }}</div></div>
+    <div class="ops-card"><div class="label">New users (7d)</div>
+      <div class="value count">{{ ops_dashboard.new_users_7d }}</div></div>
+  </div>
+
+  <h2>Queues</h2>
+  <div class="ops-cards">
+    <div class="ops-card{% if ops_dashboard.queues.verifications %} alert{% endif %}">
+      <div class="label">Verifications pending</div>
+      <div class="value count">{{ ops_dashboard.queues.verifications }}</div></div>
+    <div class="ops-card{% if ops_dashboard.queues.payouts %} alert{% endif %}">
+      <div class="label">Payouts due</div>
+      <div class="value count">{{ ops_dashboard.queues.payouts }}</div></div>
+    <div class="ops-card{% if ops_dashboard.queues.reports %} alert{% endif %}">
+      <div class="label">Reports open</div>
+      <div class="value count">{{ ops_dashboard.queues.reports }}</div></div>
+    <div class="ops-card{% if ops_dashboard.queues.disputes %} alert{% endif %}">
+      <div class="label">Disputes open</div>
+      <div class="value count">{{ ops_dashboard.queues.disputes }}</div></div>
+  </div>
+
+  <h2>Hires by state</h2>
+  <div class="ops-state">
+    {% for row in ops_dashboard.hires_by_state %}
+    <div class="cell"><div class="n">{{ row.count }}</div><div class="t">{{ row.label }}</div></div>
+    {% endfor %}
+  </div>
+
+  <h2>Reconciliation</h2>
+  <p>
+    {% with r=ops_dashboard.reconciliation %}
+    {% if r %}
+      Last run {{ r.run_at }} — checked {{ r.checked }}.
+      {% if r.is_clean %}<span class="ops-recon good">No mismatches.</span>
+      {% else %}<span class="ops-recon bad">{{ r.mismatch_count }} mismatch(es).</span>{% endif %}
+    {% else %}
+      <span class="ops-recon">No reconciliation run recorded yet.</span>
+    {% endif %}
+    {% endwith %}
+  </p>
+</div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}

@@ -29,3 +29,15 @@ class CheckoutUnavailable(TerminalError):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_code = "checkout_unavailable"
     default_detail = "Payment checkout could not be opened. Try again shortly."
+
+
+class PayoutFrozen(TerminalError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "payout_frozen"
+    default_detail = "This payout is frozen; unfreeze it before marking it paid."
+
+
+class PayoutAlreadyPaid(TerminalError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "payout_already_paid"
+    default_detail = "This payout has already been paid."

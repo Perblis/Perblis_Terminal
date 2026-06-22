@@ -52,6 +52,10 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_tasks",
     "django_tasks_db",
+    # Admin 2FA (TSD §7). The TOTP plugin holds staff authenticator devices;
+    # enforcement on the Ops Console is gated by ADMIN_2FA_REQUIRED (below).
+    "django_otp",
+    "django_otp.plugins.otp_totp",
 ]
 
 # Project apps. `core` and `accounts` carry Wave 0 content; the rest are
@@ -83,6 +87,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Attaches request.user.is_verified() for the Ops Console 2FA gate. Must sit
+    # after AuthenticationMiddleware (it reads request.user). Inert for the JWT
+    # API — it only adds the OTP device check used by the admin site.
+    "django_otp.middleware.OTPMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -143,6 +151,19 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
+
+# --- Ops Console security (TSD §7) ---------------------------------------
+# When true, the admin site is the django-otp OTPAdminSite: staff must present
+# a TOTP code (authenticator app) to log in, and unverified sessions are denied
+# every admin page. Default OFF so local dev / CI aren't locked out; prod sets
+# it ON. Enrol a device first with `manage.py enroll_totp` to avoid lockout.
+ADMIN_2FA_REQUIRED = env.bool("ADMIN_2FA_REQUIRED", default=False)
+
+# The Ops Console session cookie is scoped to /admin/ and named distinctly, so
+# admin sessions never ride along with any other path (TSD §7 "separate cookie
+# path"). The public API is stateless (JWT), so this affects only the admin.
+SESSION_COOKIE_NAME = env("ADMIN_SESSION_COOKIE_NAME", default="terminal_ops_sessionid")
+SESSION_COOKIE_PATH = env("ADMIN_SESSION_COOKIE_PATH", default="/admin/")
 
 # --- Internationalisation ------------------------------------------------
 
@@ -281,6 +302,10 @@ PAYSTACK_CALLBACK_URL = env(
 BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1")
 BACHS_SECRET_KEY = env("BACHS_SECRET_KEY", default="")
 BACHS_WEBHOOK_SECRET = env("BACHS_WEBHOOK_SECRET", default="")
+
+# Recipient for the weekly founder digest + reconciliation-mismatch alerts
+# (Ops emails). Falls back to DEFAULT_FROM_EMAIL's address if unset.
+OPS_DIGEST_RECIPIENT = env("OPS_DIGEST_RECIPIENT", default="")
 
 ABLY_API_KEY = env("ABLY_API_KEY", default="")
 TERMII_API_KEY = env("TERMII_API_KEY", default="")

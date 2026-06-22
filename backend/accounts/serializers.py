@@ -136,7 +136,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
-    is_verified = serializers.BooleanField(read_only=True)
+    # Wire field stays `is_verified` (frozen contract); the model property was
+    # renamed to `is_account_verified` to avoid clashing with django-otp.
+    is_verified = serializers.BooleanField(read_only=True, source="is_account_verified")
     is_phone_verified = serializers.BooleanField(read_only=True)
     is_email_verified = serializers.BooleanField(read_only=True)
 

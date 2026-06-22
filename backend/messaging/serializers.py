@@ -72,7 +72,7 @@ class ConversationSerializer(serializers.Serializer):
             profile = getattr(other, "supplier_profile", None)
             if profile and profile.business_name:
                 name = profile.business_name
-        return {"id": other.id, "name": name, "verified": other.is_verified}
+        return {"id": other.id, "name": name, "verified": other.is_account_verified}
 
     def get_listing(self, obj: Conversation) -> dict | None:
         if obj.listing_id is None:

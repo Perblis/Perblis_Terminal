@@ -79,6 +79,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Suspension (Ops action) and soft-delete.
     suspended_at = models.DateTimeField(null=True, blank=True)
     suspended_reason = models.TextField(blank=True)
+    # Free-text Ops notes about the account (Ops Console only; never exposed).
+    internal_notes = models.TextField(blank=True, default="")
     deleted_at = models.DateTimeField(null=True, blank=True)
     # Set when the daily purge has scrubbed PII after the 30-day recovery
     # window. Verification records are retained (NDPR) — only the account's
@@ -117,7 +119,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email_verified_at is not None
 
     @property
-    def is_verified(self) -> bool:
+    def is_account_verified(self) -> bool:
+        # Account verification *level* (identity/business reviewed by Ops) — not
+        # to be confused with phone/email OTP or django-otp's request-level
+        # ``is_verified()`` (admin 2FA), whose name this deliberately avoids.
         return self.account_level in {
             AccountLevel.VERIFIED,
             AccountLevel.BUSINESS_VERIFIED,

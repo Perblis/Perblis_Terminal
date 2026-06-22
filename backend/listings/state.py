@@ -28,14 +28,18 @@ def _check_publish_gates(listing: Listing) -> None:
     missing = missing_required_specs(template, listing.specs)
     if missing:
         raise errors.PublishRequiresSpecs(fields=dict.fromkeys(missing, "Required."))
-    if not listing.supplier.is_verified:
+    if not listing.supplier.is_account_verified:
         raise errors.VerificationRequired()
     if not profile_complete(listing.supplier):
         raise errors.BusinessProfileIncomplete()
 
 
-def apply(listing: Listing, action: str) -> Listing:
-    """Apply a status transition in place (call inside a transaction)."""
+def apply(listing: Listing, action: str, *, reason: str = "") -> Listing:
+    """Apply a status transition in place (call inside a transaction).
+
+    ``reason`` is used by the Ops-only ``remove`` transition (stored on the
+    listing); other actions ignore it.
+    """
     if action == "publish":
         if listing.status not in (ListingStatus.DRAFT, ListingStatus.PAUSED):
             raise errors.InvalidTransition()
@@ -53,6 +57,14 @@ def apply(listing: Listing, action: str) -> Listing:
             raise errors.InvalidTransition()
         listing.status = ListingStatus.ARCHIVED
         listing.save(update_fields=["status", "updated_at"])
+    elif action == "remove":
+        # Ops-only takedown (FSD §5.2). Hire history is preserved (no cascade);
+        # only the listing leaves discovery. A terminal state.
+        if listing.status not in (ListingStatus.DRAFT, ListingStatus.LIVE, ListingStatus.PAUSED):
+            raise errors.InvalidTransition()
+        listing.status = ListingStatus.REMOVED
+        listing.removed_reason = reason
+        listing.save(update_fields=["status", "removed_reason", "updated_at"])
     else:
         raise errors.InvalidTransition()
     return listing

@@ -23,6 +23,11 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# Ops Console 2FA is mandatory in prod (TSD §7). Enrol a staff TOTP device with
+# `manage.py enroll_totp` and verify login BEFORE the first deploy that flips
+# this on, or you lock yourself out of the admin.
+ADMIN_2FA_REQUIRED = env.bool("ADMIN_2FA_REQUIRED", default=True)
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 # WhiteNoise serves static directly from gunicorn (no CDN, within budget).

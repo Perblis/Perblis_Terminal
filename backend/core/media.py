@@ -116,6 +116,32 @@ def _private_is_r2() -> bool:
     return settings.PRIVATE_MEDIA_BACKEND == "r2"
 
 
+def r2_usage() -> dict | None:
+    """Best-effort R2 storage usage for the weekly digest (TSD §9).
+
+    Sums object sizes across the public + private buckets via ``list_objects_v2``.
+    R2 exposes no clean per-request usage API, so this is storage-only and
+    best-effort: returns ``None`` when R2 isn't configured or on any error.
+    """
+    if not (_public_is_r2() or _private_is_r2()):
+        return None
+    buckets = [b for b in {settings.R2_PUBLIC_BUCKET, settings.R2_PRIVATE_BUCKET} if b]
+    try:
+        client = _r2_client()
+        total = 0
+        objects = 0
+        for bucket in buckets:
+            paginator = client.get_paginator("list_objects_v2")
+            for page in paginator.paginate(Bucket=bucket):
+                for obj in page.get("Contents", []):
+                    total += obj.get("Size", 0)
+                    objects += 1
+    except Exception:  # storage stats are best-effort; never fail the digest
+        logger.exception("media.r2_usage_failed")
+        return None
+    return {"bytes": total, "objects": objects, "mb": round(total / (1024 * 1024), 1)}
+
+
 def _local_public_path(key: str) -> Path:
     base = Path(settings.MEDIA_ROOT) / "public"
     target = (base / key).resolve()
