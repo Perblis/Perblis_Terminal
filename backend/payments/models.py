@@ -100,3 +100,9 @@ class Payout(BaseModel):
 
     def __str__(self) -> str:
         return f"payout {self.amount} to {self.supplier_id} ({self.state})"
+
+    @property
+    def amount_display(self) -> str:
+        from core.money import display
+
+        return display(self.amount)

@@ -47,6 +47,20 @@ def send_email(*, to: str, subject: str, body: str) -> bool:
     return True
 
 
+def send_payout_paid_email(*, to: str, amount_display: str, reference: str, hire_ref: str) -> bool:
+    """Notify a supplier that their payout was paid (FSD §9 — supplier-only)."""
+    return send_email(
+        to=to,
+        subject="Your Terminal payout has been paid",
+        body=(
+            f"Good news — we've paid your payout of {amount_display} "
+            f"for hire {hire_ref}.\n\n"
+            f"Bank reference: {reference}\n\n"
+            "Allow a short while for it to reflect in your account."
+        ),
+    )
+
+
 def send_welcome_email(*, to: str, full_name: str) -> bool:
     return send_email(
         to=to,

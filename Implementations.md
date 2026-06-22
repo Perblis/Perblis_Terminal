@@ -461,3 +461,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave 6 §6.2 founder dashboard — the Ops Console landing page.
 - change_ref: 2026-06-22 - Wave 6 Slice 6A
 - notes: 20 ops tests green; ruff+format clean; migration `ops 0001` created; `makemigrations --check` clean. Next: Slice 6C (verification age column + Payout queue, mark-paid/freeze/unfreeze, payout-paid email, bank-number decrypt-only-here).
+
+## 2026-06-22 - Wave 6 Slice 6C — Verification age column + Payout queue
+- tag: FEATURE
+- area: backend/payments/{admin.py [new], services.py, errors.py, tasks.py, models.py, templates/admin/payments/payout_action.html [new]}, accounts/{admin.py, integrations/email.py}, payments/tests/test_payout_admin.py, accounts/tests/test_admin_verification.py
+- summary: Wave 6 §6.3/§6.4. **Verification queue:** added an SLA `age` column (>12h pending highlighted red, FSD §4.3). **Payout queue** (`PayoutAdmin`): due-first ordering, state/kind/created-week filters, full **decrypted** supplier bank details shown ONLY here (masked everywhere else); actions `mark_paid` (intermediate reference form → `services.mark_payout_paid` → supplier "Payout paid" email post-commit), `freeze_selected`/`unfreeze_selected` (single-payout, reason), `sum_selected` (batch total). New services `freeze_payout`/`unfreeze_payout`; `mark_payout_paid` now refuses a FROZEN payout (`PayoutFrozen`) and enqueues `notify_payout_paid` on commit. New email helper `send_payout_paid_email` + `payments.tasks.notify_payout_paid` (honours `notif_payouts`, best-effort). `Payout.amount_display` property for templated naira.
+- reason: Wave 6 §6.3/§6.4 — the verification SLA surface and the Friday payout batch.
+- change_ref: 2026-06-22 - Wave 6 Slice 6B
+- notes: Full suite GREEN — **447 passed**; ruff+format clean; no new migrations. Mandatory tests covered: mark-paid stores reference + emails + state→paid; freeze blocks mark-paid; bank number full-only-on-payout-queue vs masked in SupplierProfileAdmin. Next: Slice 6D (reports/listing moderation: resolve/warn/remove + tier award + listings/state.py `remove`).

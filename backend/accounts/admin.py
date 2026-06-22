@@ -13,7 +13,8 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.db.models import Case, IntegerField, Value, When
 from django.template.response import TemplateResponse
-from django.utils.html import format_html_join
+from django.utils import timezone
+from django.utils.html import format_html, format_html_join
 
 from accounts.enums import VerificationState
 from accounts.integrations import media
@@ -73,7 +74,7 @@ class RejectReasonForm(forms.Form):
 
 @admin.register(VerificationRequest)
 class VerificationRequestAdmin(admin.ModelAdmin):
-    list_display = ("user", "kind", "state", "rc_number", "created_at", "decided_at")
+    list_display = ("user", "kind", "state", "rc_number", "age", "created_at", "decided_at")
     list_filter = ("state", "kind")
     search_fields = ("user__email", "user__phone", "rc_number")
     readonly_fields = (
@@ -101,6 +102,17 @@ class VerificationRequestAdmin(admin.ModelAdmin):
                 output_field=IntegerField(),
             )
         ).order_by("_pending_first", "-created_at")
+
+    @admin.display(description="Age")
+    def age(self, obj: VerificationRequest):
+        # SLA visibility (FSD §4.3): pending requests older than 12h are flagged.
+        if obj.state != VerificationState.PENDING:
+            return "—"
+        hours = (timezone.now() - obj.created_at).total_seconds() / 3600
+        label = f"{hours:.0f}h"
+        if hours > 12:
+            return format_html('<span style="color:#B91C1C;font-weight:600">{}</span>', label)
+        return label
 
     @admin.display(description="Documents (15-min links)")
     def documents(self, obj: VerificationRequest):
