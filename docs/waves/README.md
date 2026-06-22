@@ -20,14 +20,14 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 | 3 | [wave-3.md](wave-3.md) | Search: map endpoint (yard aggregation), list, filters | ✅ Done & merged (PRs #23–#25); deployed. P95 ~170ms/500 listings; demo'd locally. Founder sign-off to record at Wave 4 go |
 | 4 | [wave-4.md](wave-4.md) | Hires + money: state machine, availability, fees, **Paystack** (D-018), sweeps, payouts | ✅ **Done & signed off** (founder, 2026-06-21). Slices 4A–4F merged (PR #27); provider switched to Paystack behind a pluggable gateway (D-018, PR #30) + callback wiring (PR #31). Deployed to natural-cat. Carry-over (deploy-only): set the Paystack dashboard webhook URL |
 | 5 | [wave-5.md](wave-5.md) | Messaging: conversations, masking, Ably + polling fallback | ✅ **Done & signed off** (founder, 2026-06-21). `messaging` app + `core/realtime.py` (Ably, keyless-degraded) + Wave 4C hire-conversation hookup; PR #35 merged & deployed (natural-cat). Carry-over (deploy-only): set `ABLY_API_KEY` for live realtime (works by polling without it) |
-| 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | 🟡 **Built** (branch `claude/focused-mccarthy-69u1ju`): admin 2FA (django-otp TOTP), dashboard, verification/payout/reports/hires/users queues, dispute resolution, suspension cascade, weekly digest + reconciliation history. 476 tests green; OpenAPI unchanged (admin-only). Pending **founder demo + sign-off** (enrol a TOTP device + set Railway cron/`OPS_DIGEST_RECIPIENT`) |
+| 6 | [wave-6.md](wave-6.md) | Ops Console: queues, dashboard, dispute actions, digests | ✅ **Done & signed off** (founder, 2026-06-22; PR #37 merged & deployed to natural-cat): admin 2FA (django-otp TOTP), dashboard, verification/payout/reports/hires/users queues, dispute resolution, suspension cascade, weekly digest + reconciliation history. 476 tests green; OpenAPI unchanged (admin-only). Deploy-only carry-overs (TOTP enrolment, `OPS_DIGEST_RECIPIENT`, Railway cron, `ABLY_API_KEY`) confirmed addressed |
 
 ## Frontend & launch waves
 
 | Wave | File | Deliverable | Status |
 |---|---|---|---|
-| 7 | [wave-7.md](wave-7.md) | Supplier Portal complete (FSD §10.2, screens `ux/03` P1–P12) | ⏸ Gated on Wave 4 contract freeze (Messages slice needs Wave 5) |
-| 8 | [wave-8.md](wave-8.md) | Hirer app complete (FSD §10.1, screens `ux/02` S1–S17) | ⏸ Gated on Wave 4 contract freeze (Messages slice needs Wave 5) |
+| 7 | [wave-7.md](wave-7.md) | Supplier Portal complete (FSD §10.2, screens `ux/03` P1–P12) | ⏸ Backend dependencies met (Waves 4 + 5 contracts frozen); **awaiting explicit founder approval to start** |
+| 8 | [wave-8.md](wave-8.md) | Hirer app complete (FSD §10.1, screens `ux/02` S1–S17) | ⏸ Backend dependencies met (Waves 4 + 5 contracts frozen); **awaiting explicit founder approval to start** |
 | 9 | [wave-9.md](wave-9.md) | Hardening: journeys verbatim, load, security, runbooks, beta, launch gate | ⏸ Gated on Waves 0–8 |
 
 Waves 7 and 8 may interleave with Waves 5–6 once Wave 4's OpenAPI contracts are frozen (TSD §10).
