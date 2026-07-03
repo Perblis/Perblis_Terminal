@@ -26,7 +26,7 @@ Terminal is built in **gated waves**. Each wave has its own file in this directo
 
 | Wave | File | Deliverable | Status |
 |---|---|---|---|
-| 7 | [wave-7.md](wave-7.md) | Supplier Portal complete (FSD §10.2, screens `ux/03` P1–P12) | ⏸ Backend dependencies met (Waves 4 + 5 contracts frozen); **awaiting explicit founder approval to start** |
+| 7 | [wave-7.md](wave-7.md) | Supplier Portal complete (FSD §10.2, screens `ux/03` P1–P12) | 🟡 **Approved & in progress** (founder go 2026-07-03; vision brief in [wave-7-vision.md](wave-7-vision.md); slices 7-0 → 7E on `wave-7-supplier-portal`) |
 | 8 | [wave-8.md](wave-8.md) | Hirer app complete (FSD §10.1, screens `ux/02` S1–S17) | ⏸ Backend dependencies met (Waves 4 + 5 contracts frozen); **awaiting explicit founder approval to start** |
 | 9 | [wave-9.md](wave-9.md) | Hardening: journeys verbatim, load, security, runbooks, beta, launch gate | ⏸ Gated on Waves 0–8 |
 
