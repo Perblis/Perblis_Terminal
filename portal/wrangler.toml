@@ -12,7 +12,7 @@ binding = "ASSETS"
 [observability]
 enabled = true
 
-# Set the backend API origin per environment in the Cloudflare dashboard or
-# via `vars` here once the API is deployed (Wave 0 deploy step).
-# [vars]
-# NEXT_PUBLIC_API_BASE_URL = "https://api.example.com/api/v1"
+# Server-side API origin for the BFF (TSD §5) — never exposed to browser JS.
+# Override per environment in the Cloudflare dashboard if it moves.
+[vars]
+API_BASE_URL = "https://api-production-101c8.up.railway.app/api/v1"

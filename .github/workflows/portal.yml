@@ -40,5 +40,8 @@ jobs:
       - name: Typecheck
         run: pnpm --filter @terminal/portal typecheck
 
+      - name: Test (vitest — BFF refresh, cookie flags, zod↔DRF parity)
+        run: pnpm --filter @terminal/portal test
+
       - name: Build
         run: pnpm --filter @terminal/portal build
