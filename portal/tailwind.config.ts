@@ -9,8 +9,18 @@ const config: Config = {
   // TS widens to plain arrays, so it no longer structurally overlaps Config —
   // hence the two-step conversion. Shape is guaranteed by the tokens build.
   presets: [tokensPreset as unknown as Partial<Config>],
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
-  theme: { extend: {} },
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      // next/font self-hosts the token faces and exposes them as CSS vars;
+      // the preset's literal family names remain the fallback stack.
+      fontFamily: {
+        display: ["var(--font-display)", "Archivo", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "'IBM Plex Mono'", "ui-monospace", "monospace"],
+      },
+    },
+  },
   plugins: [],
 };
 

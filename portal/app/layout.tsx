@@ -1,15 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+
+import { fontVariables } from "./fonts";
+import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Terminal — Supplier Portal",
-  description: "Map-first B2B marketplace for hiring heavy assets in Nigeria.",
+  title: { default: "Terminal — Supplier Portal", template: "%s · Terminal" },
+  description: "Run your fleet on Terminal — Nigeria's marketplace for heavy assets.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#16181D",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-paper-50 text-ink-900 font-sans antialiased">{children}</body>
+    <html lang="en-GB" className={fontVariables}>
+      <body className="bg-surface-page font-sans text-body text-text-primary antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
