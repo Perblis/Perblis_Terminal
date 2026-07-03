@@ -69,9 +69,14 @@ def test_summary_queue_frozen_and_month_windows(auth, supplier):
         paid_at=timezone.now(),
         paid_ref="PO-E2E-1",
     )
-    # A payout settled last month — counts toward the delta, not this month.
-    prev = _payout(supplier, amount=16_000_000, state=PayoutState.PAID, paid_at=timezone.now())
+    # A payout settled (and paid) last month — counts toward the delta, not this month.
     month_start = timezone.localtime().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    prev = _payout(
+        supplier,
+        amount=16_000_000,
+        state=PayoutState.PAID,
+        paid_at=month_start - dt.timedelta(days=2),
+    )
     Payout.objects.filter(pk=prev.pk).update(created_at=month_start - dt.timedelta(days=2))
 
     body = auth(supplier).get(PAYOUTS).json()

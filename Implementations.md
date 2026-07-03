@@ -532,3 +532,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave gating (binding) — explicit founder approval recorded before build start.
 - change_ref: 2026-07-03 14:30 - Wave 7 founder vision shaping session (48-question elicitation)
 - notes: Branch `wave-7-supplier-portal` (local, 2 commits ahead of origin/main: Wave 6 sign-off docs + tokens/D-019). Next: Slice 7-0 backend additions PR. Carry-over reminder: Paystack dashboard webhook URL still unset (Wave 4 deploy-only).
+
+## 2026-07-03 18:30 - Wave 7 Slice 7-0 VERIFIED green + OpenAPI regenerated
+- tag: FIX | CHORE
+- area: backend/payments/tests/test_payout_api.py, backend/openapi/schema.yml (regenerated, additive-only)
+- summary: Ran the full verification pass slice 7-0 deferred ("tests not yet run" on dcb83b8). One test-data bug found and fixed: `test_summary_queue_frozen_and_month_windows` gave the previous-month payout `paid_at=timezone.now()`, so `last_paid` (ordered by `-paid_at`) deterministically picked it over the intended row — its `paid_at` now matches its last-month `created_at` (the service was correct; the fixture was self-inconsistent). Regenerated OpenAPI: **+362 lines, 0 deletions** — purely additive (new paths `hires/{id}/refund-preview`, `hires/stats`, `hires/events`, `payments/payouts`; `from`/`to` params + yard/photo fields on GET /hires); all frozen Wave 2-5 contracts byte-untouched.
+- reason: Slice 7-0 was committed blind (no Postgres on the authoring machine); Definition of Done requires the suite green + OpenAPI committed before the next slice.
+- change_ref: 2026-07-03 16:00 - Wave 7 FOUNDER GO + build plan approved
+- notes: **All gates green locally** (native PG16+PostGIS, GDAL libgdal.so.34): **503 passed** (476 Wave 6 + 27 new), coverage 91.2% overall (gate 70%) / **91.1% hires+payments (gate 85%)**, ruff+format clean, mypy clean on the CI target, `makemigrations --check` clean, `.env.example` completeness passes, spectacular --validate 0 errors. Slice 7-0 complete on branch `wave-7-supplier-portal-fg2lhk` -> draft PR. Next: Slice 7A (portal foundation/deploy - Bundle A governance incl. formal D-020/D-021 DECISIONS.md entries; ends with founder direction check).

@@ -474,6 +474,11 @@ paths:
         description: The pagination cursor value.
         schema:
           type: string
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Only hires overlapping on/after this date (YYYY-MM-DD).
       - name: page_size
         required: false
         in: query
@@ -491,6 +496,11 @@ paths:
         name: status
         schema:
           type: string
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: Only hires overlapping on/before this date (YYYY-MM-DD).
       tags:
       - hires
       security:
@@ -736,6 +746,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentStatus'
           description: ''
+  /api/v1/hires/{hire_id}/refund-preview:
+    get:
+      operationId: hires_refund_preview_retrieve
+      description: |-
+        The §7.6 refund manifest if the caller cancelled now (Wave 7, read-only).
+
+        The portal renders these figures verbatim — money is never recomputed
+        client-side. 400 ``refund_not_applicable`` unless the hire is Confirmed.
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundPreview'
+          description: ''
   /api/v1/hires/{hire_id}/resolve-dispute:
     post:
       operationId: hires_resolve_dispute_create
@@ -770,6 +806,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HireDetail'
+          description: ''
+  /api/v1/hires/events:
+    get:
+      operationId: hires_events_list
+      description: The supplier's cross-hire activity feed (Wave 7 P2), cursor-paginated.
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHireEventFeedList'
+          description: ''
+  /api/v1/hires/stats:
+    get:
+      operationId: hires_stats_retrieve
+      description: Supplier dashboard counts (Wave 7 P2) — by-status totals + nearest
+        expiry.
+      parameters:
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - supplier
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HireStats'
           description: ''
   /api/v1/listings:
     get:
@@ -1217,6 +1304,39 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/payments/payouts:
+    get:
+      operationId: payments_payouts_list
+      description: |-
+        The supplier's payouts + the payout-strip summary (Wave 7 P2/F11).
+
+        Cursor-paginated rows with a ``summary`` block on the envelope (mirrors the
+        messaging list's ``unread_total``). Supplier-only: payout figures are
+        supplier-confidential (D-014), and this is their one API home.
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - payments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPayoutList'
+          description: ''
   /api/v1/payments/webhook:
     post:
       operationId: payments_webhook_create
@@ -1829,6 +1949,14 @@ components:
         asset_class:
           type: string
           readOnly: true
+        yard_id:
+          type: string
+          nullable: true
+          readOnly: true
+        listing_photo:
+          type: string
+          nullable: true
+          readOnly: true
         start_date:
           type: string
           format: date
@@ -1905,6 +2033,7 @@ components:
       - hire_value_display
       - id
       - listing_id
+      - listing_photo
       - listing_title
       - payout_amount
       - payout_amount_display
@@ -1913,6 +2042,7 @@ components:
       - service_fee
       - service_fee_display
       - start_date
+      - yard_id
     HireAccept:
       type: object
       properties:
@@ -1971,6 +2101,14 @@ components:
           readOnly: true
         asset_class:
           type: string
+          readOnly: true
+        yard_id:
+          type: string
+          nullable: true
+          readOnly: true
+        listing_photo:
+          type: string
+          nullable: true
           readOnly: true
         start_date:
           type: string
@@ -2054,6 +2192,7 @@ components:
       - hire_value_display
       - id
       - listing_id
+      - listing_photo
       - listing_title
       - payout_amount
       - payout_amount_display
@@ -2062,6 +2201,7 @@ components:
       - service_fee
       - service_fee_display
       - start_date
+      - yard_id
     HireEvent:
       type: object
       properties:
@@ -2087,6 +2227,67 @@ components:
       - created_at
       - id
       - to_status
+    HireEventFeed:
+      type: object
+      description: A cross-hire event row for the supplier's activity feed (Wave 7
+        P2).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        actor_kind:
+          $ref: '#/components/schemas/ActorKindEnum'
+        from_status:
+          oneOf:
+          - $ref: '#/components/schemas/ToStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        to_status:
+          $ref: '#/components/schemas/ToStatusEnum'
+        meta: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        hire_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+      required:
+      - actor_kind
+      - created_at
+      - hire_id
+      - id
+      - listing_title
+      - status
+      - to_status
+    HireStats:
+      type: object
+      description: Supplier dashboard counts (response-only, Wave 7 P2).
+      properties:
+        by_status:
+          type: object
+          additionalProperties:
+            type: integer
+          readOnly: true
+        needs_response:
+          type: integer
+          readOnly: true
+        nearest_request_expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - by_status
+      - nearest_request_expires_at
+      - needs_response
     KindCc5Enum:
       enum:
       - on_hire
@@ -2708,6 +2909,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Conversation'
+    PaginatedHireEventFeedList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HireEventFeed'
     PaginatedHireList:
       type: object
       required:
@@ -2765,6 +2985,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Message'
+    PaginatedPayoutList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payout'
     PasswordResetConfirm:
       type: object
       properties:
@@ -2992,6 +3231,75 @@ components:
         * `success` - Success
         * `failed` - Failed
         * `abandoned` - Abandoned
+    Payout:
+      type: object
+      description: A supplier's payout row (Wave 7 P2/F11). Supplier-scoped by the
+        view.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        hire_id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_title:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        amount_display:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/PayoutKindEnum'
+        state:
+          $ref: '#/components/schemas/PayoutStateEnum'
+        paid_ref:
+          type: string
+          maxLength: 128
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        frozen_reason:
+          type: string
+          maxLength: 64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - amount_display
+      - created_at
+      - hire_id
+      - id
+      - listing_title
+    PayoutKindEnum:
+      enum:
+      - completion
+      - withheld_day
+      type: string
+      description: |-
+        * `completion` - Completion
+        * `withheld_day` - Withheld day
+    PayoutStateEnum:
+      enum:
+      - pending
+      - due
+      - paid
+      - frozen
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `due` - Due
+        * `paid` - Paid
+        * `frozen` - Frozen
     PhotoAttach:
       type: object
       properties:
@@ -3017,6 +3325,60 @@ components:
         * `inappropriate` - Inappropriate
         * `duplicate` - Duplicate
         * `unavailable` - Unavailable
+    RefundPreview:
+      type: object
+      description: |-
+        The §7.6 outcome if the caller cancelled now (response-only, Wave 7).
+
+        Every figure is server-computed integer kobo with its display string — the
+        portal renders these verbatim and never recomputes (architecture invariant).
+      properties:
+        cancelled_by:
+          allOf:
+          - $ref: '#/components/schemas/CancelledByEnum'
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        hire_value:
+          type: integer
+          readOnly: true
+        hire_value_display:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+        amount_display:
+          type: string
+          readOnly: true
+        withheld_day:
+          type: integer
+          readOnly: true
+        withheld_day_display:
+          type: string
+          readOnly: true
+        processing:
+          type: integer
+          readOnly: true
+        processing_display:
+          type: string
+          readOnly: true
+        strike:
+          type: boolean
+          readOnly: true
+      required:
+      - amount
+      - amount_display
+      - cancelled_by
+      - hire_value
+      - hire_value_display
+      - kind
+      - processing
+      - processing_display
+      - strike
+      - withheld_day
+      - withheld_day_display
     Register:
       type: object
       properties:
