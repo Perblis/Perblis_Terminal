@@ -5,7 +5,10 @@ import type { Config } from "tailwindcss";
 import tokensPreset from "@terminal/tokens/tailwind";
 
 const config: Config = {
-  presets: [tokensPreset as Partial<Config>],
+  // The emitted preset carries fontSize pairs ([size, {lineHeight,...}]) that
+  // TS widens to plain arrays, so it no longer structurally overlaps Config —
+  // hence the two-step conversion. Shape is guaranteed by the tokens build.
+  presets: [tokensPreset as unknown as Partial<Config>],
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: { extend: {} },
   plugins: [],
