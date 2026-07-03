@@ -19,6 +19,17 @@ const config: Config = {
         sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "'IBM Plex Mono'", "ui-monospace", "monospace"],
       },
+      // P1's barely-perceptible pan (wave-7-vision.md) — the one decorative
+      // motion, killed by prefers-reduced-motion via motion-safe.
+      keyframes: {
+        "port-pan": {
+          "0%": { transform: "scale(1.06) translateX(0)" },
+          "100%": { transform: "scale(1.06) translateX(-2.5%)" },
+        },
+      },
+      animation: {
+        "port-pan": "port-pan 60s ease-in-out infinite alternate",
+      },
     },
   },
   plugins: [],
