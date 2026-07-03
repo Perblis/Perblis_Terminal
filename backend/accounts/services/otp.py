@@ -12,6 +12,8 @@ import hmac
 import secrets
 from datetime import timedelta
 
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
@@ -31,6 +33,13 @@ EMAIL_VERIFY = str(OtpPurpose.EMAIL_VERIFY)
 
 
 def _generate_code() -> str:
+    # E2E harness hook (Wave 7 TSD §8): a fixed code so Playwright can log in.
+    # DEBUG-only, enforced loudly — never simulate trust outside dev.
+    fixed = getattr(settings, "E2E_FIXED_OTP", "")
+    if fixed:
+        if not settings.DEBUG:
+            raise ImproperlyConfigured("E2E_FIXED_OTP must never be set outside DEBUG")
+        return fixed
     return f"{secrets.randbelow(10**OTP_LENGTH):0{OTP_LENGTH}d}"
 
 

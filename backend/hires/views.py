@@ -8,7 +8,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from core.permissions import IsHirer
+from core.money import display
+from core.permissions import IsHirer, IsSupplier
 from hires import serializers as s
 from hires import services
 from payments.serializers import PaymentStatusSerializer
@@ -29,14 +30,34 @@ class HireListCreateView(GenericAPIView):
         parameters=[
             OpenApiParameter("role", str, required=False, enum=["hirer", "supplier"]),
             OpenApiParameter("status", str, required=False),
+            OpenApiParameter(
+                "from",
+                str,
+                required=False,
+                description="Only hires overlapping on/after this date (YYYY-MM-DD).",
+            ),
+            OpenApiParameter(
+                "to",
+                str,
+                required=False,
+                description="Only hires overlapping on/before this date (YYYY-MM-DD).",
+            ),
         ],
         responses={200: s.HireSerializer(many=True)},
     )
     def get(self, request):
+        window = s.HireWindowSerializer(
+            data={
+                "start": request.query_params.get("from"),
+                "end": request.query_params.get("to"),
+            }
+        )
+        window.is_valid(raise_exception=True)
         hires = services.list_hires(
             user=request.user,
             role=request.query_params.get("role"),
             status=request.query_params.get("status"),
+            **window.validated_data,
         )
         page = self.paginate_queryset(hires)
         return self.get_paginated_response(self.get_serializer(page, many=True).data)
@@ -170,6 +191,64 @@ class HireDisputeView(GenericAPIView):
             user=request.user, hire_id=hire_id, reason=data.validated_data["reason"]
         )
         return Response(self.get_serializer(hire).data)
+
+
+class HireRefundPreviewView(GenericAPIView):
+    """The §7.6 refund manifest if the caller cancelled now (Wave 7, read-only).
+
+    The portal renders these figures verbatim — money is never recomputed
+    client-side. 400 ``refund_not_applicable`` unless the hire is Confirmed.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = s.RefundPreviewSerializer
+
+    @extend_schema(responses={200: s.RefundPreviewSerializer})
+    def get(self, request, hire_id):
+        hire, cancelled_by, plan = services.refund_preview(user=request.user, hire_id=hire_id)
+        processing = hire.hire_value - plan.amount - plan.withheld_day
+        return Response(
+            {
+                "cancelled_by": cancelled_by,
+                "kind": plan.kind,
+                "hire_value": hire.hire_value,
+                "hire_value_display": display(hire.hire_value),
+                "amount": plan.amount,
+                "amount_display": display(plan.amount),
+                "withheld_day": plan.withheld_day,
+                "withheld_day_display": display(plan.withheld_day),
+                "processing": processing,
+                "processing_display": display(processing),
+                "strike": plan.strike,
+            }
+        )
+
+
+class HireStatsView(GenericAPIView):
+    """Supplier dashboard counts (Wave 7 P2) — by-status totals + nearest expiry."""
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.HireStatsSerializer
+
+    @extend_schema(
+        parameters=[OpenApiParameter("role", str, required=False, enum=["supplier"])],
+        responses={200: s.HireStatsSerializer},
+    )
+    def get(self, request):
+        return Response(services.hire_stats(user=request.user))
+
+
+class HireEventsView(GenericAPIView):
+    """The supplier's cross-hire activity feed (Wave 7 P2), cursor-paginated."""
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.HireEventFeedSerializer
+
+    @extend_schema(responses={200: s.HireEventFeedSerializer(many=True)})
+    def get(self, request):
+        events = services.list_hire_events(user=request.user)
+        page = self.paginate_queryset(events)
+        return self.get_paginated_response(self.get_serializer(page, many=True).data)
 
 
 class HireResolveDisputeView(GenericAPIView):

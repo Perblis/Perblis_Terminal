@@ -213,8 +213,19 @@ def _issue_refund(hire: Hire, *, cancelled_by: str, reason: str) -> None:
     issue_refund(hire, cancelled_by=cancelled_by, reason=reason)
 
 
-def list_hires(*, user: User, role: str | None = None, status: str | None = None) -> QuerySet[Hire]:
-    """Hires the user is party to, newest first (cursor-paginated by the view)."""
+def list_hires(
+    *,
+    user: User,
+    role: str | None = None,
+    status: str | None = None,
+    start: dt.date | None = None,
+    end: dt.date | None = None,
+) -> QuerySet[Hire]:
+    """Hires the user is party to, newest first (cursor-paginated by the view).
+
+    ``start``/``end`` narrow to hires whose dates overlap the window — the
+    CalendarGantt's month fetch (Wave 7 P8). Either bound may stand alone.
+    """
     if role == "hirer":
         qs = Hire.objects.filter(hirer=user)
     elif role == "supplier":
@@ -223,13 +234,80 @@ def list_hires(*, user: User, role: str | None = None, status: str | None = None
         qs = Hire.objects.filter(Q(hirer=user) | Q(supplier=user))
     if status:
         qs = qs.filter(status=status)
-    return qs.select_related("listing", "supplier", "hirer").order_by("-created_at")
+    if end:
+        qs = qs.filter(start_date__lte=end)
+    if start:
+        qs = qs.filter(end_date__gte=start)
+    return (
+        qs.select_related("listing", "supplier", "hirer")
+        .prefetch_related("listing__photos")
+        .order_by("-created_at")
+    )
 
 
 def get_hire(*, user: User, hire_id) -> Hire:
     """A single hire with its event timeline, visible only to its parties."""
     hire = _get_for_actor(hire_id, user)
     return hire
+
+
+def refund_preview(*, user: User, hire_id):
+    """The §7.6 refund outcome if the caller cancelled this hire right now.
+
+    Read-only companion to ``cancel_hire`` (Wave 7 portal's cancel manifest —
+    the client must never recompute money). The caller's role decides
+    ``cancelled_by`` exactly as ``cancel_hire`` would; only a paid (Confirmed)
+    hire has a refund to preview.
+    """
+    from payments.refunds import compute_refund_plan
+
+    hire = _get_for_actor(hire_id, user)
+    if hire.status != HireStatus.CONFIRMED:
+        raise errors.RefundNotApplicable()
+    if user.is_staff:
+        cancelled_by = CancelledBy.OPS
+    elif user.id == hire.supplier_id:
+        cancelled_by = CancelledBy.SUPPLIER
+    else:
+        cancelled_by = CancelledBy.HIRER
+    plan = compute_refund_plan(hire, cancelled_by=str(cancelled_by))
+    return hire, str(cancelled_by), plan
+
+
+def hire_stats(*, user: User) -> dict:
+    """Supplier dashboard counts (Wave 7 P2) — one GROUP BY, no money.
+
+    Cursor pagination carries no totals, so the counts live here: every status,
+    plus the nearest pending-request expiry for the "Action needed" countdown.
+    """
+    from django.db.models import Count
+
+    qs = Hire.objects.filter(supplier=user)
+    counts = {row["status"]: row["n"] for row in qs.values("status").annotate(n=Count("id"))}
+    by_status = {status: counts.get(status, 0) for status in HireStatus.values}
+    nearest = (
+        qs.filter(status=HireStatus.REQUESTED)
+        .order_by("request_expires_at")
+        .values_list("request_expires_at", flat=True)
+        .first()
+    )
+    return {
+        "by_status": by_status,
+        "needs_response": by_status[str(HireStatus.REQUESTED)],
+        "nearest_request_expires_at": nearest,
+    }
+
+
+def list_hire_events(*, user: User) -> QuerySet[HireEvent]:
+    """The supplier's cross-hire event feed, newest first (Wave 7 P2 activity).
+
+    One indexed query instead of an N+1 walk over hire details.
+    """
+    return (
+        HireEvent.objects.filter(hire__supplier=user)
+        .select_related("hire__listing")
+        .order_by("-created_at")
+    )
 
 
 # --- handovers (FSD §7.4) ---------------------------------------------------

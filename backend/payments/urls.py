@@ -10,4 +10,5 @@ app_name = "payments"
 
 urlpatterns = [
     path("payments/webhook", views.PaymentWebhookView.as_view(), name="webhook"),
+    path("payments/payouts", views.SupplierPayoutListView.as_view(), name="payouts"),
 ]

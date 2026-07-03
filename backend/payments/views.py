@@ -7,11 +7,14 @@ import json
 import structlog
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import gateway, services
+from core.permissions import IsSupplier
+
+from . import gateway, serializers, services
 from .tasks import process_collection_event
 
 logger = structlog.get_logger(__name__)
@@ -68,3 +71,23 @@ class PaymentWebhookView(APIView):
         # 200 fast; the charge is verified and the hire confirmed off-request.
         process_collection_event.enqueue(event.dedup_id)
         return Response({"status": "accepted"}, status=status.HTTP_200_OK)
+
+
+class SupplierPayoutListView(GenericAPIView):
+    """The supplier's payouts + the payout-strip summary (Wave 7 P2/F11).
+
+    Cursor-paginated rows with a ``summary`` block on the envelope (mirrors the
+    messaging list's ``unread_total``). Supplier-only: payout figures are
+    supplier-confidential (D-014), and this is their one API home.
+    """
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = serializers.PayoutSerializer
+
+    @extend_schema(responses={200: serializers.PayoutSerializer(many=True)})
+    def get(self, request):
+        payouts = services.list_payouts(supplier=request.user)
+        page = self.paginate_queryset(payouts)
+        response = self.get_paginated_response(self.get_serializer(page, many=True).data)
+        response.data["summary"] = services.payout_summary(supplier=request.user)
+        return response

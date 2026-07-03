@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
+from core import media
 from core.money import display
 
-from .enums import HandoverKind
+from .enums import CancelledBy, HandoverKind
 from .models import HandoverRecord, Hire, HireEvent
 
 # Fields visible only to the supplier (and Ops/staff) — never to the hirer.
@@ -36,6 +37,13 @@ class HireCreateSerializer(serializers.Serializer):
         if attrs["end_date"] < attrs["start_date"]:
             raise serializers.ValidationError({"end_date": "Must be on or after start_date."})
         return attrs
+
+
+class HireWindowSerializer(serializers.Serializer):
+    """Optional date-window filters on the hire list (`from`/`to` query params)."""
+
+    start = serializers.DateField(required=False, allow_null=True, default=None)
+    end = serializers.DateField(required=False, allow_null=True, default=None)
 
 
 class HireDeclineSerializer(serializers.Serializer):
@@ -63,6 +71,8 @@ class HireSerializer(serializers.ModelSerializer):
     listing_id = serializers.UUIDField(source="listing.id", read_only=True)
     listing_title = serializers.CharField(source="listing.title", read_only=True)
     asset_class = serializers.CharField(source="listing.asset_class", read_only=True)
+    yard_id = serializers.SerializerMethodField()
+    listing_photo = serializers.SerializerMethodField()
     hire_value_display = serializers.SerializerMethodField()
     service_fee_display = serializers.SerializerMethodField()
     payout_amount_display = serializers.SerializerMethodField()
@@ -74,6 +84,8 @@ class HireSerializer(serializers.ModelSerializer):
             "listing_id",
             "listing_title",
             "asset_class",
+            "yard_id",
+            "listing_photo",
             "start_date",
             "end_date",
             "duration_days",
@@ -94,6 +106,17 @@ class HireSerializer(serializers.ModelSerializer):
             "payment_deadline",
             "created_at",
         )
+
+    def get_yard_id(self, obj: Hire) -> str | None:
+        return str(obj.yard_id) if obj.yard_id else None
+
+    def get_listing_photo(self, obj: Hire) -> str | None:
+        # Cover (or first) listing photo; the view prefetches listing__photos.
+        photos = list(obj.listing.photos.all())
+        if not photos:
+            return None
+        cover = next((p for p in photos if p.is_cover), photos[0])
+        return media.public_url(cover.r2_key)
 
     def get_hire_value_display(self, obj: Hire) -> str:
         return display(obj.hire_value)
@@ -139,6 +162,45 @@ class HandoverSerializer(serializers.ModelSerializer):
     class Meta:
         model = HandoverRecord
         fields = ("id", "hire", "kind", "photos", "reading", "confirmed_at", "created_at")
+
+
+class RefundPreviewSerializer(serializers.Serializer):
+    """The §7.6 outcome if the caller cancelled now (response-only, Wave 7).
+
+    Every figure is server-computed integer kobo with its display string — the
+    portal renders these verbatim and never recomputes (architecture invariant).
+    """
+
+    cancelled_by = serializers.ChoiceField(choices=CancelledBy.choices, read_only=True)
+    kind = serializers.CharField(read_only=True)
+    hire_value = serializers.IntegerField(read_only=True)
+    hire_value_display = serializers.CharField(read_only=True)
+    amount = serializers.IntegerField(read_only=True)
+    amount_display = serializers.CharField(read_only=True)
+    withheld_day = serializers.IntegerField(read_only=True)
+    withheld_day_display = serializers.CharField(read_only=True)
+    processing = serializers.IntegerField(read_only=True)
+    processing_display = serializers.CharField(read_only=True)
+    strike = serializers.BooleanField(read_only=True)
+
+
+class HireStatsSerializer(serializers.Serializer):
+    """Supplier dashboard counts (response-only, Wave 7 P2)."""
+
+    by_status = serializers.DictField(child=serializers.IntegerField(), read_only=True)
+    needs_response = serializers.IntegerField(read_only=True)
+    nearest_request_expires_at = serializers.DateTimeField(read_only=True, allow_null=True)
+
+
+class HireEventFeedSerializer(HireEventSerializer):
+    """A cross-hire event row for the supplier's activity feed (Wave 7 P2)."""
+
+    hire_id = serializers.UUIDField(read_only=True)
+    listing_title = serializers.CharField(source="hire.listing.title", read_only=True)
+    status = serializers.CharField(source="hire.status", read_only=True)
+
+    class Meta(HireEventSerializer.Meta):
+        fields = (*HireEventSerializer.Meta.fields, "hire_id", "listing_title", "status")
 
 
 class DisputeSerializer(serializers.Serializer):
