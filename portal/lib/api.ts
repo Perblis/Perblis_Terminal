@@ -21,9 +21,15 @@ export class ApiError extends Error {
 export const SESSION_EXPIRED_EVENT = "terminal:session-expired";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // Only claim JSON for string bodies — FormData must set its own multipart
+  // boundary (verification uploads ride this path through the BFF).
+  const jsonHeaders =
+    init?.body === undefined || typeof init.body === "string"
+      ? { "content-type": "application/json" }
+      : undefined;
   const resp = await fetch(path, {
     ...init,
-    headers: { "content-type": "application/json", ...init?.headers },
+    headers: { ...jsonHeaders, ...init?.headers },
   });
   if (resp.ok) {
     return resp.status === 204 ? (undefined as T) : ((await resp.json()) as T);
