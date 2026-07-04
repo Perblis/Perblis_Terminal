@@ -564,3 +564,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave 7 slice 7C per plan.
 - change_ref: 2026-07-04 05:15 - Wave 7 Slice 7B BUILT
 - notes: Gates green: 37 vitest (incl. mandatory state-machine fidelity + LockedTerms server-figures-only), tsc, eslint, next build. Follow-ups: hirer card (level/completed count) needs hirer fields on the supplier-shaped HireSerializer (additive backend — founder approval); handover SUBMIT from the portal (photos capture) is app-first per spec, portal offers confirm; utilisation % is per-listing not per-unit (unit-level hire allocation isn't in the API). Next: 7D (P9 messages, P10 storefront, P11 settings).
+
+## 2026-07-04 07:45 - Wave 7 Slice 7D BUILT — messages, storefront, settings (P9/P10/P11, F7)
+- tag: FEATURE
+- area: portal/ (app/(app)/{messages,storefront,settings}, app/s/[id] [new public share page], components/storefront/storefront-view, lib/types messaging shapes)
+- summary: P9 two-pane Messages (thread filters, MaskedContact anatomy + 09 explainer, optimistic send w/ retry, bulk mark-read, 15s polling — Ably wiring is 7E, F7 says indistinguishable beyond latency, keyboard nav). P10 storefront preview-as-hirer + edit drawer (name/about/logo presign) + CAC upgrade CTA + Share -> new PUBLIC /s/[id] (SSR off the AllowAny storefront endpoint; OG card 7E). P11 settings: personal, business pointer, bank VAULT (inverse ink + brackets + masked mono + password re-auth ceremony + encryption note), 4 notif toggles, verification status/resubmit, account (reset email; delete w/ 30-day copy, API-guarded), legal.
+- reason: Wave 7 slice 7D per plan.
+- change_ref: 2026-07-04 06:30 - Wave 7 Slice 7C BUILT
+- notes: Gates green (tsc, eslint, 37 vitest, build). P9 hire side-strip is minimal (kind+listing) — ConversationSerializer exposes no hire_id; LockedTerms-mini needs an additive field (founder-approved backend change, queue with the photo-DELETE + hirer-card asks). P7's conversation slot still placeholder — wiring the hire conv into P7 rides with the Ably work in 7E. Next: 7E hardening (Stage-6 sweep, Sentry, Ably realtime, Playwright smoke, OG card, mobile polish).
