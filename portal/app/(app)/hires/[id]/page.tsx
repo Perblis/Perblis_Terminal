@@ -19,7 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
-import { ApiError } from "@/lib/api";
+import { ApiError, mediaUrl } from "@/lib/api";
 import { formatDateRange, legalSupplierActions, supplierStatusCopy } from "@/lib/hire-domain";
 import { useConfirmHandover, useHandovers, useHire, useHireAction, useRefundPreview } from "@/lib/queries";
 
@@ -112,7 +112,7 @@ export default function HireDetailPage() {
           <Card className="flex items-center gap-s4">
             {h.listing_photo ? (
               // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-              <img src={h.listing_photo} alt="" className="size-s8 rounded-sm object-cover" />
+              <img src={mediaUrl(h.listing_photo) ?? ""} alt="" className="size-s8 rounded-sm object-cover" />
             ) : (
               <span className={`grid size-s8 shrink-0 place-items-center rounded-sm ${meta.bg} ${meta.text}`}>
                 <Glyph size={26} />

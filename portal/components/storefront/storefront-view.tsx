@@ -5,6 +5,7 @@ import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
 import { CLASS_GLYPHS } from "@/components/brand/class-glyphs";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
 import type { AssetClass } from "@/lib/types";
+import { mediaUrl } from "@/lib/api";
 
 export type StorefrontData = {
   supplier_id: string;
@@ -32,7 +33,7 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
       <header className="flex items-center gap-s4">
         {data.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-          <img src={data.logo_url} alt="" className="size-s8 rounded-md object-cover" />
+          <img src={mediaUrl(data.logo_url) ?? ""} alt="" className="size-s8 rounded-md object-cover" />
         ) : (
           <span className="grid size-s8 place-items-center rounded-md bg-surface-inverse font-display text-h3 text-amber-500">
             {name.slice(0, 1).toUpperCase()}
@@ -77,7 +78,7 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
               <div className="relative aspect-[4/3] bg-surface-sunken">
                 {l.cover_photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-                  <img src={l.cover_photo_url} alt="" className="h-full w-full object-cover" />
+                  <img src={mediaUrl(l.cover_photo_url) ?? ""} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className={`flex h-full items-center justify-center ${meta.bg} ${meta.text}`}>
                     <Glyph size={40} />

@@ -26,7 +26,7 @@ import { Money } from "@/components/ui/money";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LostContainerIllustration } from "@/components/ui/system-illustrations";
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "@/lib/asset-classes";
-import { bff } from "@/lib/api";
+import { bff, mediaUrl } from "@/lib/api";
 import { keys, useInvalidate, useListings, useYards } from "@/lib/queries";
 import type { AssetClass, Listing, ListingStatus } from "@/lib/types";
 
@@ -152,7 +152,7 @@ export default function AssetsPage() {
             <Link href={`/assets/${l.id}`} className="flex items-center gap-s3 hover:underline">
               {cover ? (
                 // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-                <img src={cover.url} alt="" className="size-s7 rounded-sm object-cover" />
+                <img src={mediaUrl(cover.url) ?? ""} alt="" className="size-s7 rounded-sm object-cover" />
               ) : (
                 <span className={`grid size-s7 shrink-0 place-items-center rounded-sm ${meta.bg} ${meta.text}`}>
                   <Glyph size={18} />

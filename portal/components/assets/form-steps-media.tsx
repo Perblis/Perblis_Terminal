@@ -11,7 +11,7 @@ import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
-import { ApiError, bff } from "@/lib/api";
+import { ApiError, bff, mediaUrl } from "@/lib/api";
 import { keys, useInvalidate, useMe, useSpecTemplate, useYards } from "@/lib/queries";
 import type { AssetClass, Listing, PresignResult } from "@/lib/types";
 
@@ -92,7 +92,9 @@ export function PhotosStep({
         method: "POST",
         body: JSON.stringify({ kind: "listing_photo", content_type: contentType, file_size: blob.size }),
       });
-      await putWithProgress(presign.presigned_put_url, blob, contentType, (p) => update({ progress: p }));
+      // Local-dev presign URLs are API-relative; ride the BFF (R2 URLs pass through).
+      const putUrl = mediaUrl(presign.presigned_put_url) ?? presign.presigned_put_url;
+      await putWithProgress(putUrl, blob, contentType, (p) => update({ progress: p }));
       await bff(`/listings/${listing!.id}/photos`, {
         method: "POST",
         body: JSON.stringify({ r2_key: presign.key, is_cover: photos.length === 0 && slot === 0 }),
@@ -168,7 +170,7 @@ export function PhotosStep({
             className="group relative aspect-[4/3] cursor-grab overflow-hidden rounded-sm border border-border-default bg-surface-sunken"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic */}
-            <img src={photo.url} alt="" className="h-full w-full object-cover" />
+            <img src={mediaUrl(photo.url) ?? ""} alt="" className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => void setCover(photo.id)}
@@ -365,7 +367,7 @@ export function ReviewStep({
       <div className="relative aspect-[4/3] bg-surface-sunken">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-          <img src={cover.url} alt="" className="h-full w-full object-cover" />
+          <img src={mediaUrl(cover.url) ?? ""} alt="" className="h-full w-full object-cover" />
         ) : clsMeta && Glyph ? (
           <div className={`flex h-full items-center justify-center ${clsMeta.bg} ${clsMeta.text}`}>
             <Glyph size={48} />

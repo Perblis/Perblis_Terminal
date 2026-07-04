@@ -59,3 +59,14 @@ export function auth<T>(path: string, body?: unknown): Promise<T> {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
+
+/**
+ * Resolve a media URL from the API for browser use. R2 URLs are absolute and
+ * pass through; local-dev fallback URLs are relative to the API origin
+ * ("/api/v1/media/...") and must ride the BFF instead.
+ */
+export function mediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("/api/v1/")) return `/bff/${url.slice("/api/v1/".length)}`;
+  return url;
+}

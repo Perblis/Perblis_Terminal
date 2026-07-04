@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TextField } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, bff } from "@/lib/api";
+import { ApiError, bff, mediaUrl } from "@/lib/api";
 import { keys, useInvalidate, useMe, useSupplierProfile } from "@/lib/queries";
 import type { PresignResult } from "@/lib/types";
 
@@ -63,7 +63,7 @@ export default function StorefrontPage() {
         method: "POST",
         body: JSON.stringify({ kind: "logo", content_type: file.type || "image/jpeg", file_size: file.size }),
       });
-      const put = await fetch(presign.presigned_put_url, {
+      const put = await fetch(mediaUrl(presign.presigned_put_url) ?? presign.presigned_put_url, {
         method: "PUT",
         headers: { "content-type": file.type || "image/jpeg" },
         body: file,

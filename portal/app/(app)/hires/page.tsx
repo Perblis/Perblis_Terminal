@@ -17,6 +17,7 @@ import { CLASS_BY_VALUE } from "@/lib/asset-classes";
 import { formatDateRange, HIRE_TABS } from "@/lib/hire-domain";
 import { useHires, useListings, useYards } from "@/lib/queries";
 import type { Hire } from "@/lib/types";
+import { mediaUrl } from "@/lib/api";
 
 type TabKey = keyof typeof HIRE_TABS;
 const TAB_LABELS: Record<TabKey, string> = {
@@ -195,7 +196,7 @@ export default function HiresPage() {
                       <Link href={`/hires/${hire.id}`} className="flex items-center gap-s3 hover:underline">
                         {hire.listing_photo ? (
                           // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-                          <img src={hire.listing_photo} alt="" className="size-s7 rounded-sm object-cover" />
+                          <img src={mediaUrl(hire.listing_photo) ?? ""} alt="" className="size-s7 rounded-sm object-cover" />
                         ) : (
                           <span className={`grid size-s7 shrink-0 place-items-center rounded-sm ${meta.bg} ${meta.text}`}>
                             <Glyph size={18} />

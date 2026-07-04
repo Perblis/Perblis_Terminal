@@ -11,7 +11,7 @@ const FIXED_OTP = process.env.E2E_FIXED_OTP ?? "123456";
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(SUPPLIER.email);
-  await page.getByLabel("Password").fill(SUPPLIER.password);
+  await page.getByRole("textbox", { name: "Password" }).fill(SUPPLIER.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/dashboard");
 }
@@ -21,15 +21,18 @@ test("F1: register → fixed OTP (both channels) → dashboard checklist", async
   await page.goto("/register");
   await page.getByLabel("Full name").fill("E2E Newcomer");
   await page.getByLabel("Email").fill(`newcomer+${stamp}@e2e.terminal.test`);
-  await page.getByLabel("Phone number").fill(`80${String(stamp).slice(-8)}1`);
-  await page.getByLabel("Password", { exact: true }).fill("Sufficient1");
+  // Local NG shape: 0 + 10 digits (normalize_ng_phone); stamp keeps it unique.
+  await page.getByLabel("Phone number").fill(`0705${String(stamp).slice(-7)}`);
+  await page.getByRole("textbox", { name: "Password" }).fill("Sufficient1");
   await page.getByText("I accept the Terms of Service").click();
   await page.getByText("I accept the Privacy Policy (NDPR)").click();
   await page.getByRole("button", { name: "Create account" }).click();
 
   // phone then email — same 6-cell input, fixed code
   for (const step of ["phone", "email"]) {
-    await expect(page.getByText(step === "phone" ? "Verify your phone" : "Verify your email")).toBeVisible();
+    await expect(
+      page.getByText(step === "phone" ? "Verify your phone" : "Verify your email"),
+    ).toBeVisible({ timeout: 15_000 });
     await page.getByLabel("Digit 1").click();
     await page.keyboard.type(FIXED_OTP);
   }
@@ -58,9 +61,9 @@ test("F9: six-step create → publish → Live", async ({ page }) => {
   await page.getByLabel(/Make/).first().fill("Perkins");
   await page.getByLabel(/Model/).first().fill("P100");
   await page.getByLabel(/Year/).first().fill("2021");
-  const condition = page.locator("select#spec-condition");
-  if (await condition.count()) await condition.selectOption("Good");
-  // fill any remaining required selects/inputs generically
+  // required plant-common selects (spec_data.py)
+  await page.locator("select#spec-condition").selectOption("Good");
+  await page.locator("select#spec-operator_included").selectOption("Not available");
   await page.getByRole("button", { name: "Next" }).click();
 
   // ③ pricing — creates the server draft
@@ -101,17 +104,18 @@ test("F4: accept the seeded request with acknowledgment", async ({ page }) => {
   await expect(page.getByText("Awaiting payment").first()).toBeVisible({ timeout: 15_000 });
 });
 
-test("refund preview figures match the API", async ({ page, request }) => {
+test("refund preview figures match the API", async ({ page }) => {
   await login(page);
   await page.goto("/hires");
   await page.getByRole("tab", { name: "Upcoming" }).click();
-  // the seeded CONFIRMED hire
-  const row = page.getByRole("link", { name: /E2E/ }).first();
-  await row.click();
+  // the seeded CONFIRMED hire (Upcoming also holds the F4-accepted one)
+  const row = page.getByRole("row").filter({ hasText: "Confirmed" }).first();
+  await row.getByRole("link").first().click();
   await page.waitForURL(/hires\/(.+)/);
   const hireId = page.url().split("/hires/")[1];
 
-  const apiResp = await request.get(`/bff/hires/${hireId}/refund-preview`);
+  // page.request shares the browser context's auth cookies
+  const apiResp = await page.request.get(`/bff/hires/${hireId}/refund-preview`);
   expect(apiResp.ok()).toBeTruthy();
   const preview = (await apiResp.json()) as { amount_display: string; hire_value_display: string };
 
