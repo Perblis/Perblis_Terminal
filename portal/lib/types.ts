@@ -233,3 +233,24 @@ export type HandoverRecord = {
   confirmed_at: string | null;
   created_at: string;
 };
+
+export type Conversation = {
+  id: string;
+  kind: "enquiry" | "hire";
+  counterparty: { id: string; name: string; verified: boolean };
+  listing: { id: string; title: string; thumb_url: string | null } | null;
+  yard_name: string | null;
+  last_message_preview: string;
+  last_message_at: string | null;
+  unread_count: number;
+};
+
+export type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  masked: boolean;
+  sent_at: string;
+  read_at: string | null;
+};
