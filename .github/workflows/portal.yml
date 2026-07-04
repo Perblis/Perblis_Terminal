@@ -45,3 +45,62 @@ jobs:
 
       - name: Build
         run: pnpm --filter @terminal/portal build
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: terminal
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d terminal"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgis://postgres:postgres@localhost:5432/terminal
+      DJANGO_SETTINGS_MODULE: settings.dev
+      DEBUG: "true"
+      E2E_FIXED_OTP: "123456"
+      API_BASE_URL: http://localhost:8000/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install GDAL (GeoDjango)
+        run: sudo apt-get update -q && sudo apt-get install -y -q gdal-bin libgdal-dev
+      - uses: astral-sh/setup-uv@v5
+      - name: Backend deps
+        run: cd backend && uv sync
+      - name: Migrate + seed (spec templates, E2E fixtures)
+        run: |
+          cd backend
+          uv run python manage.py migrate -v0
+          uv run python manage.py seed_spec_templates
+          uv run python manage.py seed_e2e
+      - name: Run backend
+        run: cd backend && (uv run python manage.py runserver 0.0.0.0:8000 &) && sleep 3
+
+      - name: Portal install + build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @terminal/tokens build
+          pnpm --filter @terminal/portal build
+      - name: Run portal
+        run: cd portal && (pnpm start &) && npx wait-on -t 60000 http://localhost:3000
+
+      - name: Playwright
+        run: |
+          cd portal
+          npx playwright install --with-deps chromium
+          pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: portal/test-results/
