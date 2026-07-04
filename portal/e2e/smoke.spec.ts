@@ -40,7 +40,10 @@ test("F1: register → fixed OTP (both channels) → dashboard checklist", async
   if (page.url().includes("login")) {
     await expect(page.getByText("Account verified")).toBeVisible();
   } else {
-    await expect(page.getByText("Get set up")).toBeVisible();
+    // Registration creates a hirer; the supplier journey starts at activation.
+    await expect(page.getByText("Start supplying on Terminal")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Become a supplier" }).click();
+    await expect(page.getByText("Get set up")).toBeVisible({ timeout: 15_000 });
   }
 });
 
@@ -121,7 +124,7 @@ test("refund preview figures match the API", async ({ page }) => {
 
   await page.getByRole("button", { name: "Cancel hire" }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText(preview.hire_value_display)).toBeVisible();
+  await expect(dialog.getByText(preview.hire_value_display).first()).toBeVisible();
   await expect(dialog.getByText(preview.amount_display).first()).toBeVisible();
   // close without cancelling — the manifest was the assertion
   await dialog.getByRole("button", { name: "Keep hire" }).click();
