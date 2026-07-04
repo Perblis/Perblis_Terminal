@@ -45,6 +45,25 @@ export function MapView({
       attributionControl: { compact: true },
     });
     map.current = instance;
+    // Interim "Terminal Chart" grade (06 §3) applied at runtime until the
+    // full style JSON lands in packages/tokens/map: paper-tinted land,
+    // desaturated water, ink roads, POI labels off at low zoom.
+    instance.on("load", () => {
+      const style = instance.getStyle();
+      for (const layer of style.layers ?? []) {
+        try {
+          if (layer.type === "background") {
+            instance.setPaintProperty(layer.id, "background-color", "#F7F7F5");
+          } else if (layer.id.includes("water") && layer.type === "fill") {
+            instance.setPaintProperty(layer.id, "fill-color", "#C6D2D9");
+          } else if (layer.type === "symbol" && layer.id.includes("poi")) {
+            instance.setLayoutProperty(layer.id, "visibility", "none");
+          }
+        } catch {
+          // best-effort grading; unknown layers keep their Liberty defaults
+        }
+      }
+    });
     if (interactive) {
       instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       instance.on("click", (e) => {

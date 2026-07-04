@@ -148,7 +148,28 @@ export default function HiresPage() {
           </p>
         </Card>
       ) : (
-        <Card className="overflow-x-auto p-0">
+        <>
+        {/* sm <768: the table becomes a card list (04 §2) */}
+        <ul className="flex flex-col gap-s3 md:hidden">
+          {rows.map((hire) => (
+            <li key={hire.id}>
+              <Link href={`/hires/${hire.id}`} className="flex flex-col gap-s1 rounded-md border border-border-default bg-surface-card p-s3">
+                <span className="flex items-center justify-between gap-s2">
+                  <span className="truncate font-medium text-text-primary">{hire.listing_title}</span>
+                  {tab === "needs_response" ? <ExpiryCell iso={hire.request_expires_at} /> : <StatusBadge status={hire.status} />}
+                </span>
+                <span className="font-mono text-mono-sm text-text-secondary">
+                  {formatDateRange(hire.start_date, hire.end_date, hire.duration_days)}
+                </span>
+                <span className="flex justify-between text-body-sm">
+                  <span className="text-text-secondary">You receive</span>
+                  <span className="font-mono font-medium">{hire.payout_amount_display ?? "—"}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Card className="hidden overflow-x-auto p-0 md:block">
           <table className="w-full min-w-[56rem] border-collapse text-body-sm">
             <thead>
               <tr>
@@ -204,6 +225,7 @@ export default function HiresPage() {
             </tbody>
           </table>
         </Card>
+        </>
       )}
     </>
   );

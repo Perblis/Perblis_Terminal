@@ -44,7 +44,8 @@ const NAV_ITEMS: NavItem[] = [
 export function NavRail() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => setCollapsed(readRailCollapsed()), []);
+  // Phones start icon-only regardless of the remembered preference (04 §2).
+  useEffect(() => setCollapsed(readRailCollapsed() || window.innerWidth < 768), []);
 
   const isActive = (href: string) =>
     href === "/hires"
