@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { bff } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useMe } from "@/lib/queries";
+import { useRealtimeChannel } from "@/lib/realtime";
 import type { Conversation, Message, Paginated } from "@/lib/types";
 
 type Filter = "all" | "enquiry" | "hire";
@@ -57,6 +58,12 @@ export default function MessagesPage() {
   }, [threads, activeId]);
 
   const active = threads.find((c) => c.id === activeId) ?? null;
+
+  // Live fan-out on the open thread; 15s polling stays as the safety net.
+  useRealtimeChannel(activeId ? `conv:${activeId}` : null, () => {
+    void qc.invalidateQueries({ queryKey: ["messages", activeId] });
+    void qc.invalidateQueries({ queryKey: ["conversations"] });
+  });
 
   const messages = useQuery({
     queryKey: ["messages", activeId],

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { NavRail } from "@/components/shell/nav-rail";
 import { OfflineBanner } from "@/components/shell/offline-banner";
+import { RealtimeInvalidator } from "@/components/shell/realtime-invalidator";
 import { SessionExpiredProvider } from "@/components/auth/session-expired";
 
 // The signed-in frame (04 §2): fixed ink-900 rail + centred 1320px content
@@ -16,6 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <SessionExpiredProvider>
+      <RealtimeInvalidator />
       <div className="flex min-h-screen">
         <NavRail />
         <main className="min-w-0 flex-1">
