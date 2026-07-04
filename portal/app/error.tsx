@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { WordmarkInline } from "@/components/brand/wordmark";
+import { captureError } from "@/lib/sentry";
 import { Button } from "@/components/ui/button";
 import { BreakdownIllustration } from "@/components/ui/system-illustrations";
 
@@ -13,6 +16,7 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => captureError(error, { digest: error.digest }), [error]);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-s4 px-s5 text-center">
       <WordmarkInline />

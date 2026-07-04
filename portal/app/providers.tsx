@@ -2,9 +2,12 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+
+import { initSentry } from "@/lib/sentry";
 
 export function Providers({ children }: { children: ReactNode }) {
+  useEffect(() => initSentry(), []);
   // One client per browser tab; created lazily so SSR never shares state.
   const [queryClient] = useState(
     () =>
