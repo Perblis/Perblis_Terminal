@@ -176,3 +176,89 @@ export function useListingMutation(action: "publish" | "pause" | "archive" | "du
     onSuccess: () => invalidate(keys.listings),
   });
 }
+
+// --- hires (7C) ---------------------------------------------------------------
+
+import type { Hire, HireDetail, RefundPreview, HandoverRecord } from "./types";
+
+export const hireKeys = {
+  list: (params: string) => ["hires", params] as const,
+  detail: (id: string) => ["hire", id] as const,
+  refundPreview: (id: string) => ["hire-refund-preview", id] as const,
+  handovers: (id: string) => ["hire-handovers", id] as const,
+};
+
+/** Supplier hires, following cursor pages (P6/P8 slice client-side). */
+export function useHires(params: { from?: string; to?: string } = {}) {
+  const qs = new URLSearchParams({ role: "supplier", ...params }).toString();
+  return useQuery({
+    queryKey: hireKeys.list(qs),
+    queryFn: async () => {
+      const all: Hire[] = [];
+      let path: string | null = `/hires?${qs}`;
+      while (path) {
+        const page: Paginated<Hire> = await bff<Paginated<Hire>>(path);
+        all.push(...page.results);
+        path = page.next ? `/hires?${page.next.split("?")[1] ?? ""}` : null;
+        if (all.length > 2000) break;
+      }
+      return all;
+    },
+    refetchInterval: 60_000,
+  });
+}
+
+export function useHire(id: string) {
+  return useQuery({
+    queryKey: hireKeys.detail(id),
+    queryFn: () => bff<HireDetail>(`/hires/${id}`),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useRefundPreview(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: hireKeys.refundPreview(id),
+    queryFn: () => bff<RefundPreview>(`/hires/${id}/refund-preview`),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useHandovers(id: string) {
+  return useQuery({
+    queryKey: hireKeys.handovers(id),
+    queryFn: () => bff<Paginated<HandoverRecord> | HandoverRecord[]>(`/hires/${id}/handovers`),
+    select: (d) => (Array.isArray(d) ? d : d.results),
+  });
+}
+
+export function useHireAction(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, body }: { action: "accept" | "decline" | "cancel" | "dispute"; body?: unknown }) =>
+      bff<HireDetail>(`/hires/${id}/${action}`, {
+        method: "POST",
+        body: JSON.stringify(body ?? {}),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: hireKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: ["hires"] });
+      void qc.invalidateQueries({ queryKey: keys.hireStats });
+      void qc.invalidateQueries({ queryKey: keys.hireEvents });
+    },
+  });
+}
+
+export function useConfirmHandover(hireId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (handoverId: string) =>
+      bff<HandoverRecord>(`/handovers/${handoverId}/confirm`, { method: "POST", body: "{}" }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: hireKeys.handovers(hireId) });
+      void qc.invalidateQueries({ queryKey: hireKeys.detail(hireId) });
+      void qc.invalidateQueries({ queryKey: ["hires"] });
+    },
+  });
+}

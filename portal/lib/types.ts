@@ -158,3 +158,78 @@ export type GeocodeResponse = {
   provider_configured: boolean;
   results: GeocodeResult[];
 };
+
+export type HireStatus7 =
+  | "requested"
+  | "accepted"
+  | "confirmed"
+  | "on_hire"
+  | "completed"
+  | "declined"
+  | "expired"
+  | "cancelled"
+  | "in_dispute";
+
+export type Hire = {
+  id: string;
+  listing_id: string;
+  listing_title: string;
+  asset_class: AssetClass;
+  yard_id: string | null;
+  listing_photo: string | null;
+  start_date: string;
+  end_date: string;
+  duration_days: number;
+  scheme: string;
+  status: HireStatus7;
+  hire_value: number;
+  hire_value_display: string;
+  // Supplier-only (D-014) — absent on hirer-shaped responses.
+  service_fee?: number;
+  service_fee_display?: string;
+  payout_amount?: number;
+  payout_amount_display?: string;
+  fee_basis?: string;
+  cancelled_by: string | null;
+  decline_reason: string;
+  cancel_reason: string;
+  hirer_note: string;
+  request_expires_at: string | null;
+  payment_deadline: string | null;
+  created_at: string;
+};
+
+export type HireDetail = Hire & {
+  events: {
+    id: string;
+    actor_kind: string;
+    from_status: string | null;
+    to_status: string;
+    meta: Record<string, unknown>;
+    created_at: string;
+  }[];
+};
+
+export type RefundPreview = {
+  cancelled_by: string;
+  kind: string;
+  hire_value: number;
+  hire_value_display: string;
+  amount: number;
+  amount_display: string;
+  withheld_day: number;
+  withheld_day_display: string;
+  processing: number;
+  processing_display: string;
+  strike: boolean;
+};
+
+export type HandoverRecord = {
+  id: string;
+  hire: string;
+  kind: "on_hire" | "off_hire";
+  photos: string[];
+  reading: Record<string, unknown>;
+  confirmed_at: string | null;
+  created_at: string;
+};
