@@ -2,8 +2,9 @@
 
 // P4 steps ④–⑥: photos (07 §9 pipeline), location (yard chips first), review
 // + publish gates (F9).
-import { Camera, Check, MapPin, Monitor, Smartphone, Star, X } from "lucide-react";
+import { Camera, Check, MapPin, Monitor, Search, Smartphone, Star, X } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 import { CLASS_GLYPHS } from "@/components/brand/class-glyphs";
@@ -11,9 +12,9 @@ import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
-import { ApiError, bff, mediaUrl } from "@/lib/api";
-import { keys, useInvalidate, useMe, useSpecTemplate, useYards } from "@/lib/queries";
-import type { AssetClass, Listing, PresignResult } from "@/lib/types";
+import { ApiError, bff, isAllowedPhotoType, mediaUrl, putPresignedUpload } from "@/lib/api";
+import { geocode, keys, useInvalidate, useMe, useSpecTemplate, useYards } from "@/lib/queries";
+import type { AssetClass, GeocodeResult, Listing, PresignResult } from "@/lib/types";
 
 import type { AssetDraft } from "./asset-form";
 import { VerificationDialog } from "./verification-dialog";
@@ -25,15 +26,15 @@ const MapView = dynamic(() => import("@/components/map/map-view").then((m) => m.
 
 // --- ④ Photos ---------------------------------------------------------------
 
-type UploadState = { name: string; progress: number; error?: string };
+type UploadState = { name: string; progress: number; error?: string; file?: File };
 
 /** 07 §9: client resize to ≤1920px JPEG before the presigned PUT. */
 async function resizeImage(file: File): Promise<Blob> {
-  if (!file.type.startsWith("image/")) return file;
+  if (!isAllowedPhotoType(file.type)) return file;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
-    if (scale === 1 && file.size <= 1024 * 1024) return file;
+    if (scale === 1 && file.size <= 1024 * 1024 && file.type === "image/jpeg") return file;
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
@@ -44,19 +45,6 @@ async function resizeImage(file: File): Promise<Blob> {
   } catch {
     return file; // resize is best-effort; the server enforces the 10MB cap
   }
-}
-
-function putWithProgress(url: string, body: Blob, contentType: string, onProgress: (p: number) => void) {
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.setRequestHeader("content-type", contentType);
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`));
-    xhr.onerror = () => reject(new Error("Upload failed — check your connection."));
-    xhr.send(body);
-  });
 }
 
 export function PhotosStep({
@@ -82,22 +70,26 @@ export function PhotosStep({
     await invalidate(keys.listings);
   }
 
-  async function uploadOne(file: File, slot: number) {
+  async function uploadOne(file: File, slot: number, isCover: boolean) {
     const update = (patch: Partial<UploadState>) =>
       setUploads((u) => u.map((s, i) => (i === slot ? { ...s, ...patch } : s)));
     try {
+      if (!isAllowedPhotoType(file.type)) {
+        throw new Error("Use a JPEG, PNG, or WebP image.");
+      }
       const blob = await resizeImage(file);
       const contentType = blob.type || "image/jpeg";
+      if (!isAllowedPhotoType(contentType)) {
+        throw new Error("Use a JPEG, PNG, or WebP image.");
+      }
       const presign = await bff<PresignResult>("/media/presign", {
         method: "POST",
         body: JSON.stringify({ kind: "listing_photo", content_type: contentType, file_size: blob.size }),
       });
-      // Local-dev presign URLs are API-relative; ride the BFF (R2 URLs pass through).
-      const putUrl = mediaUrl(presign.presigned_put_url) ?? presign.presigned_put_url;
-      await putWithProgress(putUrl, blob, contentType, (p) => update({ progress: p }));
+      await putPresignedUpload(presign.presigned_put_url, blob, contentType, (p) => update({ progress: p }));
       await bff(`/listings/${listing!.id}/photos`, {
         method: "POST",
-        body: JSON.stringify({ r2_key: presign.key, is_cover: photos.length === 0 && slot === 0 }),
+        body: JSON.stringify({ r2_key: presign.key, is_cover: isCover }),
       });
       update({ progress: 1 });
       await refresh();
@@ -110,6 +102,7 @@ export function PhotosStep({
             : e instanceof Error
               ? e.message
               : "Upload failed. Retry.",
+        file,
       });
     }
   }
@@ -118,9 +111,29 @@ export function PhotosStep({
     if (!files) return;
     const room = 10 - photos.length - uploads.length;
     const batch = Array.from(files).slice(0, Math.max(0, room));
+    const invalid = batch.find((f) => !isAllowedPhotoType(f.type));
+    if (invalid) {
+      setUploads((u) => [
+        ...u,
+        { name: invalid.name, progress: 0, error: "Use a JPEG, PNG, or WebP image." },
+      ]);
+      return;
+    }
     const start = uploads.length;
-    setUploads((u) => [...u, ...batch.map((f) => ({ name: f.name, progress: 0 }))]);
-    batch.forEach((file, i) => void uploadOne(file, start + i));
+    const coverSlot = photos.length === 0 ? start : -1;
+    setUploads((u) => [...u, ...batch.map((f) => ({ name: f.name, progress: 0, file: f }))]);
+    void (async () => {
+      for (let i = 0; i < batch.length; i++) {
+        await uploadOne(batch[i]!, start + i, start + i === coverSlot);
+      }
+    })();
+  }
+
+  async function retryUpload(slot: number) {
+    const item = uploads[slot];
+    if (!item?.file) return;
+    setUploads((u) => u.map((s, i) => (i === slot ? { ...s, progress: 0, error: undefined } : s)));
+    await uploadOne(item.file, slot, photos.length === 0 && slot === 0);
   }
 
   async function reorder(from: number, to: number) {
@@ -128,23 +141,45 @@ export function PhotosStep({
     const order = [...photos];
     const [moved] = order.splice(from, 1);
     order.splice(to, 0, moved);
-    await bff(`/listings/${listing!.id}/photos/order`, {
-      method: "POST",
-      body: JSON.stringify({
-        items: order.map((p, i) => ({ id: p.id, position: i, is_cover: p.is_cover })),
-      }),
-    });
-    await refresh();
+    try {
+      await bff(`/listings/${listing!.id}/photos/order`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          photos: order.map((p, i) => ({ id: p.id, position: i, is_cover: p.is_cover })),
+        }),
+      });
+      await refresh();
+    } catch (e) {
+      setUploads((u) => [
+        ...u,
+        {
+          name: "Reorder",
+          progress: 0,
+          error: e instanceof ApiError ? e.message : "Couldn't reorder photos. Try again.",
+        },
+      ]);
+    }
   }
 
   async function setCover(id: string) {
-    await bff(`/listings/${listing!.id}/photos/order`, {
-      method: "POST",
-      body: JSON.stringify({
-        items: photos.map((p, i) => ({ id: p.id, position: i, is_cover: p.id === id })),
-      }),
-    });
-    await refresh();
+    try {
+      await bff(`/listings/${listing!.id}/photos/order`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          photos: photos.map((p, i) => ({ id: p.id, position: i, is_cover: p.id === id })),
+        }),
+      });
+      await refresh();
+    } catch (e) {
+      setUploads((u) => [
+        ...u,
+        {
+          name: "Cover",
+          progress: 0,
+          error: e instanceof ApiError ? e.message : "Couldn't set the cover photo. Try again.",
+        },
+      ]);
+    }
   }
 
   return (
@@ -193,13 +228,24 @@ export function PhotosStep({
             {u.error ? (
               <>
                 <p className="text-center text-caption text-text-danger">{u.error}</p>
-                <button
-                  type="button"
-                  className="text-caption underline"
-                  onClick={() => setUploads((list) => list.filter((_, j) => j !== i))}
-                >
-                  Dismiss
-                </button>
+                <div className="flex gap-s2">
+                  {u.file ? (
+                    <button
+                      type="button"
+                      className="text-caption underline"
+                      onClick={() => void retryUpload(i)}
+                    >
+                      Retry
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="text-caption underline"
+                    onClick={() => setUploads((list) => list.filter((_, j) => j !== i))}
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </>
             ) : (
               <>
@@ -228,7 +274,7 @@ export function PhotosStep({
       <input
         ref={fileInput}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         multiple
         hidden
         onChange={(e) => {
@@ -252,10 +298,51 @@ export function LocationStep({
 }) {
   const yards = useYards();
   const pin = draft.point ? ([draft.point.coordinates[0], draft.point.coordinates[1]] as [number, number]) : null;
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<GeocodeResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  async function runSearch() {
+    if (query.trim().length < 2) return;
+    setSearching(true);
+    try {
+      const resp = await geocode(query.trim());
+      setResults(resp.results);
+      if (!resp.provider_configured) {
+        setSearchError("Address search is unavailable right now — drop the pin instead.");
+      } else if (resp.results.length === 0) {
+        setSearchError("No matches — drop the pin on the map instead.");
+      } else {
+        setSearchError(null);
+      }
+    } catch {
+      setSearchError("Search failed — drop the pin on the map instead.");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function pickResult(result: GeocodeResult) {
+    set("yard_id", null);
+    set("point", { type: "Point", coordinates: [result.lng, result.lat] });
+    set("address_text", result.display_name);
+    setResults([]);
+    setQuery("");
+    setSearchError(null);
+  }
 
   return (
     <div className="flex flex-col gap-s4">
-      <h2 className="font-display text-h3 text-text-primary">Where does it live?</h2>
+      <div className="flex flex-wrap items-center justify-between gap-s2">
+        <h2 className="font-display text-h3 text-text-primary">Where does it live?</h2>
+        <Link
+          href="/yards"
+          className="text-body-sm font-medium text-amber-800 underline-offset-2 hover:underline"
+        >
+          Manage yards
+        </Link>
+      </div>
       {(yards.data ?? []).length > 0 ? (
         <div className="flex flex-col gap-s2">
           <span className="text-caption font-medium text-text-secondary">Your yards</span>
@@ -269,7 +356,11 @@ export function LocationStep({
                   aria-pressed={active}
                   onClick={() => {
                     set("yard_id", active ? null : yard.id);
-                    if (!active) set("point", null);
+                    if (!active) {
+                      set("point", null);
+                      set("address_text", yard.address_text);
+                      set("city", yard.city);
+                    }
                   }}
                   className={`flex items-center gap-s1 rounded-pill border px-s3 py-s2 text-body-sm ${
                     active
@@ -284,22 +375,72 @@ export function LocationStep({
             })}
           </div>
         </div>
-      ) : null}
+      ) : (
+        <p className="text-body-sm text-text-secondary">
+          No yards yet.{" "}
+          <Link href="/yards" className="font-medium text-amber-800 underline-offset-2 hover:underline">
+            Create your first yard
+          </Link>{" "}
+          to group assets at the same depot, or pin this asset directly below.
+        </p>
+      )}
 
       {!draft.yard_id ? (
         <div className="flex flex-col gap-s2">
           <span className="text-caption font-medium text-text-secondary">
-            {(yards.data ?? []).length > 0 ? "…or drop a new pin" : "Drop a pin"}
+            {(yards.data ?? []).length > 0 ? "…or search and pin a location" : "Search or drop a pin"}
           </span>
+          <div className="flex gap-s2">
+            <div className="flex h-10 flex-1 items-center rounded-sm border border-border-default bg-surface-card px-s3">
+              <Search size={16} className="mr-s2 shrink-0 text-ink-400" aria-hidden />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void runSearch())}
+                placeholder="Search an address or area"
+                className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-400"
+              />
+            </div>
+            <Button variant="secondary" onClick={() => void runSearch()} loading={searching}>
+              Search
+            </Button>
+          </div>
+          {searchError ? (
+            <p className="text-caption text-text-danger" role="alert">
+              {searchError}
+            </p>
+          ) : null}
+          {results.length > 0 ? (
+            <ul className="max-h-32 overflow-y-auto rounded-sm border border-border-default">
+              {results.map((r) => (
+                <li key={`${r.lat}-${r.lng}`}>
+                  <button
+                    type="button"
+                    className="w-full px-s3 py-s2 text-left text-body-sm hover:bg-ink-50"
+                    onClick={() => pickResult(r)}
+                  >
+                    {r.display_name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <MapView
             className="h-56 w-full overflow-hidden rounded-sm border border-border-default"
             center={pin ?? undefined}
             marker={pin}
-            onPick={(lngLat) => set("point", { type: "Point", coordinates: lngLat })}
+            onPick={(lngLat) => {
+              set("point", { type: "Point", coordinates: lngLat });
+              setSearchError(null);
+            }}
           />
           <p className="text-caption text-ink-500">
-            Click the map or drag the pin to exactly where the asset sits. If several assets share
-            this spot, make it a yard from the Yards page and they&apos;ll share one map pin.
+            Search an address or click the map and drag the pin to exactly where the asset sits.
+            If several assets share this spot,{" "}
+            <Link href="/yards" className="underline-offset-2 hover:underline">
+              make it a yard
+            </Link>{" "}
+            and they&apos;ll share one map pin.
           </p>
         </div>
       ) : null}

@@ -580,3 +580,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Wave 7 slice 7E per plan; TSD §8 portal testing mandate.
 - change_ref: 2026-07-04 07:45 - Wave 7 Slice 7D BUILT
 - notes: **WAVE 7 BUILD COMPLETE (7-0 -> 7E).** Local-run gotcha recorded: seed_e2e re-runs can silently fail on availability_conflict once prior runs consumed the +7..+9 window — reset the DB (CI always fresh). Wave-end checklist: [x] P1-P12 built, [x] mandatory vitest+Playwright suites, [x] Sentry/Ably keyless-degraded wiring, [ ] founder direction check (wordmark, P1 photography, /styleguide), [ ] Cloudflare deploy + R2 CORS (founder), [ ] prod-demo exit criterion (J1 under an hour + J6 rhythm), [ ] founder sign-off. Founder-approval queue (additive backend): photo DELETE, hire_id on ConversationSerializer, hirer-card fields on supplier-shaped HireSerializer, yard-scoped stats, payout day-series.
+
+## 2026-07-06 11:18 - Portal UX fixes — photo upload, yards nav, listing geocode
+- tag: FIX | FEATURE
+- area: portal/components/assets/form-steps-media.tsx, portal/lib/api.ts, portal/app/bff/media-put/route.ts, portal/lib/server/media-put.ts, portal/components/shell/nav-rail.tsx, portal/app/(app)/storefront/page.tsx
+- summary: Fixed listing photo reorder/cover (PATCH + `photos` field per frozen API). R2 presigned PUTs now proxy through `/bff/media-put` so uploads work without bucket CORS. Restricted photo picker to JPEG/PNG/WebP with retry UX. Added **Yards** to the nav rail and links from the asset location step. Listing location step now supports LocationIQ text search (map updates on pick) alongside yard chips and pin drop.
+- reason: Founder-reported portal gaps: broken photo upload, undiscoverable yards UI, map-only listing location.
+- change_ref: 2026-07-04 14:15 - Wave 7 Slice 7E BUILT
+- notes: R2 bucket CORS is no longer required for portal uploads (BFF proxy). Geocode still needs `LOCATIONIQ_KEY` in prod for search results.
