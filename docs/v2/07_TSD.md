@@ -180,7 +180,7 @@ SELECT count(*) FROM hires
 | auth | `POST register` · `POST otp/verify` · `POST otp/resend` (phone) · `POST email/verify` · `POST email/resend` · `POST login` · `POST token/refresh` · `POST logout` · `POST password-reset` · `POST password-reset/confirm` |
 | me | `GET/PATCH me` · `DELETE me` (soft-delete, 30-day recovery; blocked by `active_hire_guard`) · `POST me/activate-supplier` · `POST me/verification` (docs to private bucket) · `GET me/verification` |
 | suppliers | `GET/PATCH suppliers/me/profile` · `GET/POST yards` · `PATCH/DELETE yards/:id` · `GET storefronts/:supplier_id` (public) |
-| listings | `GET/POST listings` (mine) · `GET listings/:id` (public if Live) · `PATCH listings/:id` · `POST :id/publish|pause|archive|duplicate` · `POST :id/photos` (presign+attach) · `PATCH :id/photos/order` · `POST :id/reports` · `GET spec-templates?class=&type=` |
+| listings | `GET/POST listings` (mine) · `GET listings/:id` (public if Live) · `PATCH listings/:id` · `POST :id/publish|pause|archive|duplicate` · `POST :id/photos` (presign+attach) · `PATCH :id/photos/order` · `DELETE :id/photos/:photo_id` (cover promotion + reindex; additive, 2026-07-06) · `POST :id/reports` · `GET spec-templates?class=&type=` |
 | search | `GET search/map` · `GET search/list` (same params + cursor + group_by=asset\|location) |
 | hires | `POST hires` (listing, dates, note) · `GET hires?role=&status=` · `GET hires/:id` (+`events[]`, role-shaped financials per D-014) · `POST :id/accept|decline|cancel` · `GET :id/payment` (status+authorization_url) · `POST :id/handovers` · `POST handovers/:id/confirm` |
 | payments | `POST payments/webhook` (Paystack only, signature-gated) |
