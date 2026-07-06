@@ -180,6 +180,14 @@ function cssVarName(token: string): string {
   return "--" + token.replace(/\//g, "-");
 }
 
+function cssVarMap(theme: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [token, value] of Object.entries(theme)) {
+    out[cssVarName(token)] = value;
+  }
+  return out;
+}
+
 function emitCss(): void {
   const rootVars = Object.entries(light)
     .map(([t, v]) => `  ${cssVarName(t)}: ${v};`)
@@ -272,6 +280,14 @@ export type Tokens = typeof tokens;
 export const nativewindTheme = {
   colors: tokens.themes.light,
   spacing: tokens.space,
+} as const;
+
+// NativeWind CSS-variable maps: inject via vars() at the app root so the
+// semantic Tailwind classes (surface-*, text-*, border-*, …) resolve per
+// theme — dark mode is a remap, same mechanism as the web preset.
+export const nativewindVars = {
+  light: ${JSON.stringify(cssVarMap(light), null, 2)},
+  dark: ${JSON.stringify(cssVarMap(dark), null, 2)},
 } as const;
 `;
   writeFileSync(join(ROOT, "tokens.ts"), body);
