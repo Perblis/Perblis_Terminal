@@ -32,3 +32,21 @@ jest.mock("react-native-mmkv", () => {
   }
   return { MMKV, createMMKV: () => new MMKV() };
 });
+
+jest.mock("expo-secure-store", () => {
+  const store = new Map<string, string>();
+  return {
+    getItemAsync: jest.fn(async (k: string) => store.get(k) ?? null),
+    setItemAsync: jest.fn(async (k: string, v: string) => {
+      store.set(k, v);
+    }),
+    deleteItemAsync: jest.fn(async (k: string) => {
+      store.delete(k);
+    }),
+  };
+});
+
+jest.mock("@react-native-community/netinfo", () => ({
+  addEventListener: jest.fn(() => () => {}),
+  fetch: jest.fn(async () => ({ isConnected: true })),
+}));
