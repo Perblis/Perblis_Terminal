@@ -1,0 +1,12 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://terminal-portal.nwabueze.workers.dev",
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["content-type", "Content-Type", "x-amz-*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
