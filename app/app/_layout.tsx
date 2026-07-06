@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { QueryProvider } from "../components/shell/query-provider";
+import { SessionExpiredGate } from "../components/shell/session-expired-gate";
 import { ThemeRoot } from "../components/shell/theme-root";
 import { useAppFonts } from "../lib/fonts";
 import { initSentry } from "../lib/sentry";
@@ -30,6 +31,7 @@ export default function RootLayout() {
       <QueryProvider>
         <ThemeRoot>
           <StatusBar style="auto" />
+          <SessionExpiredGate />
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeRoot>
       </QueryProvider>

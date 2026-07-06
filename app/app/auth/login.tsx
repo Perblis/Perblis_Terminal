@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
@@ -12,6 +12,7 @@ import { TextField } from "../../components/ui/text-field";
 import { ApiError } from "../../lib/api";
 import { fetchMe, login, resendEmailOtp, resendPhoneOtp } from "../../lib/auth-api";
 import { loginSchema, type LoginInput } from "../../lib/auth-schemas";
+import { consumePendingIntent } from "../../lib/guest-intent";
 import { useSession } from "../../stores/session";
 
 // Abandoned-OTP resume (F1): login with an unverified account drops straight
@@ -21,6 +22,7 @@ type Resume = { phone: string; email: string; password: string; startChannel: "p
 export default function Login() {
   const insets = useSafeAreaInsets();
   const setMe = useSession((s) => s.setMe);
+  const { reauth } = useLocalSearchParams<{ reauth?: string }>();
   const [formError, setFormError] = useState<string | null>(null);
   const [resume, setResume] = useState<Resume | null>(null);
 
@@ -32,7 +34,13 @@ export default function Login() {
   const finishLogin = async (email: string, password: string) => {
     await login(email, password);
     setMe(await fetchMe());
-    router.replace("/(tabs)");
+    if (reauth === "1" && router.canGoBack()) {
+      // F12 re-auth: pop the sheet — the interrupted screen is underneath.
+      router.back();
+      return;
+    }
+    const intent = consumePendingIntent();
+    router.replace((intent ?? "/(tabs)") as never);
   };
 
   const onSubmit = handleSubmit(async (values) => {

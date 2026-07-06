@@ -13,6 +13,7 @@ import { TextField } from "../../components/ui/text-field";
 import { ApiError } from "../../lib/api";
 import { fetchMe, login, register } from "../../lib/auth-api";
 import { registerSchema } from "../../lib/auth-schemas";
+import { consumePendingIntent } from "../../lib/guest-intent";
 import { useSession } from "../../stores/session";
 
 // The two consent flags ride one control (same doc set) — validated manually.
@@ -69,7 +70,8 @@ export default function Register() {
     try {
       await login(verifying.email, verifying.password);
       setMe(await fetchMe());
-      router.replace("/(tabs)");
+      const intent = consumePendingIntent();
+      router.replace((intent ?? "/(tabs)") as never);
     } catch {
       // Verified but auto-login failed (e.g. network) — land on sign-in.
       router.replace("/auth/login");
