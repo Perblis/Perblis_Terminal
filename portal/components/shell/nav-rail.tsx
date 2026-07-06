@@ -4,6 +4,7 @@ import {
   Boxes,
   CalendarDays,
   LayoutDashboard,
+  MapPin,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
@@ -33,6 +34,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/assets", label: "Assets", icon: Boxes },
+  { href: "/yards", label: "Yards", icon: MapPin },
   { href: "/hires", label: "Hires", icon: Truck },
   { href: "/hires/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/messages", label: "Messages", icon: MessageSquare },

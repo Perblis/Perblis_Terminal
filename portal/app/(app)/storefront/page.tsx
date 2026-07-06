@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TextField } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, bff, mediaUrl } from "@/lib/api";
+import { ApiError, bff, putPresignedUpload } from "@/lib/api";
 import { keys, useInvalidate, useMe, useSupplierProfile } from "@/lib/queries";
 import type { PresignResult } from "@/lib/types";
 
@@ -63,12 +63,7 @@ export default function StorefrontPage() {
         method: "POST",
         body: JSON.stringify({ kind: "logo", content_type: file.type || "image/jpeg", file_size: file.size }),
       });
-      const put = await fetch(mediaUrl(presign.presigned_put_url) ?? presign.presigned_put_url, {
-        method: "PUT",
-        headers: { "content-type": file.type || "image/jpeg" },
-        body: file,
-      });
-      if (!put.ok) throw new Error("upload failed");
+      await putPresignedUpload(presign.presigned_put_url, file, file.type || "image/jpeg");
       await bff("/suppliers/me/profile", { method: "PATCH", body: JSON.stringify({ logo_key: presign.key }) });
       await invalidate(keys.profile, ["storefront"]);
     } catch {

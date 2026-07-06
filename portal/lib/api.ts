@@ -70,3 +70,44 @@ export function mediaUrl(url: string | null | undefined): string | null {
   if (url.startsWith("/api/v1/")) return `/bff/${url.slice("/api/v1/".length)}`;
   return url;
 }
+
+const PHOTO_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+export function isAllowedPhotoType(type: string): boolean {
+  return PHOTO_CONTENT_TYPES.has(type);
+}
+
+function isExternalPresignedUrl(url: string): boolean {
+  return url.startsWith("https://") && !url.startsWith("/");
+}
+
+/**
+ * PUT bytes to a presigned upload URL. Local-dev API paths ride the BFF;
+ * R2 presigned URLs ride /bff/media-put so the browser never needs bucket CORS.
+ */
+export function putPresignedUpload(
+  presignedUrl: string,
+  body: Blob,
+  contentType: string,
+  onProgress?: (progress: number) => void,
+): Promise<void> {
+  const local = mediaUrl(presignedUrl);
+  const proxied = !local && isExternalPresignedUrl(presignedUrl);
+  const putUrl = local ?? (proxied ? "/bff/media-put" : presignedUrl);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", putUrl);
+    xhr.setRequestHeader("content-type", contentType);
+    if (proxied) xhr.setRequestHeader("x-presigned-url", presignedUrl);
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+    }
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(`Upload failed (${xhr.status})`));
+    xhr.onerror = () => reject(new Error("Upload failed — check your connection."));
+    xhr.send(body);
+  });
+}
