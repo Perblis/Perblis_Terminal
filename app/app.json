@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "Terminal",
+    "slug": "terminal",
+    "version": "0.1.0",
+    "scheme": "terminal",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "runtimeVersion": { "policy": "fingerprint" },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.terminal.hirer"
+    },
+    "android": {
+      "package": "com.terminal.hirer",
+      "adaptiveIcon": {
+        "backgroundColor": "#16181D",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#16181D",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Terminal centres the map on your location to show assets for hire near you."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Terminal uses the camera to photograph handovers when a hire starts and ends."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Terminal uses your photos to attach handover records."
+        }
+      ],
+      "@maplibre/maplibre-react-native"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
