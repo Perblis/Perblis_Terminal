@@ -6,6 +6,8 @@
   "scripts": {
     "tokens:build": "pnpm --filter @terminal/tokens build",
     "portal:dev": "pnpm --filter @terminal/portal dev",
-    "portal:build": "pnpm --filter @terminal/portal build"
+    "portal:build": "pnpm --filter @terminal/portal build",
+    "portal:deploy": "pnpm --filter @terminal/portal run deploy",
+    "portal:deploy:preview": "pnpm --filter @terminal/portal run deploy:preview"
   }
 }

@@ -72,16 +72,61 @@ Topology (TSD §1): **api** (gunicorn, 512 MB) · **worker** (django-tasks, 256 
 
 ## 3. Cloudflare Workers — Supplier Portal
 
-From `portal/` (config in `portal/wrangler.toml`):
+Config: `portal/wrangler.toml` · Worker name **`terminal-portal`** (must match
+the dashboard exactly).
+
+### 3a. Workers Builds (recommended — Linux CI, fixes Windows OpenNext bundles)
+
+[Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) deploys
+on every push to `main`. **Do not build on Windows** — OpenNext produces a
+broken bundle (`middleware-manifest.json` dynamic require) when built locally on
+Win32; Workers Builds runs on Ubuntu 24.04.
+
+1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)
+   → **terminal-portal** → **Settings** → **Builds** → **Connect**.
+2. Authorize Cloudflare's GitHub app if prompted; select **`Perblis/Perblis_Terminal`**.
+3. Use these build settings (monorepo — root is the repo, not `portal/`):
+
+   | Setting | Value |
+   | --- | --- |
+   | **Production branch** | `main` |
+   | **Root directory** | `/` (repo root — required for `packages/tokens` workspace) |
+   | **Build command** | *(leave empty — pnpm install runs automatically via `packageManager`)* |
+   | **Deploy command** | `pnpm --filter @terminal/portal run deploy` |
+   | **Non-production deploy command** | `pnpm --filter @terminal/portal run deploy:preview` |
+
+   *(After `portal:deploy` scripts land on `main`, you can shorten those to
+   `pnpm portal:deploy` / `pnpm portal:deploy:preview`.)*
+
+4. **Build variables** (Settings → Build → Variables and secrets):
+
+   | Variable | Value |
+   | --- | --- |
+   | `PNPM_VERSION` | `10.33.0` |
+   | `NODE_VERSION` | `22` |
+
+5. **Runtime variables** are already in `wrangler.toml [vars]` (`API_BASE_URL`).
+   Add `NEXT_PUBLIC_*` build vars here if the Next build needs them.
+6. Push to `main` (or **Retry build** in the dashboard). Confirm
+   https://terminal-portal.nwabueze.workers.dev/login loads.
+
+   **Optional (after Git is connected):** Settings → Build → **Build watch paths**
+   is a separate sub-section — not on the initial connect form. Defaults to
+   include `*` (every push builds). For a monorepo you can later narrow it to
+   `portal/*, packages/tokens/*, pnpm-lock.yaml` to skip unrelated commits.
+
+Monitor builds via the Cloudflare dashboard or the **cloudflare-builds** MCP
+(`workers_builds_list_builds`, `workers_builds_get_build_logs`).
+
+### 3b. Manual deploy (Linux/macOS only)
 
 ```bash
 pnpm install
-pnpm --filter @terminal/portal deploy   # opennextjs-cloudflare build && deploy
+pnpm portal:deploy   # opennextjs-cloudflare build && deploy
 ```
 
-- Set `NEXT_PUBLIC_API_BASE_URL` (and any portal vars) in the Cloudflare
-  dashboard or `wrangler.toml [vars]`, pointing at the Railway api domain.
-- Confirm the deployed Worker URL loads the hello-world page.
+- Runtime API origin: `API_BASE_URL` in `wrangler.toml [vars]` (Railway api).
+- **Avoid `pnpm portal:deploy` on Windows** — use Workers Builds or WSL instead.
 
 ## 4. Continuous deploy
 
@@ -89,8 +134,8 @@ Merge to `main` triggers:
 - **Railway**: auto-deploy of api + worker; the pre-deploy command in
   `backend/railway.json` runs `migrate` (+ `seed_superuser`) before the new
   release goes live.
-- **Portal**: add a GitHub Action step (or `wrangler deploy`) on `main` for
-  `portal/**`. (CI for PRs is `.github/workflows/portal.yml`.)
+- **Portal**: Workers Builds (§3a) on pushes to `main`. PR CI remains
+  `.github/workflows/portal.yml` (lint/test/e2e only).
 
 ## Exit check (Wave 0)
 
