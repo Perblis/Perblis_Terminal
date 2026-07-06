@@ -1,0 +1,268 @@
+{
+  "serializer": "listings.ListingCreateSerializer",
+  "cases": [
+    {
+      "name": "valid_minimal",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "name": "valid_full",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000,
+        "weekly_price": 40000000,
+        "monthly_price": 120000000,
+        "unit_count": 3,
+        "specs": {
+          "operating_weight_t": 20
+        },
+        "address_text": "Apapa Industrial Estate",
+        "city": "Lagos",
+        "unit_labels": [
+          "Unit A",
+          "Unit B",
+          "Unit C"
+        ]
+      },
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "name": "missing_asset_class",
+      "payload": {
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "asset_class": [
+          "required"
+        ]
+      }
+    },
+    {
+      "name": "invalid_asset_class",
+      "payload": {
+        "asset_class": "helicopters",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "asset_class": [
+          "invalid_choice"
+        ]
+      }
+    },
+    {
+      "name": "missing_title",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "title": [
+          "required"
+        ]
+      }
+    },
+    {
+      "name": "title_too_long",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "title": [
+          "max_length"
+        ]
+      }
+    },
+    {
+      "name": "title_blank",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "title": [
+          "blank"
+        ]
+      }
+    },
+    {
+      "name": "description_too_short",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Too short.",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "description": [
+          "min_length"
+        ]
+      }
+    },
+    {
+      "name": "missing_description",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "daily_price": 8000000
+      },
+      "valid": false,
+      "errors": {
+        "description": [
+          "required"
+        ]
+      }
+    },
+    {
+      "name": "missing_daily_price",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator."
+      },
+      "valid": false,
+      "errors": {
+        "daily_price": [
+          "required"
+        ]
+      }
+    },
+    {
+      "name": "daily_price_zero",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 0
+      },
+      "valid": false,
+      "errors": {
+        "daily_price": [
+          "min_value"
+        ]
+      }
+    },
+    {
+      "name": "daily_price_negative",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": -100
+      },
+      "valid": false,
+      "errors": {
+        "daily_price": [
+          "min_value"
+        ]
+      }
+    },
+    {
+      "name": "weekly_price_zero",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000,
+        "weekly_price": 0
+      },
+      "valid": false,
+      "errors": {
+        "weekly_price": [
+          "min_value"
+        ]
+      }
+    },
+    {
+      "name": "unit_count_zero",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000,
+        "unit_count": 0
+      },
+      "valid": false,
+      "errors": {
+        "unit_count": [
+          "min_value"
+        ]
+      }
+    },
+    {
+      "name": "yard_id_not_uuid",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000,
+        "yard_id": "not-a-uuid"
+      },
+      "valid": false,
+      "errors": {
+        "yard_id": [
+          "invalid"
+        ]
+      }
+    },
+    {
+      "name": "unit_label_too_long",
+      "payload": {
+        "asset_class": "plant_machinery",
+        "asset_type": "Excavator",
+        "title": "CAT 320D Excavator",
+        "description": "Well-maintained CAT 320D excavator, 1200 hours, with certified operator.",
+        "daily_price": 8000000,
+        "unit_labels": [
+          "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+        ]
+      },
+      "valid": false,
+      "errors": {
+        "unit_labels": [
+          "invalid"
+        ]
+      }
+    }
+  ]
+}

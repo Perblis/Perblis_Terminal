@@ -51,6 +51,14 @@ class HireNotFound(TerminalError):
     default_detail = "No such hire."
 
 
+class RefundNotApplicable(TerminalError):
+    """Refund preview only applies to a paid (Confirmed) hire (FSD §7.6)."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "refund_not_applicable"
+    default_detail = "A refund only applies to a paid hire."
+
+
 class ListingNotHireable(TerminalError):
     status_code = status.HTTP_409_CONFLICT
     default_code = "listing_not_hireable"

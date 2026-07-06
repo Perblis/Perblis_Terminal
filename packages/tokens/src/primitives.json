@@ -72,6 +72,7 @@
   },
   "type": {
     "family": {
+      "display": "Archivo, \"Helvetica Neue\", Arial, sans-serif",
       "sans": "Inter, system-ui, sans-serif",
       "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
     },
@@ -89,6 +90,22 @@
       "medium": "500",
       "semibold": "600",
       "bold": "700"
+    },
+    "_role_doc": "Named type roles (ch.03 §2). size/line/weight feed Tailwind fontSize tuples; `family` is a hint applied via font-display|font-sans|font-mono on the element.",
+    "role": {
+      "display-xl": { "size": "40px", "line": "44px", "weight": "500", "family": "mono" },
+      "display-lg": { "size": "32px", "line": "38px", "weight": "700", "family": "display" },
+      "h1": { "size": "28px", "line": "34px", "weight": "600", "family": "display" },
+      "h2": { "size": "22px", "line": "28px", "weight": "600", "family": "display" },
+      "h3": { "size": "18px", "line": "24px", "weight": "600", "family": "display" },
+      "body-lg": { "size": "17px", "line": "26px", "weight": "400", "family": "sans" },
+      "body": { "size": "16px", "line": "24px", "weight": "400", "family": "sans" },
+      "body-sm": { "size": "14px", "line": "20px", "weight": "400", "family": "sans" },
+      "caption": { "size": "13px", "line": "18px", "weight": "500", "family": "sans" },
+      "mono-lg": { "size": "20px", "line": "26px", "weight": "500", "family": "mono" },
+      "mono": { "size": "15px", "line": "22px", "weight": "400", "family": "mono" },
+      "mono-sm": { "size": "13px", "line": "18px", "weight": "400", "family": "mono" },
+      "overline": { "size": "12px", "line": "16px", "weight": "600", "tracking": "0.1em", "family": "display" }
     }
   },
   "space": {
@@ -110,9 +127,25 @@
     "pill": "999px"
   },
   "motion": {
-    "durInstant": "80ms",
-    "durQuick": "140ms",
-    "durBase": "220ms",
-    "easeStandard": "cubic-bezier(0.2, 0, 0, 1)"
+    "durMicro": "120ms",
+    "durQuick": "200ms",
+    "durStandard": "280ms",
+    "durDeliberate": "400ms",
+    "easeOut": "cubic-bezier(0.2, 0, 0, 1)",
+    "easeInOut": "cubic-bezier(0.4, 0, 0.2, 1)",
+    "easeExit": "cubic-bezier(0.4, 0, 1, 1)"
+  },
+  "elevation": {
+    "_doc": "ch.04 elevation. e0 is flat + 1px border (no shadow); e1 dropdowns/popovers/callouts; e2 modals/sheets. ink-900 = rgb(22,24,29).",
+    "e0": "none",
+    "e1": "0 2px 8px rgba(22, 24, 29, 0.10)",
+    "e2": "0 8px 24px rgba(22, 24, 29, 0.16)"
+  },
+  "density": {
+    "_doc": "ch.04 portal density modes. comfortable = default; compact = persisted user toggle.",
+    "rowComfortable": "52px",
+    "rowCompact": "40px",
+    "cellPadComfortable": "12px",
+    "cellPadCompact": "8px"
   }
 }

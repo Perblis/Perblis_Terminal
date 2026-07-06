@@ -307,6 +307,11 @@ BACHS_WEBHOOK_SECRET = env("BACHS_WEBHOOK_SECRET", default="")
 # (Ops emails). Falls back to DEFAULT_FROM_EMAIL's address if unset.
 OPS_DIGEST_RECIPIENT = env("OPS_DIGEST_RECIPIENT", default="")
 
+# Fixed OTP code for Playwright E2E runs (Wave 7 TSD §8). Honoured ONLY under
+# DEBUG — accounts.services.otp refuses it loudly anywhere else. Never simulate
+# trust in prod (design.md §2).
+E2E_FIXED_OTP = env("E2E_FIXED_OTP", default="")
+
 ABLY_API_KEY = env("ABLY_API_KEY", default="")
 TERMII_API_KEY = env("TERMII_API_KEY", default="")
 TERMII_SENDER_ID = env("TERMII_SENDER_ID", default="")

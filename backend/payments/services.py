@@ -332,3 +332,66 @@ def retained(hire: Hire) -> int:
     )
     paid_out = sum(p.amount for p in hire.payouts.filter(state=PayoutState.PAID))
     return collected - refunded - paid_out
+
+
+# --- supplier payouts surface (Wave 7 P2/F11) --------------------------------
+def list_payouts(*, supplier):
+    """The supplier's payouts, newest first (cursor-paginated by the view)."""
+    return (
+        Payout.objects.filter(supplier=supplier)
+        .select_related("hire__listing")
+        .order_by("-created_at")
+    )
+
+
+def payout_summary(*, supplier) -> dict:
+    """The P2 payout strip + "Earned this month" figures, server-computed.
+
+    "Earned" attributes a payout to the month its hire settled (``created_at``),
+    regardless of when the founder pays it out; a frozen payout stays earned but
+    is excluded from the queue (it shows "on hold - dispute" instead, F11).
+    """
+    import datetime as dt
+
+    from django.db.models import Sum
+
+    from core.money import display
+
+    def _total(qs) -> int:
+        return qs.aggregate(t=Sum("amount"))["t"] or 0
+
+    qs = Payout.objects.filter(supplier=supplier)
+    queued = _total(qs.filter(state__in=[PayoutState.PENDING, PayoutState.DUE]))
+    frozen = _total(qs.filter(state=PayoutState.FROZEN))
+
+    now = timezone.localtime()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    prev_month_start = (month_start - dt.timedelta(days=1)).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    earned_this_month = _total(qs.filter(created_at__gte=month_start))
+    earned_prev_month = _total(
+        qs.filter(created_at__gte=prev_month_start, created_at__lt=month_start)
+    )
+
+    last_paid = qs.filter(state=PayoutState.PAID).order_by("-paid_at").first()
+    return {
+        "queued_total": queued,
+        "queued_total_display": display(queued),
+        "frozen_total": frozen,
+        "frozen_total_display": display(frozen),
+        "earned_this_month": earned_this_month,
+        "earned_this_month_display": display(earned_this_month),
+        "earned_prev_month": earned_prev_month,
+        "earned_prev_month_display": display(earned_prev_month),
+        "last_paid": (
+            {
+                "amount": last_paid.amount,
+                "amount_display": display(last_paid.amount),
+                "paid_ref": last_paid.paid_ref,
+                "paid_at": last_paid.paid_at,
+            }
+            if last_paid
+            else None
+        ),
+    }

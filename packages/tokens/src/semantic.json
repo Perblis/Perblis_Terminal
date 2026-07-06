@@ -38,6 +38,8 @@
     "status/confirmed": "color.teal.600",
     "status/onHire": "color.green.600",
     "status/completed": "color.ink.600",
+    "status/declined": "color.ink.500",
+    "status/expired": "color.ink.500",
     "status/cancelled": "color.red.600",
     "status/dispute": "color.violet.600"
   },
@@ -80,6 +82,8 @@
     "status/confirmed": "color.teal.500",
     "status/onHire": "color.green.500",
     "status/completed": "color.ink.400",
+    "status/declined": "color.ink.400",
+    "status/expired": "color.ink.400",
     "status/cancelled": "color.red.500",
     "status/dispute": "color.violet.500"
   }

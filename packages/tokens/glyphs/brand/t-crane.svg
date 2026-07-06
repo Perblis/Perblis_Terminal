@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- T-crane (01 §1): a "T" whose arm extends right like a tower-crane jib.
+       Colour is applied by the consumer (currentColor). -->
+  <path d="M4 5h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/>
+  <path d="M9 5v15" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/>
+  <!-- jib tip: hook line + load -->
+  <path d="M18 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+  <rect x="16.25" y="9" width="3.5" height="3" fill="currentColor"/>
+</svg>

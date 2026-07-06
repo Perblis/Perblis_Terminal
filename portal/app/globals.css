@@ -5,3 +5,89 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* border/focus (02 §2): amber 2px outer ring with a 1px paper gap, on
+     keyboard focus only. Components never draw their own outlines. */
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 1px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--action-primary);
+    color: var(--text-on-brand);
+  }
+
+  /* Density modes (04 §4): only the two tokens below may vary between modes.
+     The toggle stamps data-density on <html>; comfortable is the default. */
+  :root {
+    --density-row-height: 52px;
+    --density-cell-pad: 12px;
+  }
+  :root[data-density="compact"] {
+    --density-row-height: 40px;
+    --density-cell-pad: 8px;
+  }
+
+  /* Inter with tabular numerals + contextual alternates (03 §1). */
+  body {
+    font-feature-settings:
+      "tnum" 1,
+      "calt" 1,
+      "ss01" 0;
+  }
+
+  /* 08 §6: every transition collapses to a quick opacity-ish fade; shimmer
+     freezes; motion is never the only signifier. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 80ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 80ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* M1 hazard stripe (01 §2): 4px section punctuation line, never a border. */
+  .hazard-stripe {
+    height: 4px;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--surface-brand) 0 8px,
+      var(--surface-inverse) 8px 16px
+    );
+  }
+
+  /* Skeleton shimmer (05 §4): ink-100 → paper-50, 1.2s. Static under
+     prefers-reduced-motion via the base-layer override. */
+  .skeleton {
+    background: var(--surface-sunken);
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--surface-page), transparent);
+    animation: skeleton-shimmer 1.2s linear infinite;
+  }
+  @keyframes skeleton-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      display: none;
+    }
+  }
+}
