@@ -12,10 +12,10 @@ import {
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table";
-import { Archive, Copy, Pencil, Plus, Search } from "lucide-react";
+import { Archive, Copy, MapPin, Pencil, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CLASS_GLYPHS } from "@/components/brand/class-glyphs";
 import { PageHeader } from "@/components/shell/page-header";
@@ -25,6 +25,7 @@ import { Card } from "@/components/ui/card";
 import { Money } from "@/components/ui/money";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LostContainerIllustration } from "@/components/ui/system-illustrations";
+import { YardsPanel } from "@/components/yards/yards-panel";
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "@/lib/asset-classes";
 import { bff, mediaUrl } from "@/lib/api";
 import { keys, useInvalidate, useListings, useYards } from "@/lib/queries";
@@ -64,6 +65,11 @@ export default function AssetsPage() {
   const listings = useListings();
   const yards = useYards();
   const invalidate = useInvalidate();
+
+  const [yardsOpen, setYardsOpen] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("yards") === "1") setYardsOpen(true);
+  }, []);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -151,8 +157,8 @@ export default function AssetsPage() {
           return (
             <Link href={`/assets/${l.id}`} className="flex items-center gap-s3 hover:underline">
               {cover ? (
-                // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-                <img src={mediaUrl(cover.url) ?? ""} alt="" className="size-s7 rounded-sm object-cover" />
+                // eslint-disable-next-line @next/next/no-img-element -- proxied via BFF
+                <img src={mediaUrl(cover.url, cover.r2_key) ?? ""} alt="" className="size-s7 rounded-sm object-cover" />
               ) : (
                 <span className={`grid size-s7 shrink-0 place-items-center rounded-sm ${meta.bg} ${meta.text}`}>
                   <Glyph size={18} />
@@ -299,9 +305,14 @@ export default function AssetsPage() {
       <PageHeader
         title="Assets"
         action={
-          <Button onClick={() => router.push("/assets/new")}>
-            <Plus size={16} aria-hidden /> Add asset
-          </Button>
+          <div className="flex flex-wrap gap-s2">
+            <Button variant="secondary" onClick={() => setYardsOpen(true)}>
+              <MapPin size={16} aria-hidden /> Yards
+            </Button>
+            <Button onClick={() => router.push("/assets/new")}>
+              <Plus size={16} aria-hidden /> Add asset
+            </Button>
+          </div>
         }
       />
 
@@ -338,6 +349,9 @@ export default function AssetsPage() {
           <input type="checkbox" className="size-s4 accent-amber-500" checked={groupByYard} onChange={(e) => setGroupByYard(e.target.checked)} />
           Group by yard
         </label>
+        <Button size="sm" variant="ghost" onClick={() => setYardsOpen(true)} className="text-ink-500">
+          <Plus size={14} aria-hidden /> New yard
+        </Button>
         <span className="ml-auto text-caption text-ink-500">{data.length} assets</span>
       </div>
 
@@ -472,6 +486,8 @@ export default function AssetsPage() {
           </button>
         </div>
       ) : null}
+
+      <YardsPanel open={yardsOpen} onClose={() => setYardsOpen(false)} />
     </>
   );
 }

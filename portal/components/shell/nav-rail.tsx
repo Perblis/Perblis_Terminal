@@ -4,55 +4,101 @@ import {
   Boxes,
   CalendarDays,
   LayoutDashboard,
-  MapPin,
+  LogOut,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Rows2,
+  Rows4,
   Settings,
   Store,
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 
 import { WordmarkPlate } from "@/components/brand/wordmark";
 import { CountBadge } from "@/components/ui/status-badge";
+import { auth } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
-import { DensityToggle } from "./density-toggle";
-import { persistRailCollapsed, readRailCollapsed } from "./preferences";
+import { applyDensity, persistRailCollapsed, readDensity, readRailCollapsed, type Density } from "./preferences";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: ComponentType<{ size?: number | string; className?: string }>;
-  /** Slot for live counts (Messages unread, Hires action-needed) — wired in 7B/7D. */
+  icon: React.ComponentType<{ size?: number | string; className?: string }>;
   badge?: number;
 };
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/assets", label: "Assets", icon: Boxes },
-  { href: "/yards", label: "Yards", icon: MapPin },
   { href: "/hires", label: "Hires", icon: Truck },
   { href: "/hires/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/messages", label: "Messages", icon: MessageSquare },
   { href: "/storefront", label: "Storefront", icon: Store },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+function RailIconButton({
+  label,
+  onClick,
+  collapsed,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  collapsed: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "flex h-9 items-center gap-s2 rounded-sm px-s2 text-ink-400",
+        "transition-colors duration-quick hover:bg-ink-800 hover:text-text-inverse",
+        collapsed ? "w-9 justify-center" : "w-full",
+      )}
+    >
+      {children}
+      {collapsed ? null : <span className="text-caption">{label}</span>}
+    </button>
+  );
+}
 
 /** Portal nav rail (05 §5): ink-900, 240px ↔ 64px, active = amber left bar. */
 export function NavRail() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  // Phones start icon-only regardless of the remembered preference (04 §2).
-  useEffect(() => setCollapsed(readRailCollapsed() || window.innerWidth < 768), []);
+  const [density, setDensity] = useState<Density>("comfortable");
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(readRailCollapsed() || window.innerWidth < 768);
+    setDensity(readDensity());
+  }, []);
 
   const isActive = (href: string) =>
     href === "/hires"
       ? pathname === "/hires" || (pathname.startsWith("/hires/") && !pathname.startsWith("/hires/calendar"))
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  async function logout() {
+    setSigningOut(true);
+    try {
+      await auth("/logout");
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  }
+
+  const nextDensity: Density = density === "comfortable" ? "compact" : "comfortable";
 
   return (
     <nav
@@ -64,10 +110,21 @@ export function NavRail() {
         collapsed ? "w-16" : "w-60",
       )}
     >
-      <div className={cn("flex items-center px-s3 py-s4", collapsed && "justify-center px-0")}>
+      <div className={cn("flex items-center justify-between px-s3 py-s4", collapsed && "flex-col gap-s2 px-0")}>
         <Link href="/dashboard" aria-label="Terminal dashboard">
           <WordmarkPlate compact={collapsed} />
         </Link>
+        <button
+          type="button"
+          onClick={() => {
+            persistRailCollapsed(!collapsed);
+            setCollapsed(!collapsed);
+          }}
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          className="rounded-sm p-s1 text-ink-400 hover:bg-ink-800 hover:text-text-inverse"
+        >
+          {collapsed ? <PanelLeftOpen size={16} aria-hidden /> : <PanelLeftClose size={16} aria-hidden />}
+        </button>
       </div>
 
       <ul className="flex flex-1 flex-col gap-s1 px-s2">
@@ -108,23 +165,48 @@ export function NavRail() {
       </ul>
 
       <div className="flex flex-col gap-s1 border-t border-ink-800 p-s2">
-        <DensityToggle collapsed={collapsed} />
+        <Link
+          href="/settings"
+          aria-current={pathname.startsWith("/settings") ? "page" : undefined}
+          title={collapsed ? "Settings" : undefined}
+          className={cn(
+            "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium",
+            "transition-colors duration-quick",
+            pathname.startsWith("/settings")
+              ? "text-text-inverse"
+              : "text-ink-300 hover:bg-ink-800 hover:text-text-inverse",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <Settings size={18} aria-hidden />
+          {collapsed ? null : <span>Settings</span>}
+        </Link>
         <button
           type="button"
-          onClick={() => {
-            persistRailCollapsed(!collapsed);
-            setCollapsed(!collapsed);
-          }}
-          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          onClick={() => void logout()}
+          disabled={signingOut}
+          title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "flex h-10 w-full items-center gap-s3 rounded-sm px-s3 text-body-sm text-ink-300",
+            "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium text-ink-300",
             "transition-colors duration-quick hover:bg-ink-800 hover:text-text-inverse",
             collapsed && "justify-center px-0",
           )}
         >
-          {collapsed ? <PanelLeftOpen size={18} aria-hidden /> : <PanelLeftClose size={18} aria-hidden />}
-          {collapsed ? null : <span>Collapse</span>}
+          <LogOut size={18} aria-hidden />
+          {collapsed ? null : <span>{signingOut ? "Signing out…" : "Sign out"}</span>}
         </button>
+        <div className={cn("flex gap-s1 pt-s1", collapsed ? "flex-col items-center" : "")}>
+          <RailIconButton
+            label={density === "comfortable" ? "Compact rows" : "Comfortable rows"}
+            collapsed={collapsed}
+            onClick={() => {
+              applyDensity(nextDensity);
+              setDensity(nextDensity);
+            }}
+          >
+            {density === "comfortable" ? <Rows2 size={16} aria-hidden /> : <Rows4 size={16} aria-hidden />}
+          </RailIconButton>
+        </div>
       </div>
     </nav>
   );

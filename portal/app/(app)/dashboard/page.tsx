@@ -121,7 +121,7 @@ function Checklist() {
       href: "/settings",
       cta: "Where payouts land",
     },
-    { label: "First yard", done: (yards.data?.length ?? 0) > 0, href: "/yards", cta: "Pin your depot" },
+    { label: "First yard", done: (yards.data?.length ?? 0) > 0, href: "/assets?yards=1", cta: "Pin your depot" },
     {
       label: "First listing",
       done: (listings.data?.length ?? 0) > 0,
