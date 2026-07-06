@@ -7,6 +7,8 @@ import maplibregl, { Map as MLMap, Marker } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { toLngLat } from "@/lib/map-coords";
+
 const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 /** Lagos — the launch market (D-007). */
 export const DEFAULT_CENTER: [number, number] = [3.3792, 6.5244];
@@ -33,13 +35,15 @@ export function MapView({
   const pin = useRef<Marker | null>(null);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
+  const safeCenter = toLngLat(center);
+  const safeMarker = toLngLat(marker);
 
   useEffect(() => {
     if (!container.current) return;
     const instance = new maplibregl.Map({
       container: container.current,
       style: STYLE_URL,
-      center: center ?? DEFAULT_CENTER,
+      center: safeCenter ?? DEFAULT_CENTER,
       zoom,
       interactive,
       attributionControl: { compact: true },
@@ -80,15 +84,15 @@ export function MapView({
   }, []);
 
   useEffect(() => {
-    if (map.current && center) {
-      map.current.easeTo({ center, zoom: Math.max(map.current.getZoom(), 13), duration: 400 });
+    if (map.current && safeCenter) {
+      map.current.easeTo({ center: safeCenter, zoom: Math.max(map.current.getZoom(), 13), duration: 400 });
     }
-  }, [center?.[0], center?.[1]]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [safeCenter?.[0], safeCenter?.[1]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const m = map.current;
     if (!m) return;
-    if (!marker) {
+    if (!safeMarker) {
       pin.current?.remove();
       pin.current = null;
       return;
@@ -98,16 +102,16 @@ export function MapView({
       // AssetPin-adjacent: ink ring + amber fill teardrop stand-in.
       el.className = "size-s4 rounded-pill border-2 border-ink-900 bg-amber-500 shadow-e1";
       pin.current = new Marker({ element: el, draggable: Boolean(onPickRef.current) })
-        .setLngLat(marker)
+        .setLngLat(safeMarker)
         .addTo(m);
       pin.current.on("dragend", () => {
         const pos = pin.current?.getLngLat();
         if (pos) onPickRef.current?.([pos.lng, pos.lat]);
       });
     } else {
-      pin.current.setLngLat(marker);
+      pin.current.setLngLat(safeMarker);
     }
-  }, [marker?.[0], marker?.[1]]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [safeMarker?.[0], safeMarker?.[1]]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={container} className={className} />;
 }

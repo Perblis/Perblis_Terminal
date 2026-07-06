@@ -170,6 +170,27 @@ def test_first_photo_is_cover_and_reorder(auth, supplier, seeded):
     assert by_id[p1["id"]]["is_cover"] is False
 
 
+def test_delete_photo_promotes_cover_and_reindexes(auth, supplier, seeded):
+    listing = _make_listing(supplier, with_photo=False)
+    p1 = (
+        auth(supplier)
+        .post(f"/api/v1/listings/{listing.id}/photos", {"r2_key": "listings/1.jpg"}, format="json")
+        .json()
+    )
+    p2 = (
+        auth(supplier)
+        .post(f"/api/v1/listings/{listing.id}/photos", {"r2_key": "listings/2.jpg"}, format="json")
+        .json()
+    )
+    resp = auth(supplier).delete(f"/api/v1/listings/{listing.id}/photos/{p1['id']}")
+    assert resp.status_code == 204
+    detail = auth(supplier).get(f"/api/v1/listings/{listing.id}").json()
+    assert len(detail["photos"]) == 1
+    assert detail["photos"][0]["id"] == p2["id"]
+    assert detail["photos"][0]["is_cover"] is True
+    assert detail["photos"][0]["position"] == 0
+
+
 def test_duplicate_creates_draft_basic_copy(auth, supplier, seeded):
     SupplierProfileFactory(user=supplier)
     listing = _make_listing(supplier)
