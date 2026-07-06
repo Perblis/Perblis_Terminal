@@ -18,8 +18,12 @@
     "export": "expo export --platform android --output-dir dist-export"
   },
   "dependencies": {
+    "@expo-google-fonts/archivo": "^0.4.2",
+    "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@maplibre/maplibre-react-native": "^11.3.6",
     "@react-native-community/netinfo": "12.0.1",
+    "@sentry/react-native": "^8.17.2",
     "@tanstack/query-sync-storage-persister": "^5.101.2",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-query-persist-client": "^5.101.2",

@@ -54,7 +54,8 @@
           "photosPermission": "Terminal uses your photos to attach handover records."
         }
       ],
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      "@sentry/react-native/expo"
     ],
     "experiments": {
       "typedRoutes": true
