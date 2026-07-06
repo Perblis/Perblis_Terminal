@@ -65,11 +65,7 @@ export function auth<T>(path: string, body?: unknown): Promise<T> {
  * pass through; local-dev fallback URLs are relative to the API origin
  * ("/api/v1/media/...") and must ride the BFF instead.
  */
-export function mediaUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (url.startsWith("/api/v1/")) return `/bff/${url.slice("/api/v1/".length)}`;
-  return url;
-}
+export { resolveMediaUrl as mediaUrl } from "./media-url";
 
 const PHOTO_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -91,7 +87,9 @@ export function putPresignedUpload(
   contentType: string,
   onProgress?: (progress: number) => void,
 ): Promise<void> {
-  const local = mediaUrl(presignedUrl);
+  const local = presignedUrl.startsWith("/api/v1/")
+    ? `/bff/${presignedUrl.slice("/api/v1/".length)}`
+    : null;
   const proxied = !local && isExternalPresignedUrl(presignedUrl);
   const putUrl = local ?? (proxied ? "/bff/media-put" : presignedUrl);
 

@@ -596,3 +596,10 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder can't remove photos when editing assets; console CORS errors on R2 PUT until PR deploys; map errors from null coords.
 - change_ref: 2026-07-06 11:18 - Portal UX fixes
 - notes: Photo delete requires backend deploy (Railway auto from main). Portal upload CORS fix requires Workers deploy of PR #39. 409 on listing save = archived listing (`listing_not_editable`).
+
+## 2026-07-06 12:10 - Portal: fix photo display, yards from Assets only, nav footer + logout
+- tag: FIX | FEATURE
+- area: portal/lib/media-url.ts, portal/components/shell/nav-rail.tsx, portal/components/yards/yards-panel.tsx, portal/app/(app)/assets/page.tsx, portal/app/(app)/yards/page.tsx
+- summary: Listing photos now load via `/bff/media/public?key=` (API was returning non-public R2 S3 endpoint URLs). Removed Yards from nav; yards management panel on Assets page (`Yards` + `New yard` buttons). Settings + Sign out at nav bottom; collapse moved to header; density as compact icon control. `/yards` redirects to `/assets?yards=1`.
+- reason: Founder: uploaded images broken in Assets table; yards only from Assets; missing logout; nav footer UX.
+- change_ref: 2026-07-06 11:48 - Harden media upload proxy

@@ -222,7 +222,7 @@ export function PhotosStep({
             className="group relative aspect-[4/3] cursor-grab overflow-hidden rounded-sm border border-border-default bg-surface-sunken"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic */}
-            <img src={mediaUrl(photo.url) ?? ""} alt="" className="h-full w-full object-cover" />
+            <img src={mediaUrl(photo.url, photo.r2_key) ?? ""} alt="" className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => void setCover(photo.id)}
@@ -362,7 +362,7 @@ export function LocationStep({
       <div className="flex flex-wrap items-center justify-between gap-s2">
         <h2 className="font-display text-h3 text-text-primary">Where does it live?</h2>
         <Link
-          href="/yards"
+          href="/assets?yards=1"
           className="text-body-sm font-medium text-amber-800 underline-offset-2 hover:underline"
         >
           Manage yards
@@ -403,7 +403,7 @@ export function LocationStep({
       ) : (
         <p className="text-body-sm text-text-secondary">
           No yards yet.{" "}
-          <Link href="/yards" className="font-medium text-amber-800 underline-offset-2 hover:underline">
+          <Link href="/assets?yards=1" className="font-medium text-amber-800 underline-offset-2 hover:underline">
             Create your first yard
           </Link>{" "}
           to group assets at the same depot, or pin this asset directly below.
@@ -462,7 +462,7 @@ export function LocationStep({
           <p className="text-caption text-ink-500">
             Search an address or click the map and drag the pin to exactly where the asset sits.
             If several assets share this spot,{" "}
-            <Link href="/yards" className="underline-offset-2 hover:underline">
+            <Link href="/assets?yards=1" className="underline-offset-2 hover:underline">
               make it a yard
             </Link>{" "}
             and they&apos;ll share one map pin.
@@ -533,7 +533,7 @@ export function ReviewStep({
       <div className="relative aspect-[4/3] bg-surface-sunken">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
-          <img src={mediaUrl(cover.url) ?? ""} alt="" className="h-full w-full object-cover" />
+          <img src={mediaUrl(cover.url, cover.r2_key) ?? ""} alt="" className="h-full w-full object-cover" />
         ) : clsMeta && Glyph ? (
           <div className={`flex h-full items-center justify-center ${clsMeta.bg} ${clsMeta.text}`}>
             <Glyph size={48} />
