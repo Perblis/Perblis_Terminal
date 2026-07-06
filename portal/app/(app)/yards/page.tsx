@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GateIllustration } from "@/components/ui/system-illustrations";
 import { YardModal } from "@/components/yards/yard-modal";
 import { ApiError } from "@/lib/api";
+import { toLngLat } from "@/lib/map-coords";
 import { useDeleteYard, useListings, useYards } from "@/lib/queries";
 import type { Yard } from "@/lib/types";
 
@@ -133,15 +134,22 @@ export default function YardsPage() {
         <div className="grid gap-s4 sm:grid-cols-2 xl:grid-cols-3">
           {(yards.data ?? []).map((yard) => {
             const count = countByYard.get(yard.id) ?? 0;
+            const yardPin = toLngLat(yard.point?.coordinates);
             return (
               <Card key={yard.id} className="overflow-hidden p-0">
-                <MapView
-                  className="h-32 w-full"
-                  center={[yard.point.coordinates[0], yard.point.coordinates[1]]}
-                  marker={[yard.point.coordinates[0], yard.point.coordinates[1]]}
-                  interactive={false}
-                  zoom={13}
-                />
+                {yardPin ? (
+                  <MapView
+                    className="h-32 w-full"
+                    center={yardPin}
+                    marker={yardPin}
+                    interactive={false}
+                    zoom={13}
+                  />
+                ) : (
+                  <div className="flex h-32 items-center justify-center bg-surface-sunken text-caption text-ink-500">
+                    No map pin
+                  </div>
+                )}
                 <div className="flex flex-col gap-s2 p-s4">
                   <div className="flex items-start justify-between gap-s2">
                     <h2 className="font-display text-h3 text-text-primary">{yard.name}</h2>

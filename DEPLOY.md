@@ -69,6 +69,13 @@ Topology (TSD §1): **api** (gunicorn, 512 MB) · **worker** (django-tasks, 256 
 2. Create an R2 API token (Object Read & Write); put the credentials in the
    Railway api/worker vars (`R2_*`). The presign endpoint is implemented in
    Wave 2 — only the credentials are wired now.
+3. **Portal uploads (optional if using the BFF proxy):** the Supplier Portal
+   routes presigned PUTs through `/bff/media-put` on the Worker (server-side
+   forward to R2), so **bucket CORS is not required** for listing photos or
+   logos. If you bypass that proxy or upload from another browser origin, add a
+   CORS policy on `terminal-public` allowing `PUT` + `GET` from your portal
+   origin, e.g. `https://terminal-portal.<account>.workers.dev`, with
+   `AllowedHeaders: content-type`.
 
 ## 3. Cloudflare Workers — Supplier Portal
 

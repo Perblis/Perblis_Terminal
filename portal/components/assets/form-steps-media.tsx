@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
 import { ApiError, bff, isAllowedPhotoType, mediaUrl, putPresignedUpload } from "@/lib/api";
+import { toLngLat } from "@/lib/map-coords";
 import { geocode, keys, useInvalidate, useMe, useSpecTemplate, useYards } from "@/lib/queries";
 import type { AssetClass, GeocodeResult, Listing, PresignResult } from "@/lib/types";
 
@@ -182,6 +183,22 @@ export function PhotosStep({
     }
   }
 
+  async function removePhoto(id: string) {
+    try {
+      await bff(`/listings/${listing!.id}/photos/${id}`, { method: "DELETE" });
+      await refresh();
+    } catch (e) {
+      setUploads((u) => [
+        ...u,
+        {
+          name: "Remove",
+          progress: 0,
+          error: e instanceof ApiError ? e.message : "Couldn't remove the photo. Try again.",
+        },
+      ]);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-s4">
       <div>
@@ -217,6 +234,14 @@ export function PhotosStep({
               }`}
             >
               <Star size={13} fill={photo.is_cover ? "currentColor" : "none"} />
+            </button>
+            <button
+              type="button"
+              onClick={() => void removePhoto(photo.id)}
+              aria-label="Remove photo"
+              className="absolute right-s1 top-s1 grid size-s5 place-items-center rounded-pill bg-ink-900/60 text-paper-0 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <X size={13} aria-hidden />
             </button>
           </figure>
         ))}
@@ -282,7 +307,7 @@ export function PhotosStep({
           e.target.value = "";
         }}
       />
-      <p className="text-caption text-ink-500">Drag to reorder · star sets the cover.</p>
+      <p className="text-caption text-ink-500">Drag to reorder · star sets the cover · X removes.</p>
     </div>
   );
 }
@@ -297,7 +322,7 @@ export function LocationStep({
   set: <K extends keyof AssetDraft>(key: K, value: AssetDraft[K]) => void;
 }) {
   const yards = useYards();
-  const pin = draft.point ? ([draft.point.coordinates[0], draft.point.coordinates[1]] as [number, number]) : null;
+  const pin = toLngLat(draft.point?.coordinates);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [searching, setSearching] = useState(false);

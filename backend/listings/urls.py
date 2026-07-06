@@ -16,6 +16,11 @@ urlpatterns = [
         "listings/<uuid:listing_id>/photos", views.ListingPhotoView.as_view(), name="listing-photos"
     ),
     path(
+        "listings/<uuid:listing_id>/photos/<uuid:photo_id>",
+        views.ListingPhotoDetailView.as_view(),
+        name="listing-photo-detail",
+    ),
+    path(
         "listings/<uuid:listing_id>/photos/order",
         views.ListingPhotoReorderView.as_view(),
         name="listing-photos-order",

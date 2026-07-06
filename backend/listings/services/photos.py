@@ -47,3 +47,25 @@ def reorder_photos(*, user: User, listing_id, items: list[dict]) -> list[Listing
         photo.is_cover = bool(item.get("is_cover", False))
     ListingPhoto.objects.bulk_update(photos.values(), ["position", "is_cover"])
     return sorted(photos.values(), key=lambda p: p.position)
+
+
+@transaction.atomic
+def delete_photo(*, user: User, listing_id, photo_id) -> None:
+    from listings.enums import ListingStatus
+    from listings.errors import ListingNotEditable
+
+    listing = get_object_or_404(Listing.objects.select_for_update(), id=listing_id, supplier=user)
+    if listing.status in (ListingStatus.ARCHIVED, ListingStatus.REMOVED):
+        raise ListingNotEditable()
+    photo = get_object_or_404(ListingPhoto, id=photo_id, listing=listing)
+    was_cover = photo.is_cover
+    photo.delete()
+    remaining = list(listing.photos.order_by("position"))
+    for index, item in enumerate(remaining):
+        item.position = index
+    if was_cover and remaining:
+        for item in remaining:
+            item.is_cover = False
+        remaining[0].is_cover = True
+    if remaining:
+        ListingPhoto.objects.bulk_update(remaining, ["position", "is_cover"])

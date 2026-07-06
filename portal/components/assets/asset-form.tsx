@@ -170,7 +170,9 @@ export function AssetForm({ initial }: { initial?: Listing }) {
       setSavedPulse(true);
       window.setTimeout(() => setSavedPulse(false), 1200);
     } catch (e) {
-      if (e instanceof ApiError && e.fields) {
+      if (e instanceof ApiError && e.code === "listing_not_editable") {
+        setError("This listing is archived and can't be edited. Duplicate it to make changes.");
+      } else if (e instanceof ApiError && e.fields) {
         setError(Object.values(e.fields).flat().join(" "));
       } else {
         setError(e instanceof ApiError ? e.message : "Couldn't save. Try again.");

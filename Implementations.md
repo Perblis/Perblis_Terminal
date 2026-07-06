@@ -588,3 +588,11 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder-reported portal gaps: broken photo upload, undiscoverable yards UI, map-only listing location.
 - change_ref: 2026-07-04 14:15 - Wave 7 Slice 7E BUILT
 - notes: R2 bucket CORS is no longer required for portal uploads (BFF proxy). Geocode still needs `LOCATIONIQ_KEY` in prod for search results.
+
+## 2026-07-06 11:36 - Portal photo delete + map null-coord fix + CORS docs
+- tag: FEATURE | FIX
+- area: backend/listings (photos delete), portal PhotosStep, portal MapView/map-coords, DEPLOY.md
+- summary: Added `DELETE /api/v1/listings/{id}/photos/{photo_id}` (cover promotion + reindex). Portal Photos step now has remove (X) on hover. MapLibre null-coordinate guard fixes console "Expected number, found null" errors. DEPLOY.md notes BFF upload proxy vs optional R2 CORS.
+- reason: Founder can't remove photos when editing assets; console CORS errors on R2 PUT until PR deploys; map errors from null coords.
+- change_ref: 2026-07-06 11:18 - Portal UX fixes
+- notes: Photo delete requires backend deploy (Railway auto from main). Portal upload CORS fix requires Workers deploy of PR #39. 409 on listing save = archived listing (`listing_not_editable`).

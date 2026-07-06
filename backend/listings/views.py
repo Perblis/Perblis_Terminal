@@ -104,6 +104,15 @@ class ListingPhotoView(GenericAPIView):
         return Response(s.ListingPhotoSerializer(photo).data, status=status.HTTP_201_CREATED)
 
 
+class ListingPhotoDetailView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, listing_id, photo_id):
+        photos_service.delete_photo(user=request.user, listing_id=listing_id, photo_id=photo_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ListingPhotoReorderView(GenericAPIView):
     permission_classes = [IsAuthenticated, IsSupplier]
     serializer_class = s.PhotoReorderSerializer
