@@ -83,7 +83,8 @@ function isExternalPresignedUrl(url: string): boolean {
 
 /**
  * PUT bytes to a presigned upload URL. Local-dev API paths ride the BFF;
- * R2 presigned URLs ride /bff/media-put so the browser never needs bucket CORS.
+ * R2 presigned URLs ride /bff/media-put?target=… so the browser never needs
+ * bucket CORS (query param avoids custom-header issues on some proxies).
  */
 export function putPresignedUpload(
   presignedUrl: string,
@@ -93,16 +94,30 @@ export function putPresignedUpload(
 ): Promise<void> {
   const local = mediaUrl(presignedUrl);
   const proxied = !local && isExternalPresignedUrl(presignedUrl);
-  const putUrl = local ?? (proxied ? "/bff/media-put" : presignedUrl);
+  const putUrl =
+    local ??
+    (proxied
+      ? `/bff/media-put?target=${encodeURIComponent(presignedUrl)}`
+      : presignedUrl);
+
+  if (!onProgress) {
+    return fetch(putUrl, {
+      method: "PUT",
+      body,
+      headers: { "content-type": contentType },
+      credentials: "include",
+    }).then((resp) => {
+      if (resp.status >= 200 && resp.status < 300) return;
+      throw new Error(`Upload failed (${resp.status})`);
+    });
+  }
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", putUrl);
+    xhr.withCredentials = true;
     xhr.setRequestHeader("content-type", contentType);
-    if (proxied) xhr.setRequestHeader("x-presigned-url", presignedUrl);
-    if (onProgress) {
-      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    }
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () =>
       xhr.status >= 200 && xhr.status < 300
         ? resolve()

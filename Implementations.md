@@ -596,3 +596,10 @@ ailway setup agent -y from project root. Installed use-railway skill to Universa
 - reason: Founder can't remove photos when editing assets; console CORS errors on R2 PUT until PR deploys; map errors from null coords.
 - change_ref: 2026-07-06 11:18 - Portal UX fixes
 - notes: Photo delete requires backend deploy (Railway auto from main). Portal upload CORS fix requires Workers deploy of PR #39. 409 on listing save = archived listing (`listing_not_editable`).
+
+## 2026-07-06 11:48 - Harden media upload proxy (query param + R2 CORS template)
+- tag: FIX
+- area: portal/lib/api.ts, portal/app/bff/media-put/route.ts, scripts/r2-cors-terminal-public.json, DEPLOY.md
+- summary: Upload proxy now passes presigned URL as `?target=` query param (no custom header); XHR sets `withCredentials`. Added `scripts/r2-cors-terminal-public.json` for optional bucket CORS fallback.
+- reason: Founder still saw direct R2 CORS errors — likely cached pre-deploy JS; belt-and-suspenders hardening.
+- change_ref: 2026-07-06 11:36 - Portal photo delete + map null-coord fix

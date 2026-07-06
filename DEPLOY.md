@@ -74,8 +74,9 @@ Topology (TSD §1): **api** (gunicorn, 512 MB) · **worker** (django-tasks, 256 
    forward to R2), so **bucket CORS is not required** for listing photos or
    logos. If you bypass that proxy or upload from another browser origin, add a
    CORS policy on `terminal-public` allowing `PUT` + `GET` from your portal
-   origin, e.g. `https://terminal-portal.<account>.workers.dev`, with
-   `AllowedHeaders: content-type`.
+   origin — paste `scripts/r2-cors-terminal-public.json` in the bucket
+   **Settings → CORS Policy** JSON editor (update the origin if your Workers URL
+   differs), with `AllowedHeaders: content-type`.
 
 ## 3. Cloudflare Workers — Supplier Portal
 

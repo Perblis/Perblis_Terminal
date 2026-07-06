@@ -2,6 +2,14 @@
 import { ACCESS_COOKIE, readCookie } from "@/lib/server/cookies";
 import { isAllowedR2PresignedUrl } from "@/lib/server/media-put";
 
+function readPresignedTarget(request: Request): string | null {
+  const url = new URL(request.url);
+  const fromQuery = url.searchParams.get("target");
+  if (fromQuery) return fromQuery;
+  // Legacy clients sent the destination in a custom header.
+  return request.headers.get("x-presigned-url");
+}
+
 export async function PUT(request: Request) {
   if (!readCookie(request, ACCESS_COOKIE)) {
     return Response.json(
@@ -10,7 +18,7 @@ export async function PUT(request: Request) {
     );
   }
 
-  const presignedUrl = request.headers.get("x-presigned-url");
+  const presignedUrl = readPresignedTarget(request);
   if (!presignedUrl || !isAllowedR2PresignedUrl(presignedUrl)) {
     return Response.json(
       { error: { code: "bad_request", message: "Invalid upload destination." } },
