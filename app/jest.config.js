@@ -1,7 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: "jest-expo",
-  setupFilesAfterEach: undefined,
   setupFiles: ["<rootDir>/test/jest-setup.ts"],
   // pnpm keeps real packages under node_modules/.pnpm/<pkg>@<ver>/node_modules/,
   // so we match only the inner real-name segment and never at .pnpm itself

@@ -1,12 +1,9 @@
-import { View } from "react-native";
+import { Redirect } from "expo-router";
 
-import { BodyText, MonoText } from "../components/ui/text";
+import { useOnboarding } from "../stores/onboarding";
 
+/** S1 route decision: first launch → onboarding; otherwise the Map. */
 export default function Index() {
-  return (
-    <View className="flex-1 items-center justify-center bg-surface-page">
-      <MonoText>Terminal</MonoText>
-      <BodyText className="mt-2 text-text-secondary">Hirer app — Wave 8</BodyText>
-    </View>
-  );
+  const completed = useOnboarding((s) => s.completed);
+  return <Redirect href={completed ? "/(tabs)" : "/onboarding"} />;
 }

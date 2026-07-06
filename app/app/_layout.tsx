@@ -4,7 +4,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { QueryProvider } from "../components/shell/query-provider";
 import { ThemeRoot } from "../components/shell/theme-root";
 import { useAppFonts } from "../lib/fonts";
 import { initSentry } from "../lib/sentry";
@@ -24,9 +26,13 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <ThemeRoot>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }} />
-    </ThemeRoot>
+    <SafeAreaProvider>
+      <QueryProvider>
+        <ThemeRoot>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }} />
+        </ThemeRoot>
+      </QueryProvider>
+    </SafeAreaProvider>
   );
 }
