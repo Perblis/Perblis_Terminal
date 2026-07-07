@@ -58,3 +58,11 @@ jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(async () => {}),
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
 }));
+
+jest.mock("expo-location", () => ({
+  requestForegroundPermissionsAsync: jest.fn(async () => ({ status: "granted" })),
+  getCurrentPositionAsync: jest.fn(async () => ({
+    coords: { latitude: 6.4541, longitude: 3.3947 },
+  })),
+  Accuracy: { Balanced: 3 },
+}));
