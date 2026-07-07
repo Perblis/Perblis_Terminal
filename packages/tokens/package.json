@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Terminal design tokens — one source, multi-platform outputs (design-system ch.10).",
+  "description": "Terminal design tokens \u2014 one source, multi-platform outputs (design-system ch.10).",
   "main": "tokens.ts",
   "types": "tokens.ts",
   "exports": {
     ".": "./tokens.ts",
     "./tailwind": "./tailwind.tokens.cjs",
     "./css": "./tokens.css",
-    "./admin.css": "./admin.css"
+    "./admin.css": "./admin.css",
+    "./map/grade.json": "./map/grade.json"
   },
   "files": [
     "src",
