@@ -1,8 +1,8 @@
 // D-014 leak gate over S6: a maximal listing fixture renders with zero fee
 // vocabulary (the listing serializer carries none — belt and braces).
-import ListingDetail from "./[id]";
-import { collectStrings, expectNoFeeLeak } from "../../test/d014";
-import { renderScreen } from "../../test/render";
+import ListingDetail from "../../app/listing/[id]";
+import { collectStrings, expectNoFeeLeak } from "../d014";
+import { renderScreen } from "../render";
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
