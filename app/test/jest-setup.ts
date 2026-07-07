@@ -50,3 +50,11 @@ jest.mock("@react-native-community/netinfo", () => ({
   addEventListener: jest.fn(() => () => {}),
   fetch: jest.fn(async () => ({ isConnected: true })),
 }));
+
+jest.mock("@maplibre/maplibre-react-native", () => require("./maplibre-mock"));
+
+jest.mock("expo-haptics", () => ({
+  selectionAsync: jest.fn(async () => {}),
+  impactAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+}));
