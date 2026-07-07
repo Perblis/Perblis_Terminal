@@ -66,3 +66,12 @@ jest.mock("expo-location", () => ({
   })),
   Accuracy: { Balanced: 3 },
 }));
+
+jest.mock("react-native-worklets", () =>
+  jest.requireActual("react-native-worklets/src/mock"),
+);
+
+jest.mock("react-native-reanimated", () => {
+  const mock = jest.requireActual("react-native-reanimated/mock");
+  return { ...mock, useReducedMotion: () => true };
+});

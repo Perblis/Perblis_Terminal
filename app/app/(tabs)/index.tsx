@@ -17,6 +17,7 @@ import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText } from "../../components/ui/text";
 import { useMapSearch } from "../../lib/queries";
 import type { Bbox } from "../../lib/search-params";
+import { YardSheet } from "../../components/map/yard-sheet";
 import { useMapState } from "../../stores/map-state";
 import { useOnboarding } from "../../stores/onboarding";
 
@@ -29,6 +30,7 @@ export default function MapTab() {
 
   const [bbox, setBbox] = useState<Bbox | null>(null);
   const [selection, setSelection] = useState<MapSelection>(null);
+  const [yardSheet, setYardSheet] = useState<import("../../lib/types").MapYard | null>(null);
   const [locateAsk, setLocateAsk] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
   const [tilesFailed, setTilesFailed] = useState(false);
@@ -91,7 +93,9 @@ export default function MapTab() {
     if (selection.kind === "listing") {
       router.push(`/listing/${selection.listing.id}` as never);
     } else {
-      router.push(`/yard-sheet?yardId=${selection.yard.yard_id}` as never);
+      // S5 opens in-screen from the map payload — drag-dismiss preserves
+      // the map position (zero navigation, zero fetches).
+      setYardSheet(selection.yard);
     }
   };
 
@@ -211,9 +215,12 @@ export default function MapTab() {
       ) : null}
 
       {/* Peek card */}
-      {selection ? (
+      {selection && !yardSheet ? (
         <PeekCard selection={selection} onOpen={openSelection} bottomInset={insets.bottom} />
       ) : null}
+
+      {/* S5 Yard Sheet */}
+      {yardSheet ? <YardSheet yard={yardSheet} onDismiss={() => setYardSheet(null)} /> : null}
     </View>
   );
 }
