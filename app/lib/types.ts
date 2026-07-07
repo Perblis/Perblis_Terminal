@@ -256,3 +256,113 @@ export type Message = {
   sent_at: string;
   read_at: string | null;
 };
+
+// ---------------------------------------------------------------------------
+// Wave 3 search contracts (frozen) — app additions for slice 8B.
+// NOTE two badge vocabularies: supplier/yard `badge` is ACCOUNT-level
+// (verified | business_verified | null); solo-listing/list-row `badge` is the
+// LISTING tier (basic | verified | inspected). Never collapse them.
+
+export type SupplierBadge = "verified" | "business_verified" | null;
+export type ListingTier = "basic" | "verified" | "inspected";
+
+export type MapSupplier = {
+  id: string;
+  name: string;
+  logo: string;
+  badge: SupplierBadge;
+};
+
+/** Embedded yard-pin listing summary — S5 renders these with zero fetches. */
+export type MapYardListing = {
+  id: string;
+  title: string;
+  asset_class: AssetClass;
+  price_from: number; // kobo — display strings are what render
+  price_from_display: string;
+  photo: string;
+  available: boolean;
+};
+
+export type MapYard = {
+  yard_id: string;
+  name: string;
+  point: GeoPoint;
+  supplier: MapSupplier;
+  listing_count: number;
+  /** 0 ⇒ pin dims to 40%, never removed (FSD §6). */
+  matching_count: number;
+  class_mix: AssetClass[];
+  price_from: number;
+  price_from_display: string;
+  listings: MapYardListing[];
+};
+
+export type MapSoloListing = {
+  id: string;
+  title: string;
+  asset_class: AssetClass;
+  point: GeoPoint;
+  price_from: number;
+  price_from_display: string;
+  distance_km: number;
+  photo: string;
+  badge: ListingTier;
+  available: boolean;
+};
+
+export type MapResponse = {
+  yards: MapYard[];
+  listings: MapSoloListing[];
+};
+
+export type ListAssetItem = MapSoloListing & {
+  yard_id: string | null;
+  /** "+N more at this yard" sub-line (S12). */
+  more_at_yard: number;
+};
+
+export type ListLocationYard = Omit<MapYard, "matching_count"> & {
+  type: "yard";
+  matching_count: null;
+  distance_km: number;
+};
+
+export type ListLocationListing = MapSoloListing & {
+  type: "listing";
+  yard_id: string | null;
+};
+
+export type ListSearchPage<T> = {
+  results: T[];
+  next: string | null;
+  previous: string | null;
+};
+
+export type StorefrontYard = {
+  id: string;
+  name: string;
+  point: GeoPoint;
+  listing_count: number;
+};
+
+export type StorefrontListing = {
+  id: string;
+  title: string;
+  asset_class: AssetClass;
+  asset_type: string;
+  daily_price_display: string;
+  cover_photo_url: string;
+  yard_id: string | null;
+};
+
+export type Storefront = {
+  supplier_id: string;
+  business_name: string;
+  logo_url: string;
+  verification_badge: SupplierBadge;
+  member_since: string;
+  about: string;
+  yards: StorefrontYard[];
+  live_listings: StorefrontListing[];
+};
