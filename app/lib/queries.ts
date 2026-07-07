@@ -97,3 +97,79 @@ export function useGeocode(q: string) {
     staleTime: 24 * 60 * 60 * 1000, // server caches 24h too
   });
 }
+
+// ---------------------------------------------------------------------------
+// Hires (Wave 4 contracts, hirer-shaped — D-014 fields never arrive).
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import type { HireDetail, PaymentStatus, RefundPreview } from "./types";
+
+export const hireKeys = {
+  all: ["hires"] as const,
+  detail: (id: string) => ["hire", id] as const,
+  refundPreview: (id: string) => ["refund-preview", id] as const,
+  payment: (id: string) => ["payment", id] as const,
+};
+
+/** S8/S10: pass refetchInterval to poll (webhook is truth — never the redirect). */
+export function useHire(id: string | null, refetchInterval?: number) {
+  return useQuery({
+    queryKey: hireKeys.detail(id ?? "none"),
+    queryFn: () => apiFetch<HireDetail>(`/hires/${id}`),
+    enabled: id !== null,
+    refetchInterval,
+  });
+}
+
+export type CreateHirePayload = {
+  listing_id: string;
+  start_date: string;
+  end_date: string;
+  hirer_note?: string;
+  terms_accepted: true;
+};
+
+export function useCreateHire() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateHirePayload) =>
+      apiFetch<HireDetail>("/hires", { method: "POST", body: payload }),
+    onSuccess: (hire) => {
+      qc.setQueryData(hireKeys.detail(hire.id), hire);
+      void qc.invalidateQueries({ queryKey: hireKeys.all });
+    },
+  });
+}
+
+export function useCancelHire(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reason: string) =>
+      apiFetch<HireDetail>(`/hires/${id}/cancel`, { method: "POST", body: { reason } }),
+    onSuccess: (hire) => {
+      qc.setQueryData(hireKeys.detail(id), hire);
+      void qc.invalidateQueries({ queryKey: hireKeys.all });
+    },
+  });
+}
+
+/** Confirmed hires only — 400 refund_not_applicable otherwise. */
+export function useRefundPreview(id: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: hireKeys.refundPreview(id ?? "none"),
+    queryFn: () => apiFetch<RefundPreview>(`/hires/${id}/refund-preview`),
+    enabled: enabled && id !== null,
+  });
+}
+
+/** Lazily (re)initializes checkout for an accepted hire on the server. */
+export function usePaymentStatus(id: string | null, refetchInterval?: number) {
+  return useQuery({
+    queryKey: hireKeys.payment(id ?? "none"),
+    queryFn: () => apiFetch<PaymentStatus>(`/hires/${id}/payment`),
+    enabled: id !== null,
+    refetchInterval,
+    retry: false, // 404 no_payment / 503 checkout_unavailable surface immediately
+  });
+}

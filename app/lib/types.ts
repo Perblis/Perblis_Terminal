@@ -366,3 +366,13 @@ export type Storefront = {
   yards: StorefrontYard[];
   live_listings: StorefrontListing[];
 };
+
+/** GET /hires/{id}/payment — payments.PaymentStatusSerializer (Wave 4). */
+export type PaymentStatus = {
+  reference: string;
+  state: "initiated" | "success" | "failed" | "abandoned";
+  authorization_url: string;
+  /** 1-based; max attempts is 3 → attempts left = 3 − attempt. */
+  attempt: number;
+  paid_at: string | null;
+};
