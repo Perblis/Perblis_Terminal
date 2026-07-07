@@ -4,7 +4,9 @@
 import {
   keepPreviousData,
   useInfiniteQuery,
+  useMutation,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 
 import { apiFetch } from "./api";
@@ -23,12 +25,18 @@ import type {
   ListLocationYard,
   ListSearchPage,
   Listing,
+  HireDetail,
   MapResponse,
+  PaymentStatus,
+  RefundPreview,
+  SpecTemplate,
   Storefront,
 } from "./types";
 
+
 export const keys = {
   mapSearch: (query: string) => ["map-search", query] as const,
+  specTemplate: (c: string, t: string, v: string) => ["spec-template", c, t, v] as const,
   listSearch: (query: string) => ["list-search", query] as const,
   listing: (id: string) => ["listing", id] as const,
   storefront: (id: string) => ["storefront", id] as const,
@@ -98,13 +106,6 @@ export function useGeocode(q: string) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Hires (Wave 4 contracts, hirer-shaped — D-014 fields never arrive).
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import type { HireDetail, PaymentStatus, RefundPreview } from "./types";
-
 export const hireKeys = {
   all: ["hires"] as const,
   detail: (id: string) => ["hire", id] as const,
@@ -171,5 +172,24 @@ export function usePaymentStatus(id: string | null, refetchInterval?: number) {
     enabled: id !== null,
     refetchInterval,
     retry: false, // 404 no_payment / 503 checkout_unavailable surface immediately
+  });
+}
+
+/** S6 SpecTable: the versioned template the listing's specs were written against. */
+export function useSpecTemplate(
+  assetClass: string | null,
+  assetType: string | null,
+  version: number | null,
+) {
+  const enabled = assetClass !== null && assetType !== null;
+  const params = new URLSearchParams();
+  if (assetClass) params.set("class", assetClass);
+  if (assetType) params.set("type", assetType);
+  if (version !== null) params.set("version", String(version));
+  return useQuery({
+    queryKey: keys.specTemplate(assetClass ?? "", assetType ?? "", String(version ?? "")),
+    queryFn: () => apiFetch<SpecTemplate>(`/spec-templates?${params.toString()}`),
+    enabled,
+    staleTime: 24 * 60 * 60 * 1000, // templates are versioned — effectively immutable
   });
 }

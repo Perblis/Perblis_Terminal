@@ -203,3 +203,49 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
     </MapLibreMap>
   );
 });
+
+/**
+ * S6 privacy mini-map: non-interactive chart with a ~200m amber radius —
+ * never the exact pin until Confirmed (FSD §6 privacy posture). Lives here
+ * to keep this file the sole maplibre importer.
+ */
+export function StaticMiniMap({ lng, lat, height = 160 }: { lng: number; lat: number; height?: number }) {
+  const scheme = useColorScheme();
+  const [style, setStyle] = useState<TerminalChartStyle | null>(null);
+  const theme = scheme === "dark" ? "dark" : "light";
+
+  useEffect(() => {
+    let live = true;
+    void getTerminalChartStyle(theme).then((s) => {
+      if (live) setStyle(s);
+    });
+    return () => {
+      live = false;
+    };
+  }, [theme]);
+
+  return (
+    <View style={{ height, borderRadius: 8, overflow: "hidden" }} pointerEvents="none">
+      <MapLibreMap
+        style={{ flex: 1 }}
+        mapStyle={(style ?? LIBERTY_URL) as string | StyleSpecification}
+        attribution={false}
+        logo={false}
+      >
+        <Camera initialViewState={{ center: [lng, lat], zoom: 13.5 }} />
+        <Marker lngLat={[lng, lat]} anchor="center">
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: "rgba(245,158,11,0.25)",
+              borderWidth: 1.5,
+              borderColor: "#F59E0B",
+            }}
+          />
+        </Marker>
+      </MapLibreMap>
+    </View>
+  );
+}
