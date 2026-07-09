@@ -75,3 +75,7 @@ jest.mock("react-native-reanimated", () => {
   const mock = jest.requireActual("react-native-reanimated/mock");
   return { ...mock, useReducedMotion: () => true };
 });
+
+jest.mock("expo-audio", () => ({
+  createAudioPlayer: jest.fn(() => ({ play: jest.fn(), remove: jest.fn() })),
+}));
