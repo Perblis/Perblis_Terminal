@@ -232,6 +232,8 @@ export type HandoverRecord = {
   kind: "on_hire" | "off_hire";
   photos: string[];
   reading: Record<string, unknown>;
+  // Which party submitted — the counterparty confirms (never the submitter).
+  submitted_by_role: "hirer" | "supplier";
   confirmed_at: string | null;
   created_at: string;
 };
