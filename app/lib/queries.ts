@@ -120,10 +120,12 @@ export const hireKeys = {
 type HirePage = { next: string | null; results: Hire[] };
 
 /** S9 My Hires: every hire the caller is party to (walks all cursor pages),
- *  partitioned into tabs client-side. Persisted (["hires"]) so it renders cold. */
-export function useHires() {
+ *  partitioned into tabs client-side. Persisted (["hires"]) so it renders cold.
+ *  Gentle poll keeps it live-ish until Ably realtime lands (8E). */
+export function useHires(refetchInterval = 30_000) {
   return useQuery({
     queryKey: hireKeys.list(),
+    refetchInterval,
     queryFn: async () => {
       const all: Hire[] = [];
       let path: string | null = "/hires?role=hirer";
