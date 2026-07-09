@@ -1,0 +1,64 @@
+{
+  "_doc": "Terminal Chart grade (D-022): the canonical layer-override definition applied to the OpenFreeMap Liberty base style, per theme. Rules run in order; the FIRST rule whose `match` hits a layer applies its paint/layout and stops. `match.type` = MapLibre layer type; `match.idIncludes` = substring test on layer id (any of). Values are resolved from packages/tokens/src/primitives.json — keep them in sync by hand (this file is consumed by native apps at runtime, no build step). Both surfaces (app 8B, portal post-8B) consume this; snapshot-style.mjs bakes it into full committed style JSONs when run with network access.",
+  "styleUrl": "https://tiles.openfreemap.org/styles/liberty",
+  "themes": {
+    "light": {
+      "rules": [
+        {
+          "_": "paper-tinted land (paper-50)",
+          "match": { "type": "background" },
+          "paint": { "background-color": "#F7F7F5" }
+        },
+        {
+          "_": "desaturated chart water",
+          "match": { "type": "fill", "idIncludes": ["water"] },
+          "paint": { "fill-color": "#C6D2D9" }
+        },
+        {
+          "_": "POI noise off — pins are the content",
+          "match": { "type": "symbol", "idIncludes": ["poi"] },
+          "layout": { "visibility": "none" }
+        },
+        {
+          "_": "greenspace flattened toward paper (paper-100)",
+          "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood"] },
+          "paint": { "fill-color": "#F1F0EC" }
+        }
+      ]
+    },
+    "dark": {
+      "rules": [
+        {
+          "_": "ink-900 land",
+          "match": { "type": "background" },
+          "paint": { "background-color": "#16181D" }
+        },
+        {
+          "_": "deep water one step up from land (ink-800)",
+          "match": { "type": "fill", "idIncludes": ["water"] },
+          "paint": { "fill-color": "#23262E" }
+        },
+        {
+          "_": "POI noise off",
+          "match": { "type": "symbol", "idIncludes": ["poi"] },
+          "layout": { "visibility": "none" }
+        },
+        {
+          "_": "greenspace/buildings sink into ink-800",
+          "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood", "building"] },
+          "paint": { "fill-color": "#23262E" }
+        },
+        {
+          "_": "roads as ink-700 linework",
+          "match": { "type": "line", "idIncludes": ["road", "highway", "motorway", "bridge", "tunnel"] },
+          "paint": { "line-color": "#3A3F4A" }
+        },
+        {
+          "_": "labels read paper on ink",
+          "match": { "type": "symbol" },
+          "paint": { "text-color": "#B3B8C2", "text-halo-color": "#16181D" }
+        }
+      ]
+    }
+  }
+}

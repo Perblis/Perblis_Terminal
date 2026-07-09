@@ -1,0 +1,50 @@
+name: app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "packages/tokens/**"
+      - ".github/workflows/app.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "packages/tokens/**"
+      - ".github/workflows/app.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version comes from package.json "packageManager" — don't also set it
+      # here or action-setup errors on the duplicate.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens (contrast gate + emit artifacts)
+        run: pnpm --filter @terminal/tokens build
+
+      - name: Lint
+        run: pnpm --filter @terminal/app lint
+
+      - name: Typecheck
+        run: pnpm --filter @terminal/app typecheck
+
+      - name: Test (jest — D-014 leak gate, hirer state-machine fidelity, api client)
+        run: pnpm --filter @terminal/app test
+
+      # No native builds in CI (founder machine / EAS per TSD §6). The export
+      # compiles the full Metro bundle — catches NativeWind/resolution breakage
+      # that tsc and jest cannot.
+      - name: Bundle-compile gate (expo export)
+        run: pnpm --filter @terminal/app export
