@@ -80,24 +80,24 @@ jest.mock("expo-audio", () => ({
   createAudioPlayer: jest.fn(() => ({ play: jest.fn(), remove: jest.fn() })),
 }));
 
-jest.mock("expo-image-manipulator", () => ({
-  ImageManipulator: {
-    manipulate: jest.fn(() => {
-      const ctx = {
-        resize: jest.fn(() => ctx),
-        renderAsync: jest.fn(async () => ({
-          saveAsync: jest.fn(async () => ({
-            uri: "file:///resized.jpg",
-            width: 1920,
-            height: 1080,
-          })),
-        })),
-      };
-      return ctx;
-    }),
-  },
-  SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
-}));
+jest.mock("expo-image-manipulator", () => {
+  const makeContext = () => {
+    const renderAsync = jest.fn(async () => ({
+      saveAsync: jest.fn(async () => ({
+        uri: "file:///resized.jpg",
+        width: 1920,
+        height: 1080,
+      })),
+    }));
+    const ctx = { resize: jest.fn(), renderAsync };
+    ctx.resize.mockReturnValue(ctx); // chainable, no self-reference in initializer
+    return ctx;
+  };
+  return {
+    ImageManipulator: { manipulate: jest.fn(() => makeContext()) },
+    SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
+  };
+});
 
 jest.mock("expo-file-system/legacy", () => ({
   getInfoAsync: jest.fn(async () => ({ exists: true, size: 500_000 })),
