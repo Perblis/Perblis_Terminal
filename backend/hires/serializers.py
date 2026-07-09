@@ -159,9 +159,26 @@ class HandoverCreateSerializer(serializers.Serializer):
 
 
 class HandoverSerializer(serializers.ModelSerializer):
+    # Which party submitted the record — the counterparty confirms it (never the
+    # submitter). The client uses this to offer "Confirm" only to the other party
+    # and to label "you submitted" vs "supplier submitted". No user id / PII leaks.
+    submitted_by_role = serializers.SerializerMethodField()
+
     class Meta:
         model = HandoverRecord
-        fields = ("id", "hire", "kind", "photos", "reading", "confirmed_at", "created_at")
+        fields = (
+            "id",
+            "hire",
+            "kind",
+            "photos",
+            "reading",
+            "submitted_by_role",
+            "confirmed_at",
+            "created_at",
+        )
+
+    def get_submitted_by_role(self, obj: HandoverRecord) -> str:
+        return "hirer" if obj.submitted_by_id == obj.hire.hirer_id else "supplier"
 
 
 class RefundPreviewSerializer(serializers.Serializer):

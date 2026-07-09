@@ -691,6 +691,29 @@ paths:
                 $ref: '#/components/schemas/HireDetail'
           description: ''
   /api/v1/hires/{hire_id}/handovers:
+    get:
+      operationId: hires_handovers_list
+      description: List the hire's handover records (FSD §7.4).
+      parameters:
+      - in: path
+        name: hire_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - hires
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Handover'
+          description: ''
     post:
       operationId: hires_handovers_create
       description: Submit an on-hire / off-hire handover record (FSD §7.4).
@@ -1925,6 +1948,9 @@ components:
           $ref: '#/components/schemas/KindCc5Enum'
         photos: {}
         reading: {}
+        submitted_by_role:
+          type: string
+          readOnly: true
         confirmed_at:
           type: string
           format: date-time
@@ -1938,6 +1964,7 @@ components:
       - hire
       - id
       - kind
+      - submitted_by_role
     HandoverCreate:
       type: object
       properties:

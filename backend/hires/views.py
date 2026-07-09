@@ -153,12 +153,25 @@ class HirePaymentView(GenericAPIView):
 
 
 class HireHandoverView(GenericAPIView):
-    """Submit an on-hire / off-hire handover record (FSD §7.4)."""
+    """``GET`` the hire's handover records; ``POST`` a new on-hire/off-hire one (FSD §7.4)."""
 
     permission_classes = [IsAuthenticated]
     serializer_class = s.HandoverSerializer
+    pagination_class = None  # a hire has ≤2 records — a bare list, never paginated
 
-    @extend_schema(request=s.HandoverCreateSerializer, responses={201: s.HandoverSerializer})
+    @extend_schema(
+        description="List the hire's handover records (FSD §7.4).",
+        responses={200: s.HandoverSerializer(many=True)},
+    )
+    def get(self, request, hire_id):
+        handovers = services.list_handovers(user=request.user, hire_id=hire_id)
+        return Response(self.get_serializer(handovers, many=True).data)
+
+    @extend_schema(
+        description="Submit an on-hire / off-hire handover record (FSD §7.4).",
+        request=s.HandoverCreateSerializer,
+        responses={201: s.HandoverSerializer},
+    )
     def post(self, request, hire_id):
         data = s.HandoverCreateSerializer(data=request.data)
         data.is_valid(raise_exception=True)

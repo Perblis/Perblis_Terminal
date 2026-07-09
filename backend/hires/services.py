@@ -329,6 +329,17 @@ def submit_handover(
     )
 
 
+def list_handovers(*, user: User, hire_id) -> QuerySet[HandoverRecord]:
+    """The hire's handover records, oldest first — visible only to its parties.
+
+    S10 (hirer app) / P7 (portal) render these as cards and need the record id
+    to confirm the counterparty's submission. ``_get_for_actor`` 404s a
+    non-party, so scoping matches the rest of the hire surface.
+    """
+    hire = _get_for_actor(hire_id, user)
+    return hire.handovers.select_related("hire").order_by("created_at")
+
+
 @transaction.atomic
 def confirm_handover(*, user: User, handover_id) -> HandoverRecord:
     """The counterparty confirms a handover, advancing the hire's lifecycle."""
