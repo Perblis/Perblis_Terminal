@@ -9,6 +9,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { useSession } from "../stores/session";
 import { apiFetch } from "./api";
 import {
   isValidBbox,
@@ -397,10 +398,11 @@ export function useDeleteAccount() {
 /** F8 become a supplier — activates the account (idempotent) and triggers the
  *  portal invite email server-side. Returns the updated Me. */
 export function useBecomeSupplier() {
-  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => apiFetch<Me>("/me/become-supplier", { method: "POST" }),
-    onSuccess: (me) => qc.setQueryData(["me"], me),
+    // The session store is the single source of truth for `me` — writing a
+    // ["me"] query cache reflected nowhere (the restart-to-see-it bug).
+    onSuccess: (me) => useSession.getState().setMe(me),
   });
 }
 

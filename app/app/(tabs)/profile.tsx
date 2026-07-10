@@ -36,6 +36,7 @@ function Row({ label, sub, onPress, danger }: { label: string; sub?: string; onP
 export default function ProfileTab() {
   const insets = useSafeAreaInsets();
   const me = useSession((s) => s.me);
+  const hydrated = useSession((s) => s.hydrated);
   const setMe = useSession((s) => s.setMe);
   const { data: verification } = useVerification();
   const deleteAccount = useDeleteAccount();
@@ -51,6 +52,9 @@ export default function ProfileTab() {
   };
 
   if (!me) {
+    // Until the boot reconciliation has run, don't flash the guest CTA at a
+    // signed-in user whose session is still hydrating.
+    if (!hydrated) return <View className="flex-1 bg-surface-page" />;
     return (
       <View className="flex-1 justify-center gap-4 bg-surface-page px-6">
         <DisplayText className="text-h2">Profile</DisplayText>

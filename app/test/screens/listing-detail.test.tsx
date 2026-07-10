@@ -1,6 +1,11 @@
 // D-014 leak gate over S6: a maximal listing fixture renders with zero fee
 // vocabulary (the listing serializer carries none — belt and braces).
+import { act, fireEvent } from "@testing-library/react-native";
+import { router } from "expo-router";
+
 import ListingDetail from "../../app/listing/[id]";
+import type { Me } from "../../lib/types";
+import { useSession } from "../../stores/session";
 import { collectStrings, expectNoFeeLeak } from "../d014";
 import { renderScreen } from "../render";
 
@@ -63,4 +68,19 @@ test("S6 renders the showroom with no fee vocabulary (D-014)", async () => {
   expect(screen.getByText("20 t")).toBeTruthy();
   expect(screen.getByText("Request to hire")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
+});
+
+test("a signed-in hirer's Request to hire proceeds — no auth bounce", async () => {
+  useSession.setState({ me: { id: "me1", full_name: "Ada Obi" } as Me, hydrated: true });
+  const screen = await renderScreen(<ListingDetail />);
+  await fireEvent.press(await screen.findByText("Request to hire"));
+  expect(router.push).toHaveBeenCalledWith("/hire-request/l1");
+  await act(async () => useSession.setState({ me: null }));
+});
+
+test("a guest's Request to hire routes to login with the intent parked", async () => {
+  useSession.setState({ me: null, hydrated: true });
+  const screen = await renderScreen(<ListingDetail />);
+  await fireEvent.press(await screen.findByText("Request to hire"));
+  expect(router.push).toHaveBeenCalledWith("/auth/login");
 });
