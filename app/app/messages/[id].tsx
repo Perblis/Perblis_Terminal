@@ -44,10 +44,9 @@ export default function Conversation() {
   const [pending, setPending] = useState<Pending[]>([]);
   const keySeq = useRef(0);
 
-  // Ably conv channel overlays polling; refresh + play the receive sound.
+  // Ably conv channel overlays polling; a fire just triggers a refetch.
   useRealtimeChannel(conversationId ? `conv:${id}` : null, () => {
     void markRead.mutate();
-    playMessageReceived();
   });
 
   // Mark read on open + whenever the thread grows.
@@ -57,6 +56,18 @@ export default function Conversation() {
     // markRead identity is stable enough; fire on count change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, count]);
+
+  // Play the receive sound when a new INBOUND message lands (poll or realtime);
+  // never on first hydration or for the hirer's own sends (V10; V8: no haptic).
+  const lastSeenId = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const last = messages && messages.length ? messages[messages.length - 1] : undefined;
+    if (!last) return;
+    if (lastSeenId.current !== undefined && last.id !== lastSeenId.current && last.sender_id !== me?.id) {
+      playMessageReceived();
+    }
+    lastSeenId.current = last.id;
+  }, [messages, me?.id]);
 
   const submit = (body: string) => {
     const key = `p${keySeq.current++}`;

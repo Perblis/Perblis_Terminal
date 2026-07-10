@@ -6,8 +6,12 @@
 // fill AUDIO_SOURCES to go live.
 import { createAudioPlayer } from "expo-audio";
 
+// CC0/self-authored assets (public domain). Drop more in as they land.
 const AUDIO_SOURCES: { paymentSuccess?: number; messageReceived?: number; handoverConfirm?: number } =
-  {};
+  {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    messageReceived: require("../assets/sounds/message-received.wav"),
+  };
 
 function play(source?: number): void {
   if (!source) return; // silent until assets land
