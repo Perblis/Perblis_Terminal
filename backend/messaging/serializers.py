@@ -49,6 +49,9 @@ class ConversationSerializer(serializers.Serializer):
 
     id = serializers.UUIDField(read_only=True)
     kind = serializers.CharField(read_only=True)
+    # Hire conversations carry their hire so the client can deep-link to the hire
+    # detail (S10); enquiry conversations serialize null.
+    hire_id = serializers.UUIDField(read_only=True, allow_null=True)
     counterparty = serializers.SerializerMethodField()
     listing = serializers.SerializerMethodField()
     yard_name = serializers.SerializerMethodField()

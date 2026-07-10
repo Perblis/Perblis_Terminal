@@ -38,7 +38,23 @@ def test_create_general_enquiry_has_no_listing(auth, hirer):
     supplier = listing.supplier
     resp = auth(hirer).post(CONV, {"supplier_id": str(supplier.id)})
     assert resp.status_code == 201
-    assert resp.json()["listing"] is None
+    body = resp.json()
+    assert body["listing"] is None
+    assert body["hire_id"] is None  # enquiry conversations carry no hire
+
+
+def test_hire_conversation_exposes_hire_id(auth, django_capture_on_commit_callbacks):
+    from hires import services as hire_services
+    from hires.factories import HireFactory
+
+    listing = ListingFactory(status=ListingStatus.LIVE, unit_count=1)
+    hire = HireFactory(listing=listing)  # requested
+    with django_capture_on_commit_callbacks(execute=True):
+        hire_services.accept_hire(user=listing.supplier, hire_id=hire.id)
+    resp = auth(hire.hirer).get(CONV)
+    assert resp.status_code == 200
+    row = next(c for c in resp.json()["results"] if c["kind"] == "hire")
+    assert row["hire_id"] == str(hire.id)  # deep-links the thread to S10
 
 
 def test_general_enquiry_is_idempotent(auth, hirer):

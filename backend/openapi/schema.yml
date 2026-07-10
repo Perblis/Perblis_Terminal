@@ -1826,6 +1826,11 @@ components:
         kind:
           type: string
           readOnly: true
+        hire_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
         counterparty:
           type: object
           additionalProperties: {}
@@ -1852,6 +1857,7 @@ components:
           readOnly: true
       required:
       - counterparty
+      - hire_id
       - id
       - kind
       - last_message_at
