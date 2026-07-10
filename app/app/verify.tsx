@@ -7,6 +7,7 @@ import { Image, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "../components/ui/button";
+import { KeyboardSpacer } from "../components/ui/keyboard-spacer";
 import { TextField } from "../components/ui/text-field";
 import { BodyText, DisplayText } from "../components/ui/text";
 import { useSubmitVerification } from "../lib/queries";
@@ -97,6 +98,7 @@ export default function Verify() {
 
         <Button variant="secondary" label="Add document" onPress={() => void pick()} />
         <Button label="Submit for review" busy={submit.isPending} disabled={!canSubmit} onPress={onSubmit} />
+        <KeyboardSpacer />
       </ScrollView>
     </View>
   );

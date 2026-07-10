@@ -8,6 +8,7 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable,
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Composer } from "../../components/messaging/composer";
+import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import { MessageBubble } from "../../components/messaging/message-bubble";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { useConversations, useMarkRead, useMessages, useSendMessage } from "../../lib/queries";
@@ -192,6 +193,7 @@ export default function Conversation() {
       <View style={{ paddingBottom: insets.bottom }}>
         <Composer onSend={submit} />
       </View>
+      <KeyboardSpacer />
     </KeyboardAvoidingView>
   );
 }

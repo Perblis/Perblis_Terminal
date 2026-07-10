@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, View } f
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PriceHero } from "../../components/hires/price-hero";
+import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import { RangeCalendar, type DateRange } from "../../components/hires/range-calendar";
 import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText, MonoText } from "../../components/ui/text";
@@ -235,6 +236,7 @@ export default function HireRequest() {
             <Button label="Send request" busy={createHire.isPending} onPress={() => void submit()} />
           </View>
         ) : null}
+        <KeyboardSpacer />
       </ScrollView>
 
       {/* F3 409 race sheet */}
