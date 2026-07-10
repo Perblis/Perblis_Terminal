@@ -52,6 +52,10 @@ class ConversationSerializer(serializers.Serializer):
     # Hire conversations carry their hire so the client can deep-link to the hire
     # detail (S10); enquiry conversations serialize null.
     hire_id = serializers.UUIDField(read_only=True, allow_null=True)
+    # True once a hire conversation has unlocked contact detail (hire paid);
+    # enquiry conversations stay locked forever. Drives the "Contact details
+    # unlocked" system line + the composer's masking hint.
+    unlocked = serializers.SerializerMethodField()
     counterparty = serializers.SerializerMethodField()
     listing = serializers.SerializerMethodField()
     yard_name = serializers.SerializerMethodField()
@@ -94,6 +98,11 @@ class ConversationSerializer(serializers.Serializer):
         if obj.listing_id and obj.listing.yard_id:
             return obj.listing.yard.name
         return None
+
+    def get_unlocked(self, obj: Conversation) -> bool:
+        from . import services
+
+        return services.contact_unlocked(obj)
 
     def get_last_message_preview(self, obj: Conversation) -> str | None:
         from . import services

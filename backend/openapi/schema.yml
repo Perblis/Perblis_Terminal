@@ -1831,6 +1831,9 @@ components:
           format: uuid
           readOnly: true
           nullable: true
+        unlocked:
+          type: boolean
+          readOnly: true
         counterparty:
           type: object
           additionalProperties: {}
@@ -1863,6 +1866,7 @@ components:
       - last_message_at
       - last_message_preview
       - listing
+      - unlocked
       - unread_count
       - yard_name
     Dispute:

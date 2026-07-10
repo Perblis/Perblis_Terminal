@@ -41,6 +41,7 @@ def test_create_general_enquiry_has_no_listing(auth, hirer):
     body = resp.json()
     assert body["listing"] is None
     assert body["hire_id"] is None  # enquiry conversations carry no hire
+    assert body["unlocked"] is False  # enquiries stay masked indefinitely
 
 
 def test_hire_conversation_exposes_hire_id(auth, django_capture_on_commit_callbacks):
