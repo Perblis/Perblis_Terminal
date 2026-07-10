@@ -34,6 +34,8 @@ pnpm exec eas update --branch production --message "slice 8B"
 
 The dev client picks updates up on restart. Rebuild the client only when `app.json` plugins or native dependencies change (the `runtimeVersion: fingerprint` policy makes stale clients refuse mismatched bundles rather than crash).
 
+**Full release procedure — builds, channels, the critical-update (S17 gate) flow, perf gate, and the mandatory J2/J3/J8 manual E2E checklist: [`docs/runbooks/app-release.md`](../docs/runbooks/app-release.md).** Until `eas update:configure` adds `updates.url`, the entire OTA path (including the update-required gate) is deliberately inert. Bumping `extra.updates.criticalIndex` in `app.json` marks the next published update as blocking; `fingerprint.config.js` keeps that bump from shifting the fingerprint runtime version.
+
 ## Environment
 
 - `EXPO_PUBLIC_API_BASE_URL` — defaults to the natural-cat prod API (`https://api-production-101c8.up.railway.app`). Point it at `http://<your-lan-ip>:8000` for a local backend.
