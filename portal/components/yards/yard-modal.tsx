@@ -133,7 +133,7 @@ export function YardModal({
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), runSearch())}
                     placeholder="Search an address or area"
-                    className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-400"
+                    className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-500"
                   />
                 </div>
                 <Button variant="secondary" onClick={runSearch} loading={searching}>
