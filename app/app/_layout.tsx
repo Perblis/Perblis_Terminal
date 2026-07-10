@@ -11,6 +11,7 @@ import { QueryProvider } from "../components/shell/query-provider";
 import { RealtimeInvalidator } from "../components/shell/realtime-invalidator";
 import { SessionExpiredGate } from "../components/shell/session-expired-gate";
 import { ThemeRoot } from "../components/shell/theme-root";
+import { UpdateGate } from "../components/shell/update-gate";
 import { ErrorScreen } from "../components/system/error-screen";
 import { useAppFonts } from "../lib/fonts";
 import { initSentry } from "../lib/sentry";
@@ -54,6 +55,7 @@ export default function RootLayout() {
           <HandoverQueueDrainer />
           <RealtimeInvalidator />
           <Stack screenOptions={{ headerShown: false }} />
+          <UpdateGate />
         </ThemeRoot>
       </QueryProvider>
     </SafeAreaProvider>

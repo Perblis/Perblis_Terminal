@@ -111,6 +111,34 @@ jest.mock("ably", () => ({
   },
 }));
 
+// Inert by default (Updates.isEnabled false mirrors dev clients / unset
+// updates.url); update-gate tests override per-case.
+jest.mock("expo-updates", () => ({
+  isEnabled: false,
+  useUpdates: jest.fn(() => ({
+    currentlyRunning: { isEmbeddedLaunch: true, isEmergencyLaunch: false },
+    isUpdateAvailable: false,
+    isUpdatePending: false,
+    isChecking: false,
+    isDownloading: false,
+    isRestarting: false,
+    restartCount: 0,
+    isStartupProcedureRunning: false,
+  })),
+  checkForUpdateAsync: jest.fn(async () => ({
+    isAvailable: false,
+    manifest: undefined,
+    isRollBackToEmbedded: false,
+    reason: "noUpdateAvailableOnServer",
+  })),
+  fetchUpdateAsync: jest.fn(async () => ({
+    isNew: false,
+    manifest: undefined,
+    isRollBackToEmbedded: false,
+  })),
+  reloadAsync: jest.fn(async () => {}),
+}));
+
 jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({
