@@ -15,10 +15,10 @@ import { BodyText, DisplayText } from "../ui/text";
 export function UpdateRequired({ ready, onRestart }: { ready: boolean; onRestart: () => void }) {
   const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1 bg-surface-inverse" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-ink-900" style={{ paddingTop: insets.top }}>
       <View className="flex-1 items-center justify-center gap-3 px-8">
         <TCrane size={56} />
-        <DisplayText className="text-h1 text-center text-text-inverse">Update required</DisplayText>
+        <DisplayText className="text-h1 text-center text-paper-0">Update required</DisplayText>
         <BodyText className="text-center text-ink-300">
           This version of Terminal is out of date and needs an update before it can continue.
           {ready ? " The update is ready — restart to apply it." : " Downloading the update…"}
@@ -28,7 +28,7 @@ export function UpdateRequired({ ready, onRestart }: { ready: boolean; onRestart
         </View>
       </View>
       <HazardStripe height={8} />
-      <View style={{ height: insets.bottom }} className="bg-surface-inverse" />
+      <View style={{ height: insets.bottom }} className="bg-ink-900" />
     </View>
   );
 }

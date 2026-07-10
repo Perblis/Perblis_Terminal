@@ -11,10 +11,10 @@ const STYLES: Record<HireStatus7, { frame: string; text: string }> = {
   requested: { frame: "bg-amber-100", text: "text-amber-900" },
   accepted: { frame: "bg-blue-50", text: "text-blue-900" },
   confirmed: { frame: "bg-teal-50", text: "text-teal-900" },
-  on_hire: { frame: "bg-green-600", text: "text-text-inverse" },
+  on_hire: { frame: "bg-green-700", text: "text-paper-0" },
   completed: { frame: "bg-ink-100", text: "text-ink-600" },
-  declined: { frame: "border border-ink-300", text: "text-ink-500" },
-  expired: { frame: "border border-ink-300", text: "text-ink-500" },
+  declined: { frame: "border border-ink-300", text: "text-text-tertiary" },
+  expired: { frame: "border border-ink-300", text: "text-text-tertiary" },
   cancelled: { frame: "bg-red-50", text: "text-red-900" },
   in_dispute: { frame: "bg-violet-50", text: "text-violet-900" },
 };

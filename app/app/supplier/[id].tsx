@@ -90,9 +90,7 @@ export default function Storefront() {
             <Image source={{ uri: cover }} style={{ width: "100%", height: 176 }} resizeMode="cover" />
           ) : (
             <View className="flex-1 items-center justify-center">
-              <MonoText className="text-body" style={{ color: "#F59E0B" }}>
-                {data.business_name}
-              </MonoText>
+              <MonoText className="text-body text-text-brand-on-inverse">{data.business_name}</MonoText>
             </View>
           )}
           <CornerMarks />
@@ -113,7 +111,7 @@ export default function Storefront() {
             {data.logo_url ? (
               <Image source={{ uri: data.logo_url }} style={{ width: 56, height: 56 }} />
             ) : (
-              <MonoText className="text-h3" style={{ color: "#F59E0B" }}>
+              <MonoText className="text-h3 text-text-brand-on-inverse">
                 {data.business_name.slice(0, 2).toUpperCase()}
               </MonoText>
             )}

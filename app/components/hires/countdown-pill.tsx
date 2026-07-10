@@ -59,13 +59,23 @@ export function CountdownPill({ deadlineIso }: { deadlineIso: string }) {
         : band === "amber"
           ? "bg-amber-100"
           : "bg-surface-sunken";
+  // amber band: fixed amber-100 chip needs fixed amber-900 text — the
+  // theme-flipping primary/tertiary colours go near-white on it in dark.
   const text =
-    band === "critical" ? "text-text-on-brand" : band === "expired" ? "text-text-tertiary" : "text-text-primary";
+    band === "critical"
+      ? "text-text-on-brand"
+      : band === "expired"
+        ? "text-text-tertiary"
+        : band === "amber"
+          ? "text-amber-900"
+          : "text-text-primary";
+  const caption =
+    band === "critical" ? "text-text-on-brand" : band === "amber" ? "text-amber-900" : "text-text-tertiary";
 
   return (
     <Animated.View style={style} className={`items-center gap-0.5 self-center rounded-full px-6 py-3 ${frame}`}>
       <MonoText className={`text-money-hero ${text}`}>{parts.expired ? "0:00" : parts.label}</MonoText>
-      <BodyText className={`text-caption ${band === "critical" ? "text-text-on-brand" : "text-text-tertiary"}`}>
+      <BodyText className={`text-caption ${caption}`}>
         {parts.expired ? "payment window closed" : "left to pay"}
       </BodyText>
     </Animated.View>

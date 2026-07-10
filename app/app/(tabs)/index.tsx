@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText } from "../../components/ui/text";
 import { useMapSearch } from "../../lib/queries";
+import { useThemeTokens } from "../../lib/theme";
 import type { Bbox } from "../../lib/search-params";
 import { YardSheet } from "../../components/map/yard-sheet";
 import { useMapState } from "../../stores/map-state";
@@ -24,6 +25,7 @@ import { useOnboarding } from "../../stores/onboarding";
 /** S4 Map (Home) — the front door. Terminal Chart + pins per 06 §3. */
 export default function MapTab() {
   const insets = useSafeAreaInsets();
+  const tk = useThemeTokens();
   const mapRef = useRef<TerminalMapHandle>(null);
   const { region, classFilter, setRegion, setClassFilter } = useMapState();
   const { mapRevealPlayed, markMapRevealPlayed } = useOnboarding();
@@ -123,8 +125,8 @@ export default function MapTab() {
           className="mx-4 min-h-12 flex-row items-center gap-2 rounded-full border border-border bg-surface-card px-4 py-3 shadow-md"
         >
           <Svg width={18} height={18} viewBox="0 0 24 24">
-            <Circle cx={10.5} cy={10.5} r={7} stroke="#3A3F4A" strokeWidth={2} fill="none" />
-            <Path d="M16 16l5.5 5.5" stroke="#3A3F4A" strokeWidth={2} />
+            <Circle cx={10.5} cy={10.5} r={7} stroke={tk["--text-secondary"]} strokeWidth={2} fill="none" />
+            <Path d="M16 16l5.5 5.5" stroke={tk["--text-secondary"]} strokeWidth={2} />
           </Svg>
           <BodyText className="text-text-tertiary">Search assets, e.g. “30t excavator”</BodyText>
         </Pressable>
@@ -168,9 +170,9 @@ export default function MapTab() {
         style={{ bottom: insets.bottom + (selection ? 132 : 24) }}
       >
         <Svg width={22} height={22} viewBox="0 0 24 24">
-          <Circle cx={12} cy={12} r={6.5} stroke="#16181D" strokeWidth={2} fill="none" />
-          <Circle cx={12} cy={12} r={2} fill="#F59E0B" />
-          <Path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="#16181D" strokeWidth={2} />
+          <Circle cx={12} cy={12} r={6.5} stroke={tk["--text-primary"]} strokeWidth={2} fill="none" />
+          <Circle cx={12} cy={12} r={2} fill={tk["--surface-brand"]} />
+          <Path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke={tk["--text-primary"]} strokeWidth={2} />
         </Svg>
       </Pressable>
 

@@ -9,7 +9,7 @@ import Svg, { Circle, G, Path } from "react-native-svg";
  */
 export function ChartTease() {
   return (
-    <View className="absolute inset-0 bg-surface-inverse" accessible={false}>
+    <View className="absolute inset-0 bg-ink-900" accessible={false}>
       <Svg width="100%" height="100%" viewBox="0 0 375 812" preserveAspectRatio="xMidYMid slice">
         {/* water */}
         <Path d="M0 500 Q120 460 200 520 T375 500 V812 H0 Z" fill="#1C2733" opacity={0.9} />

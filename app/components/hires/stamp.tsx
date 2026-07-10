@@ -14,13 +14,8 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { playPaymentSuccess } from "../../lib/sounds";
+import { useThemeTokens } from "../../lib/theme";
 import { DisplayText } from "../ui/text";
-
-const STAMP_COLORS: Record<string, string> = {
-  PAID: "#F59E0B", // amber (06 §8)
-  REFUNDED: "#16181D",
-  COMPLETED: "#059669",
-};
 
 export function Stamp({ label = "PAID", size = 116 }: { label?: string; size?: number }) {
   const reducedMotion = useReducedMotion();
@@ -48,6 +43,14 @@ export function Stamp({ label = "PAID", size = 116 }: { label?: string; size?: n
     transform: [{ scale: scale.value }, { rotate: `${rotate.value}deg` }],
   }));
 
+  const tk = useThemeTokens();
+  // amber (06 §8) for PAID; the others follow the theme so REFUNDED's ink
+  // doesn't vanish on the dark page.
+  const STAMP_COLORS: Record<string, string> = {
+    PAID: tk["--surface-brand"],
+    REFUNDED: tk["--text-primary"],
+    COMPLETED: tk["--status-onHire"],
+  };
   const color = STAMP_COLORS[label] ?? STAMP_COLORS.PAID;
 
   return (

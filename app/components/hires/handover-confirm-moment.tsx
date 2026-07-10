@@ -54,13 +54,14 @@ export function HandoverConfirmMoment({ visible, onDone }: { visible: boolean; o
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDone}>
-      <View className="flex-1 items-center justify-center bg-surface-inverse/90 px-8">
+      {/* Fixed ink scrim — the moment overlay is designed dark in both themes. */}
+      <View className="flex-1 items-center justify-center bg-ink-900/90 px-8">
         <View className="items-center gap-4">
           <View className="flex-row gap-3">
             <AnimatedTick delay={0} />
             <AnimatedTick delay={220} />
           </View>
-          <DisplayText className="text-h2 text-text-inverse">Handover confirmed</DisplayText>
+          <DisplayText className="text-h2 text-paper-0">Handover confirmed</DisplayText>
           <BodyText className="text-center text-ink-300">Both parties have signed off.</BodyText>
         </View>
       </View>

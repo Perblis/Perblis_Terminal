@@ -20,10 +20,10 @@ export function ErrorScreen({ error, onRetry }: { error: unknown; onRetry: () =>
   const insets = useSafeAreaInsets();
   const eventId = useMemo(() => captureException(error), [error]);
   return (
-    <View className="flex-1 bg-surface-inverse" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-ink-900" style={{ paddingTop: insets.top }}>
       <View className="flex-1 items-center justify-center gap-3 px-8">
         <TCrane size={56} />
-        <DisplayText className="text-h1 text-center text-text-inverse">
+        <DisplayText className="text-h1 text-center text-paper-0">
           Something broke on our side
         </DisplayText>
         <BodyText className="text-center text-ink-300">
@@ -38,7 +38,7 @@ export function ErrorScreen({ error, onRetry }: { error: unknown; onRetry: () =>
         </View>
       </View>
       <HazardStripe height={8} />
-      <View style={{ height: insets.bottom }} className="bg-surface-inverse" />
+      <View style={{ height: insets.bottom }} className="bg-ink-900" />
     </View>
   );
 }

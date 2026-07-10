@@ -9,6 +9,7 @@ import { BodyText, DisplayText, Money, MonoText } from "../components/ui/text";
 import { TextField } from "../components/ui/text-field";
 import { ASSET_CLASSES } from "../lib/asset-classes";
 import { parseNairaInput } from "../lib/naira";
+import { useThemeTokens } from "../lib/theme";
 import { useListSearch, type ListRow } from "../lib/queries";
 import type { SearchFilters } from "../lib/search-params";
 import { useMapState } from "../stores/map-state";
@@ -20,6 +21,7 @@ const RADII = [5, 10, 25, 50, 100] as const;
  * contract has no sort param (price sort is a recorded additive-backend ask).
  */
 export default function Search() {
+  const tk = useThemeTokens();
   const insets = useSafeAreaInsets();
   const { region, classFilter, setClassFilter } = useMapState();
 
@@ -84,7 +86,7 @@ export default function Search() {
               {item.supplier.logo ? (
                 <Image source={{ uri: item.supplier.logo }} style={{ width: 40, height: 40 }} />
               ) : (
-                <MonoText style={{ color: "#F59E0B" }}>
+                <MonoText className="text-text-brand-on-inverse">
                   {item.supplier.name.slice(0, 2).toUpperCase()}
                 </MonoText>
               )}
@@ -127,7 +129,7 @@ export default function Search() {
             accessibilityLabel="Search assets"
             className="min-h-12 flex-1 rounded-full border border-border-strong bg-surface-page px-4 font-sans text-body text-text-primary"
             placeholder="Search assets, e.g. “30t excavator”"
-            placeholderTextColor="#8D93A0"
+            placeholderTextColor={tk["--text-tertiary"]}
             value={q}
             onChangeText={setQ}
             returnKeyType="search"

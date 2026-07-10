@@ -56,9 +56,7 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
           {yard.supplier.logo ? (
             <Image source={{ uri: yard.supplier.logo }} style={{ width: 44, height: 44 }} />
           ) : (
-            <MonoText className="text-body" style={{ color: "#F59E0B" }}>
-              {initials}
-            </MonoText>
+            <MonoText className="text-body text-text-brand-on-inverse">{initials}</MonoText>
           )}
         </View>
         <View className="flex-1">

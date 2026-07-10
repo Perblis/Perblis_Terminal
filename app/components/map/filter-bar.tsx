@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, View } from "react-native";
 
 import { ASSET_CLASSES } from "../../lib/asset-classes";
+import { useThemeTokens } from "../../lib/theme";
 import type { AssetClass } from "../../lib/types";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import { BodyText, MonoText } from "../ui/text";
@@ -15,6 +16,7 @@ export function FilterBar({
   onChange: (next: AssetClass | null) => void;
   resultCount: number | null;
 }) {
+  const t = useThemeTokens();
   return (
     <View className="flex-row items-center">
       <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -34,7 +36,7 @@ export function FilterBar({
                     : "border-border-strong bg-surface-card"
                 }`}
               >
-                <Glyph size={15} color={selected ? "#F59E0B" : "#3A3F4A"} />
+                <Glyph size={15} color={selected ? t["--text-brand-on-inverse"] : t["--text-secondary"]} />
                 <BodyText
                   className={`text-body-sm ${selected ? "font-sans-semibold text-text-inverse" : "text-text-primary"}`}
                 >
