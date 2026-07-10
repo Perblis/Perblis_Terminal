@@ -104,3 +104,16 @@ jest.mock("expo-file-system/legacy", () => ({
   uploadAsync: jest.fn(async () => ({ status: 200, body: "" })),
   FileSystemUploadType: { BINARY_CONTENT: 0 },
 }));
+
+jest.mock("expo-image-picker", () => ({
+  requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  launchCameraAsync: jest.fn(async () => ({
+    canceled: false,
+    assets: [{ uri: "file:///cam.jpg", width: 4000, height: 3000 }],
+  })),
+  launchImageLibraryAsync: jest.fn(async () => ({
+    canceled: false,
+    assets: [{ uri: "file:///lib.jpg", width: 4000, height: 3000 }],
+  })),
+  MediaType: { Images: "images" },
+}));
