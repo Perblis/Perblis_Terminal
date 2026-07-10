@@ -1,6 +1,8 @@
-// Pin state matrix per 06 §3: badge/dim/tick/count behaviours.
+// Pin state matrix per 06 §3 anatomy under the D-023 plate revision:
+// badge/dim/tick/count behaviours are unchanged; the frame is a fixed ink
+// equipment tag.
 import { render } from "@testing-library/react-native";
-import { nativewindVars } from "@terminal/tokens";
+import { tokens } from "@terminal/tokens";
 
 import type { MapSoloListing, MapYard } from "../../lib/types";
 import { AssetPin, ClusterPin, YardPin, availabilityCaption } from "./pins";
@@ -31,12 +33,12 @@ const YARD: MapYard = {
   listings: [],
 };
 
-test("asset pin carries the class + title accessibility label", async () => {
+test("asset plate carries the class + title accessibility label", async () => {
   const { getByLabelText } = await render(<AssetPin listing={SOLO} />);
   expect(getByLabelText("Plant & Machinery listing: 20t Excavator")).toBeTruthy();
 });
 
-test("yard pin shows listing_count unfiltered and matching_count filtered", async () => {
+test("yard plate shows listing_count unfiltered and matching_count filtered", async () => {
   const unfiltered = await render(<YardPin yard={YARD} />);
   expect(unfiltered.getByText("8")).toBeTruthy();
   const filtered = await render(<YardPin yard={YARD} filtered />);
@@ -51,13 +53,13 @@ test("zero-match yard dims to 40% but still renders (never removed)", async () =
   expect(pin.props.style).toMatchObject({ opacity: 0.4 });
 });
 
-test("initials fall back when there is no logo; ≤3 class dots", async () => {
+test("initials fall back when there is no logo; ≤3 class index squares", async () => {
   const { getByText, getByLabelText } = await render(<YardPin yard={YARD} />);
   expect(getByText("KH")).toBeTruthy();
-  // 4 classes in the mix — anatomy caps dots at 3 (asserted via children count)
+  // 4 classes in the mix — anatomy caps index squares at 3
   const pin = getByLabelText("Yard: Apapa Yard, 8 listings");
-  const dotsRow = pin.children[pin.children.length - 1] as { children: unknown[] };
-  expect(dotsRow.children).toHaveLength(3);
+  const squaresRow = pin.children[pin.children.length - 1] as { children: unknown[] };
+  expect(squaresRow.children).toHaveLength(3);
 });
 
 test("cluster is a drab mono count", async () => {
@@ -71,12 +73,16 @@ test("availability caption vocabulary", () => {
   expect(availabilityCaption({ available: false })).toBe("Currently on hire");
 });
 
-test("yard initials use brand-on-inverse, never raw brand amber (contrast)", async () => {
-  // surface-inverse flips to paper in dark, where amber-500 text fails AA —
-  // the initials must track text/brand-on-inverse for the active theme.
+test("yard initials are brand amber on the fixed ink plate (contrast holds in both themes)", async () => {
   const { getByText } = await render(<YardPin yard={YARD} />);
   const initials = getByText("KH");
   const styles = [initials.props.style].flat(Infinity);
   const color = styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
-  expect(color).toBe(nativewindVars.light["--text-brand-on-inverse"]);
+  expect(color).toBe(tokens.color.colorAmber500);
+});
+
+test("selected plates switch to the amber frame (no ring, no motion)", async () => {
+  const { getByLabelText } = await render(<AssetPin listing={SOLO} selected />);
+  const pin = getByLabelText("Plant & Machinery listing: 20t Excavator");
+  expect(pin.props.style).toMatchObject({ borderColor: tokens.color.colorAmber500, borderWidth: 2 });
 });

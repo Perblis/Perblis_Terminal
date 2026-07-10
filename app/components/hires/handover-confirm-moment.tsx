@@ -1,12 +1,12 @@
-// Handover "both ticks settle" — signature moment V7③ (08 §6). Two ticks land
-// in sequence, a Medium haptic + the handover-confirm sound fire, and reduced
-// motion renders the settled state instantly. Shown as a brief overlay after
-// the counterparty's confirmation lands.
+// Handover "both ticks settle" — signature moment V7③ (08 §6), restrained per
+// D-023: the ticks fade in sequence (no scale pop), a Medium haptic + the
+// handover-confirm sound fire, and reduced motion renders the settled state
+// instantly. Shown as a brief overlay after the counterparty's confirmation
+// lands.
 import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { Modal, View } from "react-native";
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -28,14 +28,12 @@ function Tick() {
 
 function AnimatedTick({ delay }: { delay: number }) {
   const reducedMotion = useReducedMotion();
-  const scale = useSharedValue(reducedMotion ? 1 : 0.4);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);
   useEffect(() => {
     if (reducedMotion) return;
     opacity.value = withDelay(delay, withTiming(1, { duration: 160 }));
-    scale.value = withDelay(delay, withTiming(1, { duration: 260, easing: Easing.out(Easing.back(2)) }));
-  }, [delay, reducedMotion, opacity, scale]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  }, [delay, reducedMotion, opacity]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
   return (
     <Animated.View style={style} className="h-11 w-11 items-center justify-center rounded-full bg-green-50">
       <Tick />

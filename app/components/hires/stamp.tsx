@@ -1,15 +1,13 @@
-// The Stamp (08 §4, signature moment V7①): drops in at scale 1.15 → 1.0
-// with rotate −2° → −6°, 400ms deliberate + a 1px settle; impactMedium
-// haptic. Reduced-motion renders the final state instantly.
+// The Stamp (08 §4, signature moment V7①), restrained per D-023: the plate
+// fades in at its final −6° set, impactMedium haptic + sound fire once — no
+// scale drop, no settle theatrics. Reduced-motion renders instantly.
 import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
   withTiming,
 } from "react-native-reanimated";
 
@@ -19,28 +17,18 @@ import { DisplayText } from "../ui/text";
 
 export function Stamp({ label = "PAID", size = 116 }: { label?: string; size?: number }) {
   const reducedMotion = useReducedMotion();
-  const scale = useSharedValue(reducedMotion ? 1 : 1.15);
-  const rotate = useSharedValue(reducedMotion ? -6 : -2);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);
 
   useEffect(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     playPaymentSuccess();
     if (reducedMotion) return;
-     
-    opacity.value = withTiming(1, { duration: 120 });
-    scale.value = withSequence(
-      withTiming(1.0, { duration: 400, easing: Easing.out(Easing.cubic) }),
-      withTiming(1.01, { duration: 60 }), // the 1px settle
-      withTiming(1.0, { duration: 60 }),
-    );
-    rotate.value = withTiming(-6, { duration: 400, easing: Easing.out(Easing.cubic) });
-     
-  }, [reducedMotion, opacity, scale, rotate]);
+    opacity.value = withTiming(1, { duration: 160 });
+  }, [reducedMotion, opacity]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ scale: scale.value }, { rotate: `${rotate.value}deg` }],
+    transform: [{ rotate: "-6deg" }],
   }));
 
   const tk = useThemeTokens();
