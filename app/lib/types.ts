@@ -242,6 +242,7 @@ export type Conversation = {
   id: string;
   kind: "enquiry" | "hire";
   hire_id: string | null; // set on hire conversations → deep-link to S10
+  unlocked: boolean; // hire conv unlocked (paid); enquiries always false
   counterparty: { id: string; name: string; verified: boolean };
   listing: { id: string; title: string; thumb_url: string | null } | null;
   yard_name: string | null;
