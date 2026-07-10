@@ -10,6 +10,7 @@ import { HandoverQueueDrainer } from "../components/shell/handover-queue-drainer
 import { QueryProvider } from "../components/shell/query-provider";
 import { RealtimeInvalidator } from "../components/shell/realtime-invalidator";
 import { SessionExpiredGate } from "../components/shell/session-expired-gate";
+import { SuspendedGate } from "../components/shell/suspended-gate";
 import { ThemeRoot } from "../components/shell/theme-root";
 import { UpdateGate } from "../components/shell/update-gate";
 import { ErrorScreen } from "../components/system/error-screen";
@@ -52,6 +53,7 @@ export default function RootLayout() {
         <ThemeRoot>
           <StatusBar style="auto" />
           <SessionExpiredGate />
+          <SuspendedGate />
           <HandoverQueueDrainer />
           <RealtimeInvalidator />
           <Stack screenOptions={{ headerShown: false }} />

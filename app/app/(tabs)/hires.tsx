@@ -7,10 +7,13 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "re
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HireCard } from "../../components/hires/hire-card";
+import { OfflineBanner } from "../../components/system/offline-banner";
+import { OfflineNoCache } from "../../components/system/offline-no-cache";
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { HIRE_TABS } from "../../lib/hire-domain";
 import { useHires } from "../../lib/queries";
+import { useOffline } from "../../lib/use-offline";
 import type { Hire } from "../../lib/types";
 
 type TabKey = keyof typeof HIRE_TABS;
@@ -32,6 +35,7 @@ const EMPTY: Record<TabKey, { title: string; body: string }> = {
 export default function HiresTab() {
   const insets = useSafeAreaInsets();
   const { data: hires, isLoading, refetch, isRefetching } = useHires();
+  const offline = useOffline();
   const [tab, setTab] = useState<TabKey>("requested");
 
   const byTab = useMemo(() => {
@@ -81,7 +85,12 @@ export default function HiresTab() {
         })}
       </View>
 
-      {isLoading ? (
+      {hires ? <OfflineBanner /> : null}
+
+      {offline && !hires ? (
+        // S17 offline-no-cache: nothing persisted and no network to fetch.
+        <OfflineNoCache onRetry={() => void refetch()} />
+      ) : isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
         </View>

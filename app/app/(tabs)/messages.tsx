@@ -7,9 +7,12 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "re
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConversationRow } from "../../components/messaging/conversation-row";
+import { OfflineBanner } from "../../components/system/offline-banner";
+import { OfflineNoCache } from "../../components/system/offline-no-cache";
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { useConversations } from "../../lib/queries";
+import { useOffline } from "../../lib/use-offline";
 
 type Filter = "all" | "enquiry" | "hire";
 
@@ -22,6 +25,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 export default function MessagesTab() {
   const insets = useSafeAreaInsets();
   const { data, isLoading, refetch, isRefetching } = useConversations();
+  const offline = useOffline();
   const [filter, setFilter] = useState<Filter>("all");
 
   const rows = useMemo(() => {
@@ -56,7 +60,12 @@ export default function MessagesTab() {
         })}
       </View>
 
-      {isLoading ? (
+      {data ? <OfflineBanner /> : null}
+
+      {offline && !data ? (
+        // S17 offline-no-cache: nothing persisted and no network to fetch.
+        <OfflineNoCache onRetry={() => void refetch()} />
+      ) : isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
         </View>
