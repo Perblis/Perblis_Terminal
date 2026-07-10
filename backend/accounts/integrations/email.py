@@ -102,6 +102,22 @@ def send_password_reset_email(*, to: str, reset_url: str) -> bool:
     )
 
 
+def send_supplier_invite_email(*, to: str, full_name: str, portal_url: str) -> bool:
+    """F8: the hirer asked to become a supplier — point them at the portal,
+    where supplier tools live. They sign in with their existing Terminal account."""
+    return send_email(
+        to=to,
+        subject="Set up your Terminal supplier account",
+        body=(
+            f"Hi {full_name},\n\n"
+            "Your Terminal account is now enabled for supplying. Listing assets, yards, and "
+            "hires all happen in the Terminal supplier portal.\n\n"
+            f"Open the portal and sign in with your Terminal account:\n{portal_url}\n\n"
+            "Everything you already have carries over — same login.\n"
+        ),
+    )
+
+
 def send_verification_outcome_email(
     *, to: str, kind: str, approved: bool, reason: str = ""
 ) -> bool:

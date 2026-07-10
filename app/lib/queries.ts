@@ -33,6 +33,7 @@ import type {
   Listing,
   HireDetail,
   MapResponse,
+  Me,
   PaymentStatus,
   RefundPreview,
   SpecTemplate,
@@ -390,6 +391,16 @@ export function useSubmitVerification() {
 export function useDeleteAccount() {
   return useMutation({
     mutationFn: () => apiFetch<void>("/me", { method: "DELETE" }),
+  });
+}
+
+/** F8 become a supplier — activates the account (idempotent) and triggers the
+ *  portal invite email server-side. Returns the updated Me. */
+export function useBecomeSupplier() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch<Me>("/me/become-supplier", { method: "POST" }),
+    onSuccess: (me) => qc.setQueryData(["me"], me),
   });
 }
 

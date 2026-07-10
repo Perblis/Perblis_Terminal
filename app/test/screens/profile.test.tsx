@@ -1,10 +1,8 @@
 // S16 Profile — Verify CTA when Basic, Become-a-supplier hand-off (F8), sign out.
 import { fireEvent, waitFor } from "@testing-library/react-native";
-import { Linking } from "react-native";
 import { router } from "expo-router";
 
 import ProfileTab from "../../app/(tabs)/profile";
-import { PORTAL_URL } from "../../lib/api";
 import * as authApi from "../../lib/auth-api";
 import { useSession } from "../../stores/session";
 import { renderScreen } from "../render";
@@ -21,10 +19,13 @@ beforeEach(() => {
   useSession.setState({
     me: { id: "me1", full_name: "Ada Obi", email: "ada@e.com", phone: "0800", is_supplier: false, is_hirer: true, account_level: "basic", is_phone_verified: true, is_email_verified: true, is_verified: false },
   });
-  globalThis.fetch = jest.fn(async (url: RequestInfo | URL) => {
+  globalThis.fetch = jest.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
     const u = String(url);
     if (u.includes("/me/verification")) {
       return { ok: true, status: 200, json: async () => ({ account_level: "basic", requests: [] }) } as unknown as Response;
+    }
+    if (u.includes("/me/become-supplier") && init?.method === "POST") {
+      return { ok: true, status: 200, json: async () => ({ id: "me1", is_supplier: true }) } as unknown as Response;
     }
     return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
   }) as unknown as typeof fetch;
@@ -37,11 +38,10 @@ test("Basic account shows the Verify CTA → routes to /verify", async () => {
   expect(router.push).toHaveBeenCalledWith("/verify");
 });
 
-test("Become a supplier hands off to the portal (F8)", async () => {
-  const open = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+test("Become a supplier activates + confirms the emailed portal link (F8)", async () => {
   const screen = await renderScreen(<ProfileTab />);
   await fireEvent.press(await screen.findByText("Become a supplier"));
-  expect(open).toHaveBeenCalledWith(PORTAL_URL);
+  expect(await screen.findByText(/Portal link sent to your email/)).toBeTruthy();
 });
 
 test("Sign out clears the session and returns to the tabs", async () => {

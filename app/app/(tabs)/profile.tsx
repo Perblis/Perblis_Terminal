@@ -11,7 +11,7 @@ import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { apiFetch, PORTAL_URL } from "../../lib/api";
 import { logout } from "../../lib/auth-api";
-import { useDeleteAccount, useVerification } from "../../lib/queries";
+import { useBecomeSupplier, useDeleteAccount, useVerification } from "../../lib/queries";
 import { useSession } from "../../stores/session";
 
 const SUPPORT_EMAIL = "support@perblis.com";
@@ -39,8 +39,10 @@ export default function ProfileTab() {
   const setMe = useSession((s) => s.setMe);
   const { data: verification } = useVerification();
   const deleteAccount = useDeleteAccount();
+  const becomeSupplier = useBecomeSupplier();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   const signOut = async () => {
     await logout();
@@ -138,11 +140,17 @@ export default function ProfileTab() {
           </View>
         ) : null}
 
-        {/* Become a supplier (F8) — hand off to the portal */}
+        {/* Become a supplier (F8) — activate + email the portal link */}
         <Row
           label="Become a supplier"
-          sub="List your assets and take hires — opens the supplier portal"
-          onPress={() => void Linking.openURL(PORTAL_URL)}
+          sub={
+            inviteSent
+              ? "Portal link sent to your email — sign in there to set up"
+              : "List your assets and take hires — we’ll email your portal link"
+          }
+          onPress={() =>
+            becomeSupplier.mutate(undefined, { onSuccess: () => setInviteSent(true) })
+          }
         />
 
         {/* Settings */}

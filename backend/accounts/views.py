@@ -6,6 +6,8 @@ No domain mutation happens here — that all lives in `accounts.services.*`.
 
 from __future__ import annotations
 
+from django.conf import settings
+from django.db import transaction
 from django.http import FileResponse, Http404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -21,6 +23,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from accounts import serializers as s
 from accounts.errors import OtpInvalid
+from accounts.integrations import email as email_integration
 from accounts.integrations import media
 from accounts.models import User
 from accounts.services import deletion, login, otp, password_reset, registration, verification
@@ -201,6 +204,29 @@ class ActivateSupplierView(APIView):
         if not user.is_supplier:
             user.is_supplier = True
             user.save(update_fields=["is_supplier", "updated_at"])
+        return Response(s.MeSerializer(user).data)
+
+
+class BecomeSupplierView(APIView):
+    """F8 hand-off: enable supplying on the account (idempotent) and email a
+    link to the supplier portal, where the tools live. The app never implements
+    supplier tools itself — this is the bridge."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "auth"
+
+    @extend_schema(request=None, responses={200: s.MeSerializer})
+    def post(self, request):
+        user = request.user
+        if not user.is_supplier:
+            user.is_supplier = True
+            user.save(update_fields=["is_supplier", "updated_at"])
+        portal_url = settings.FRONTEND_BASE_URL.rstrip("/") + "/login"
+        transaction.on_commit(
+            lambda: email_integration.send_supplier_invite_email(
+                to=user.email, full_name=user.full_name, portal_url=portal_url
+            )
+        )
         return Response(s.MeSerializer(user).data)
 
 

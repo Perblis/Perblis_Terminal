@@ -31,6 +31,7 @@ urlpatterns = [
     # Me & roles
     path("me", views.MeView.as_view(), name="me"),
     path("me/activate-supplier", views.ActivateSupplierView.as_view(), name="activate-supplier"),
+    path("me/become-supplier", views.BecomeSupplierView.as_view(), name="become-supplier"),
     path("me/verification", views.VerificationView.as_view(), name="verification"),
     # Ops-only local-media stream (no public path to private docs)
     path("private-doc", views.PrivateDocView.as_view(), name="private-doc"),
