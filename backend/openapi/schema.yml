@@ -1265,6 +1265,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/v1/me/become-supplier:
+    post:
+      operationId: me_become_supplier_create
+      description: |-
+        F8 hand-off: enable supplying on the account (idempotent) and email a
+        link to the supplier portal, where the tools live. The app never implements
+        supplier tools itself — this is the bridge.
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
   /api/v1/me/verification:
     get:
       operationId: me_verification_retrieve
@@ -1826,6 +1844,14 @@ components:
         kind:
           type: string
           readOnly: true
+        hire_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        unlocked:
+          type: boolean
+          readOnly: true
         counterparty:
           type: object
           additionalProperties: {}
@@ -1852,11 +1878,13 @@ components:
           readOnly: true
       required:
       - counterparty
+      - hire_id
       - id
       - kind
       - last_message_at
       - last_message_preview
       - listing
+      - unlocked
       - unread_count
       - yard_name
     Dispute:

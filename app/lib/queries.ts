@@ -19,9 +19,13 @@ import {
   type SearchFilters,
 } from "./search-params";
 import type {
+  Conversation,
+  ConversationsPage,
   GeocodeResponse,
   Hire,
   HandoverRecord,
+  Message,
+  Paginated,
   ListAssetItem,
   ListLocationListing,
   ListLocationYard,
@@ -29,10 +33,13 @@ import type {
   Listing,
   HireDetail,
   MapResponse,
+  Me,
   PaymentStatus,
   RefundPreview,
   SpecTemplate,
   Storefront,
+  VerificationRequest,
+  VerificationStatus,
 } from "./types";
 
 
@@ -273,5 +280,135 @@ export function useSpecTemplate(
     queryFn: () => apiFetch<SpecTemplate>(`/spec-templates?${params.toString()}`),
     enabled,
     staleTime: 24 * 60 * 60 * 1000, // templates are versioned — effectively immutable
+  });
+}
+
+// --- messaging (Wave 5 contracts; realtime + 15s polling, D-011) -------------
+export const conversationKeys = {
+  all: ["conversations"] as const,
+  messages: (id: string) => ["messages", id] as const,
+};
+
+/** S14: all conversations (walks cursor pages) + the aggregate unread badge.
+ *  Persisted (["conversations"]) so it renders cold; 15s poll (Ably overlays). */
+export function useConversations() {
+  return useQuery({
+    queryKey: conversationKeys.all,
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const results: Conversation[] = [];
+      let unreadTotal = 0;
+      let path: string | null = "/conversations";
+      while (path) {
+        const page: ConversationsPage = await apiFetch<ConversationsPage>(path);
+        results.push(...page.results);
+        unreadTotal = page.unread_total ?? unreadTotal;
+        const qs = page.next ? page.next.split("?")[1] : null;
+        path = qs ? `/conversations?${qs}` : null;
+      }
+      return { results, unread_total: unreadTotal };
+    },
+  });
+}
+
+/** S15: the thread's messages, sorted oldest→newest (cursor serves newest-first). */
+export function useMessages(conversationId: string | null) {
+  return useQuery({
+    queryKey: conversationKeys.messages(conversationId ?? "none"),
+    enabled: conversationId !== null,
+    refetchInterval: 15_000,
+    queryFn: () => apiFetch<Paginated<Message>>(`/conversations/${conversationId}/messages`),
+    select: (page) =>
+      [...page.results].sort(
+        (a, b) => new Date(a.sent_at).getTime() - new Date(b.sent_at).getTime(),
+      ),
+  });
+}
+
+/** S15 composer send — the screen owns the optimistic pending-bubble UI. */
+export function useSendMessage(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) =>
+      apiFetch<Message>(`/conversations/${conversationId}/messages`, {
+        method: "POST",
+        body: { body },
+      }),
+    onSettled: (_data, error) => {
+      if (!error) {
+        void qc.invalidateQueries({ queryKey: conversationKeys.messages(conversationId) });
+        void qc.invalidateQueries({ queryKey: conversationKeys.all });
+      }
+    },
+  });
+}
+
+/** Bulk-mark a conversation's counterparty messages read (backend: {conversation_id}). */
+export function useMarkRead(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ marked_read: number }>("/messages/read", {
+        method: "POST",
+        body: { conversation_id: conversationId },
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: conversationKeys.all }),
+  });
+}
+
+/** S6/S13 "Message/Enquire" — idempotent get-or-create of an enquiry conversation. */
+export function useCreateEnquiry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (target: { listing_id: string } | { supplier_id: string }) =>
+      apiFetch<Conversation>("/conversations", { method: "POST", body: target }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: conversationKeys.all }),
+  });
+}
+
+// --- profile: verification + account (S16 / F2) ------------------------------
+export const verificationKey = ["verification"] as const;
+
+/** S16 verification status card (F2): account level + the request history. */
+export function useVerification() {
+  return useQuery({
+    queryKey: verificationKey,
+    queryFn: () => apiFetch<VerificationStatus>("/me/verification"),
+  });
+}
+
+/** Submit identity/business docs (multipart) — direct upload (TSD §3.9). */
+export function useSubmitVerification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (form: FormData) =>
+      apiFetch<VerificationRequest>("/me/verification", { method: "POST", rawBody: form }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: verificationKey }),
+  });
+}
+
+/** NDPR soft-delete (30-day window); guarded server-side against active hires. */
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: () => apiFetch<void>("/me", { method: "DELETE" }),
+  });
+}
+
+/** F8 become a supplier — activates the account (idempotent) and triggers the
+ *  portal invite email server-side. Returns the updated Me. */
+export function useBecomeSupplier() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch<Me>("/me/become-supplier", { method: "POST" }),
+    onSuccess: (me) => qc.setQueryData(["me"], me),
+  });
+}
+
+/** F10 report a listing (throttle 5/day/user server-side). No reporter-side
+ *  state is returned or cached — anti-gaming. */
+export function useReportListing(listingId: string) {
+  return useMutation({
+    mutationFn: (payload: { reason: string; note?: string }) =>
+      apiFetch<unknown>(`/listings/${listingId}/reports`, { method: "POST", body: payload }),
   });
 }

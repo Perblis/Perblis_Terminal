@@ -241,12 +241,32 @@ export type HandoverRecord = {
 export type Conversation = {
   id: string;
   kind: "enquiry" | "hire";
+  hire_id: string | null; // set on hire conversations → deep-link to S10
+  unlocked: boolean; // hire conv unlocked (paid); enquiries always false
   counterparty: { id: string; name: string; verified: boolean };
   listing: { id: string; title: string; thumb_url: string | null } | null;
   yard_name: string | null;
-  last_message_preview: string;
+  last_message_preview: string | null;
   last_message_at: string | null;
   unread_count: number;
+};
+
+/** The conversations-list response injects an aggregate unread badge count. */
+export type ConversationsPage = Paginated<Conversation> & { unread_total: number };
+
+export type VerificationRequest = {
+  id: string;
+  kind: string;
+  state: "pending" | "approved" | "rejected";
+  reason: string;
+  rc_number: string;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type VerificationStatus = {
+  account_level: string;
+  requests: VerificationRequest[];
 };
 
 export type Message = {

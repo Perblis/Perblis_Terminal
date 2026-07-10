@@ -42,3 +42,17 @@ def test_activate_supplier(auth, user):
     assert resp.status_code == 200
     user.refresh_from_db()
     assert user.is_supplier is True
+
+
+def test_become_supplier_activates_and_emails_portal_link(
+    auth, user, mailoutbox, django_capture_on_commit_callbacks
+):
+    assert user.is_supplier is False
+    with django_capture_on_commit_callbacks(execute=True):
+        resp = auth(user).post(reverse("api:accounts:become-supplier"))
+    assert resp.status_code == 200
+    user.refresh_from_db()
+    assert user.is_supplier is True  # idempotent activation
+    assert len(mailoutbox) == 1
+    assert user.email in mailoutbox[0].to
+    assert "/login" in mailoutbox[0].body  # the portal hand-off link
