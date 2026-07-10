@@ -12,6 +12,7 @@
     "text/tertiary": "color.ink.500",
     "text/inverse": "color.paper.0",
     "text/on-brand": "color.ink.900",
+    "text/brand-on-inverse": "color.amber.500",
     "text/link": "color.blue.700",
     "text/danger": "color.red.700",
     "text/money": "color.ink.900",
@@ -44,7 +45,7 @@
     "status/dispute": "color.violet.600"
   },
   "dark": {
-    "_doc": "Specified now, ships post-MVP (02 §5). amber-500 stays amber-500.",
+    "_doc": "Live from Wave 8 day one (wave-8-vision V1; supersedes the 02 §5 post-MVP note). amber-500 stays amber-500 as a SURFACE; amber as a FOREGROUND must darken (brand-on-inverse) because surface/inverse flips to paper.",
     "surface/page": "color.ink.900",
     "surface/card": "color.ink.800",
     "surface/sunken": "color.ink.900",
@@ -56,8 +57,9 @@
     "text/tertiary": "color.ink.400",
     "text/inverse": "color.ink.900",
     "text/on-brand": "color.ink.900",
-    "text/link": "color.blue.500",
-    "text/danger": "color.red.500",
+    "text/brand-on-inverse": "color.amber.700",
+    "text/link": "color.blue.400",
+    "text/danger": "color.red.400",
     "text/money": "color.paper.50",
 
     "border/default": "color.ink.700",
