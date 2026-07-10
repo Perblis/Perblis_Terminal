@@ -23,7 +23,8 @@
   ],
   "scripts": {
     "build": "tsx build.ts",
-    "check": "tsx build.ts"
+    "check": "tsx build.ts",
+    "prepare": "tsx build.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.0"

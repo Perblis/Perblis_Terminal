@@ -2,3 +2,10 @@ packages:
   - "packages/*"
   - "portal"
   - "app"
+
+# Expo SDK 54+ supports isolated installs, but Metro/Babel still fail to resolve
+# transitive babel plugins under pnpm's default isolated linker on EAS
+# (Cannot find module '@babel/plugin-transform-react-jsx'). Hoisted matches
+# npm/Yarn layout that Expo's Android release bundler expects.
+# See: https://docs.expo.dev/guides/monorepos/#package-managers-with-isolated-dependencies
+nodeLinker: hoisted

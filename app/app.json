@@ -7,10 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "runtimeVersion": {
-      "policy": "fingerprint"
-    },
+    "runtimeVersion": "0.1.1",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
@@ -38,13 +35,6 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
@@ -88,7 +78,9 @@
       ],
       "@maplibre/maplibre-react-native",
       "@sentry/react-native/expo",
-      "expo-updates"
+      "expo-updates",
+      "expo-asset",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

@@ -9,5 +9,11 @@
     "portal:build": "pnpm --filter @terminal/portal build",
     "portal:deploy": "pnpm --filter @terminal/portal run deploy",
     "portal:deploy:preview": "pnpm --filter @terminal/portal run deploy:preview"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "19.2.3",
+      "react-dom": "19.2.3"
+    }
   }
 }
