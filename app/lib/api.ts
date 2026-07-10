@@ -8,6 +8,10 @@ const API_BASE_URL =
 
 export const API_V1 = `${API_BASE_URL}/api/v1`;
 
+/** Supplier portal (F8 hand-off) — the app never implements supplier tools. */
+export const PORTAL_URL =
+  process.env.EXPO_PUBLIC_PORTAL_URL ?? "https://terminal-portal.nwabueze.workers.dev";
+
 const ACCESS_KEY = "terminal.access";
 const REFRESH_KEY = "terminal.refresh";
 

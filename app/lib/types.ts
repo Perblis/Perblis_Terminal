@@ -254,6 +254,21 @@ export type Conversation = {
 /** The conversations-list response injects an aggregate unread badge count. */
 export type ConversationsPage = Paginated<Conversation> & { unread_total: number };
 
+export type VerificationRequest = {
+  id: string;
+  kind: string;
+  state: "pending" | "approved" | "rejected";
+  reason: string;
+  rc_number: string;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type VerificationStatus = {
+  account_level: string;
+  requests: VerificationRequest[];
+};
+
 export type Message = {
   id: string;
   conversation_id: string;

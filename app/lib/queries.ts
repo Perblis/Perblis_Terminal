@@ -37,6 +37,8 @@ import type {
   RefundPreview,
   SpecTemplate,
   Storefront,
+  VerificationRequest,
+  VerificationStatus,
 } from "./types";
 
 
@@ -360,5 +362,33 @@ export function useCreateEnquiry() {
     mutationFn: (target: { listing_id: string } | { supplier_id: string }) =>
       apiFetch<Conversation>("/conversations", { method: "POST", body: target }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: conversationKeys.all }),
+  });
+}
+
+// --- profile: verification + account (S16 / F2) ------------------------------
+export const verificationKey = ["verification"] as const;
+
+/** S16 verification status card (F2): account level + the request history. */
+export function useVerification() {
+  return useQuery({
+    queryKey: verificationKey,
+    queryFn: () => apiFetch<VerificationStatus>("/me/verification"),
+  });
+}
+
+/** Submit identity/business docs (multipart) — direct upload (TSD §3.9). */
+export function useSubmitVerification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (form: FormData) =>
+      apiFetch<VerificationRequest>("/me/verification", { method: "POST", rawBody: form }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: verificationKey }),
+  });
+}
+
+/** NDPR soft-delete (30-day window); guarded server-side against active hires. */
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: () => apiFetch<void>("/me", { method: "DELETE" }),
   });
 }
