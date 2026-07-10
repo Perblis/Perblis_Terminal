@@ -5,12 +5,30 @@ import { apiFetch, API_V1 } from "./api";
 
 const API_ORIGIN = API_V1.replace(/\/api\/v1$/, "");
 
+/** Object-key prefixes served from the public media bucket (TSD §3.9). */
+const PUBLIC_KEY_PREFIXES = ["listings/", "logos/", "avatars/", "handovers/"] as const;
+
+/** Extract an R2 object key from a public media URL returned by the API. */
+export function publicMediaKeyFromUrl(url: string): string | null {
+  const match = /^https?:\/\/([^/]+)\/(.+)$/.exec(url);
+  if (!match) return null;
+  const key = match[2].split("?")[0];
+  if (PUBLIC_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) return key;
+  return null;
+}
+
 /**
- * Listing photo URLs are absolute R2 public URLs in prod but RELATIVE
- * dev-proxy paths when R2 isn't configured — resolve against the API origin.
+ * Resolve a media URL for <Image>. The API returns R2 S3-endpoint URLs in
+ * prod (`*.r2.cloudflarestorage.com/...`) which are NOT public-readable —
+ * the portal hit the same wall (PR #42) and serves media through the
+ * backend's `GET /api/v1/media/public?key=` proxy, which reads R2
+ * server-side. The app rides the same endpoint; relative dev paths resolve
+ * against the API origin as before.
  */
 export function resolveMediaUrl(url: string): string {
   if (!url) return "";
+  const key = publicMediaKeyFromUrl(url);
+  if (key) return `${API_ORIGIN}/api/v1/media/public?key=${encodeURIComponent(key)}`;
   if (/^https?:\/\//.test(url)) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 }

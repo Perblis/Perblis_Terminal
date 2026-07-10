@@ -1,6 +1,7 @@
 import { Image, Pressable, View } from "react-native";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { resolveMediaUrl } from "../../lib/media";
 import type { ListingTier, MapSoloListing } from "../../lib/types";
 import { availabilityCaption } from "../map/pins";
 import { BodyText, Money, MonoText } from "../ui/text";
@@ -38,7 +39,7 @@ export function ListingRow({
       className="flex-row gap-3 border-b border-border bg-surface-card px-4 py-3 active:bg-surface-sunken"
     >
       {listing.photo ? (
-        <Image source={{ uri: listing.photo }} style={{ width: 88, height: 66, borderRadius: 6 }} />
+        <Image source={{ uri: resolveMediaUrl(listing.photo) }} style={{ width: 88, height: 66, borderRadius: 6 }} />
       ) : (
         <View
           className="items-center justify-center rounded-md bg-surface-sunken"

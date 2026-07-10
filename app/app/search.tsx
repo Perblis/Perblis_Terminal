@@ -10,6 +10,7 @@ import { TextField } from "../components/ui/text-field";
 import { ASSET_CLASSES } from "../lib/asset-classes";
 import { parseNairaInput } from "../lib/naira";
 import { useThemeTokens } from "../lib/theme";
+import { resolveMediaUrl } from "../lib/media";
 import { useListSearch, type ListRow } from "../lib/queries";
 import type { SearchFilters } from "../lib/search-params";
 import { useMapState } from "../stores/map-state";
@@ -84,7 +85,7 @@ export default function Search() {
           <View className="flex-row items-center gap-3">
             <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-inverse">
               {item.supplier.logo ? (
-                <Image source={{ uri: item.supplier.logo }} style={{ width: 40, height: 40 }} />
+                <Image source={{ uri: resolveMediaUrl(item.supplier.logo) }} style={{ width: 40, height: 40 }} />
               ) : (
                 <MonoText className="text-text-brand-on-inverse">
                   {item.supplier.name.slice(0, 2).toUpperCase()}

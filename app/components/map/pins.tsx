@@ -1,68 +1,68 @@
-// Pin system per 06 §3. Anatomy is normative; the V5 feel (spring drop,
-// crosshair select ring, haptic tick) is applied by TerminalMap around
-// these — the components themselves are static and testable.
+// Pin system, industrial-plate revision (D-023): squared ink equipment-tag
+// markers — mono type, amber accents, no teardrops, no motion. Plates are
+// FIXED ink (like the tab shell and PlateLockup) so they read identically on
+// the light and dark Terminal Chart. Anatomy stays static and testable; the
+// map layer adds no entrance animation (serious instrument posture).
 import { Image, View } from "react-native";
-import Svg, { Circle, Path } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { tokens } from "@terminal/tokens";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { resolveMediaUrl } from "../../lib/media";
 import { useThemeTokens } from "../../lib/theme";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import type { MapYard, MapSoloListing } from "../../lib/types";
 import { MonoText, BodyText } from "../ui/text";
 
-const useMapTokens = useThemeTokens;
+const INK = tokens.color.colorInk900;
+const PLATE_BORDER = tokens.color.colorInk400;
+const AMBER = tokens.color.colorAmber500;
+const PAPER = tokens.color.colorPaper0;
 
-/** WCAG relative luminance of a #RRGGBB value. */
-function luminance(hex: string): number {
-  const n = hex.replace("#", "");
-  const [r, g, b] = [0, 2, 4].map((i) => {
-    const c = parseInt(n.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+/** Shared plate frame: ink field, hairline border, amber when selected. */
+function plateFrame(selected: boolean) {
+  return {
+    backgroundColor: INK,
+    borderRadius: 4,
+    borderWidth: selected ? 2 : 1,
+    borderColor: selected ? AMBER : PLATE_BORDER,
+  } as const;
 }
 
 /**
- * Ink glyph on light class fills, paper glyph on dark ones — a fixed white
- * glyph fails non-text contrast on the amber/green 500 fills the dark theme
- * uses (e.g. white on amber-500 ≈ 2.1:1).
+ * Solo asset plate: 26px ink square, class-coloured edge strip, paper glyph.
+ * The class hue is an index mark, not the body of the pin (D-023).
  */
-function glyphColorFor(fill: string): string {
-  return luminance(fill) > 0.2 ? tokens.color.colorInk900 : tokens.color.colorPaper0;
-}
-
-/** 32px class-coloured teardrop with the paper class glyph (06 §3). */
 export function AssetPin({ listing, selected = false }: { listing: MapSoloListing; selected?: boolean }) {
-  const t = useMapTokens();
+  const t = useThemeTokens();
   const meta = CLASS_BY_VALUE[listing.asset_class];
-  const fill = t[meta.varKey];
+  const strip = t[meta.varKey];
   const Glyph = CLASS_GLYPHS[listing.asset_class];
-  const size = selected ? 38 : 32;
+  const size = selected ? 30 : 26;
   return (
     <View
       accessibilityLabel={`${meta.label} listing: ${listing.title}`}
-      style={{ width: size, height: size * 1.35, alignItems: "center" }}
+      style={{
+        width: size,
+        height: size,
+        flexDirection: "row",
+        overflow: "hidden",
+        ...plateFrame(selected),
+      }}
     >
-      <Svg width={size} height={size * 1.35} viewBox="0 0 32 43">
-        <Path
-          d="M16 1 C24.3 1 31 7.7 31 16 C31 27 16 42 16 42 S1 27 1 16 C1 7.7 7.7 1 16 1 Z"
-          fill={fill}
-          stroke={selected ? t["--surface-brand"] : t["--surface-inverse"]}
-          strokeWidth={selected ? 2.5 : 1}
-        />
-      </Svg>
-      <View style={{ position: "absolute", top: size * 0.22 }}>
-        <Glyph size={size * 0.5} color={glyphColorFor(fill)} />
+      <View style={{ width: 3, backgroundColor: strip }} />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Glyph size={size * 0.55} color={PAPER} />
       </View>
     </View>
   );
 }
 
 /**
- * 40px squircle yard pin: logo (or ink+amber initials), amber count badge
- * (matching_count when filtered), ≤3 class dots, verification tick on the
- * border; matching_count 0 ⇒ whole pin at 40%, never removed.
+ * Yard plate: ink tag with amber mono initials (or logo), a rule-separated
+ * paper count (matching_count when filtered), verification tick on the
+ * corner, ≤3 class index squares under the plate; matching_count 0 ⇒ whole
+ * plate at 40%, never removed.
  */
 export function YardPin({
   yard,
@@ -73,7 +73,7 @@ export function YardPin({
   filtered?: boolean;
   selected?: boolean;
 }) {
-  const t = useMapTokens();
+  const t = useThemeTokens();
   const dimmed = filtered && yard.matching_count === 0;
   const count = filtered ? yard.matching_count : yard.listing_count;
   const initials = yard.supplier.name
@@ -84,58 +84,47 @@ export function YardPin({
   return (
     <View
       accessibilityLabel={`Yard: ${yard.name}, ${count} listings`}
-      style={{ width: 52, height: 52, opacity: dimmed ? 0.4 : 1 }}
+      style={{ alignItems: "center", opacity: dimmed ? 0.4 : 1 }}
     >
-      <View
-        className="items-center justify-center overflow-hidden bg-surface-inverse"
-        style={{
-          width: 40,
-          height: 40,
-          marginTop: 8,
-          borderRadius: 13,
-          borderWidth: selected ? 2 : 1.5,
-          borderColor: selected ? t["--surface-brand"] : t["--surface-inverse"],
-        }}
-      >
+      <View style={{ flexDirection: "row", alignItems: "stretch", height: 30, overflow: "hidden", ...plateFrame(selected) }}>
         {yard.supplier.logo ? (
-          <Image source={{ uri: yard.supplier.logo }} style={{ width: 40, height: 40 }} />
+          <Image source={{ uri: resolveMediaUrl(yard.supplier.logo) }} style={{ width: 28, height: 28 }} />
         ) : (
-          <MonoText style={{ color: t["--text-brand-on-inverse"], fontSize: 14 }}>{initials}</MonoText>
+          <View style={{ justifyContent: "center", paddingHorizontal: 7 }}>
+            <MonoText style={{ color: AMBER, fontSize: 13 }}>{initials}</MonoText>
+          </View>
         )}
-      </View>
-      {/* count badge */}
-      <View
-        className="absolute right-0 top-0 items-center justify-center rounded-full bg-surface-brand"
-        style={{ minWidth: 20, height: 20, paddingHorizontal: 4 }}
-      >
-        <MonoText className="text-text-on-brand" style={{ fontSize: 11 }}>
-          {count}
-        </MonoText>
+        <View style={{ width: 1, backgroundColor: tokens.color.colorInk700 }} />
+        <View style={{ justifyContent: "center", paddingHorizontal: 7 }}>
+          <MonoText style={{ color: PAPER, fontSize: 13 }}>{count}</MonoText>
+        </View>
       </View>
       {/* verification tick */}
       {yard.supplier.badge ? (
         <View
-          className="absolute items-center justify-center rounded-full"
-          style={{ left: -2, top: 6, width: 16, height: 16, backgroundColor: tokens.color.colorBlue600 }}
+          style={{
+            position: "absolute",
+            right: -5,
+            top: -5,
+            width: 13,
+            height: 13,
+            borderRadius: 3,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: tokens.color.colorBlue600,
+          }}
         >
-          <Svg width={10} height={10} viewBox="0 0 24 24">
-            <Path d="M4 12l6 6 10 -12" stroke={tokens.color.colorPaper0} strokeWidth={3.5} fill="none" />
+          <Svg width={9} height={9} viewBox="0 0 24 24">
+            <Path d="M4 12l6 6 10 -12" stroke={PAPER} strokeWidth={3.5} fill="none" />
           </Svg>
         </View>
       ) : null}
-      {/* ≤3 class dots */}
-      <View className="mt-0.5 flex-row justify-center gap-1" style={{ width: 40 }}>
+      {/* ≤3 class index squares */}
+      <View style={{ flexDirection: "row", gap: 3, marginTop: 3 }}>
         {yard.class_mix.slice(0, 3).map((c) => (
           <View
             key={c}
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: 4,
-              borderWidth: 1,
-              borderColor: t["--surface-card"],
-              backgroundColor: t[CLASS_BY_VALUE[c].varKey],
-            }}
+            style={{ width: 5, height: 5, borderRadius: 1, backgroundColor: t[CLASS_BY_VALUE[c].varKey] }}
           />
         ))}
       </View>
@@ -143,30 +132,25 @@ export function YardPin({
   );
 }
 
-/** 36px ink-700 circle, paper mono count — deliberately drab (06 §3). */
+/** 26px ink-700 plate, paper mono count — deliberately drab (06 §3). */
 export function ClusterPin({ count }: { count: number }) {
-  const t = useMapTokens();
   return (
     <View
       accessibilityLabel={`${count} listings — zoom in`}
-      className="items-center justify-center rounded-full"
-      style={{ width: 36, height: 36, backgroundColor: tokens.color.colorInk700, borderWidth: 1, borderColor: t["--surface-card"] }}
+      style={{
+        minWidth: 26,
+        height: 26,
+        paddingHorizontal: 6,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: PLATE_BORDER,
+        backgroundColor: tokens.color.colorInk700,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
-      <MonoText style={{ color: tokens.color.colorPaper0, fontSize: 13 }}>{count}</MonoText>
+      <MonoText style={{ color: PAPER, fontSize: 12 }}>{count}</MonoText>
     </View>
-  );
-}
-
-/** Crosshair select ring — the chart-instrument selection detail (V5). */
-export function CrosshairRing({ size = 56 }: { size?: number }) {
-  const t = useMapTokens();
-  const c = size / 2;
-  const amber = t["--surface-brand"];
-  return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} pointerEvents="none">
-      <Circle cx={c} cy={c} r={c - 4} stroke={amber} strokeWidth={1.5} fill="none" strokeDasharray="4 5" />
-      <Path d={`M${c} 0 V7 M${c} ${size - 7} V${size} M0 ${c} H7 M${size - 7} ${c} H${size}`} stroke={amber} strokeWidth={1.5} />
-    </Svg>
   );
 }
 

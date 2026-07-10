@@ -8,6 +8,7 @@ import { BodyText, DisplayText, MonoText } from "../../components/ui/text";
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
 import { guardIntent } from "../../lib/guest-intent";
 import { useStorefront } from "../../lib/queries";
+import { resolveMediaUrl } from "../../lib/media";
 import { useSession } from "../../stores/session";
 
 function CornerMarks() {
@@ -87,7 +88,7 @@ export default function Storefront() {
         {/* Cover */}
         <View className="h-44 bg-surface-inverse">
           {cover ? (
-            <Image source={{ uri: cover }} style={{ width: "100%", height: 176 }} resizeMode="cover" />
+            <Image source={{ uri: resolveMediaUrl(cover) }} style={{ width: "100%", height: 176 }} resizeMode="cover" />
           ) : (
             <View className="flex-1 items-center justify-center">
               <MonoText className="text-body text-text-brand-on-inverse">{data.business_name}</MonoText>
@@ -109,7 +110,7 @@ export default function Storefront() {
         <View className="flex-row items-center gap-3 border-b border-border bg-surface-card px-4 py-4">
           <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-surface-inverse">
             {data.logo_url ? (
-              <Image source={{ uri: data.logo_url }} style={{ width: 56, height: 56 }} />
+              <Image source={{ uri: resolveMediaUrl(data.logo_url) }} style={{ width: 56, height: 56 }} />
             ) : (
               <MonoText className="text-h3 text-text-brand-on-inverse">
                 {data.business_name.slice(0, 2).toUpperCase()}
@@ -192,7 +193,7 @@ export default function Storefront() {
                 className="mb-3 w-[48.5%] overflow-hidden rounded-lg border border-border bg-surface-card active:opacity-90"
               >
                 {listing.cover_photo_url ? (
-                  <Image source={{ uri: listing.cover_photo_url }} style={{ width: "100%", height: 96 }} />
+                  <Image source={{ uri: resolveMediaUrl(listing.cover_photo_url) }} style={{ width: "100%", height: 96 }} />
                 ) : (
                   <View className="h-24 items-center justify-center bg-surface-sunken">
                     <MonoText className="text-caption text-text-tertiary">—</MonoText>
