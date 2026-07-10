@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { HandoverQueueDrainer } from "../components/shell/handover-queue-drainer";
 import { QueryProvider } from "../components/shell/query-provider";
 import { SessionExpiredGate } from "../components/shell/session-expired-gate";
 import { ThemeRoot } from "../components/shell/theme-root";
@@ -32,6 +33,7 @@ export default function RootLayout() {
         <ThemeRoot>
           <StatusBar style="auto" />
           <SessionExpiredGate />
+          <HandoverQueueDrainer />
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeRoot>
       </QueryProvider>

@@ -98,3 +98,8 @@ export function formatDateRange(startIso: string, endIso: string, days: number):
     new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   return `${fmt(startIso)} → ${fmt(endIso)} · ${days} day${days === 1 ? "" : "s"}`;
 }
+
+/** Local calendar date as YYYY-MM-DD (WAT has no DST — device-local is fine). */
+export function todayIso(now: Date = new Date()): string {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}

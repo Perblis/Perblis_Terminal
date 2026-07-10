@@ -83,6 +83,51 @@ def test_off_hire_handover_confirm_completes_the_hire(auth, listing):
     assert hire.status == HireStatus.COMPLETED
 
 
+def test_list_handovers_returns_records_with_submitter_role(auth, listing):
+    hire = _hire(listing, confirmed=True)
+    auth(hire.supplier).post(
+        f"{HIRES}/{hire.id}/handovers",
+        {"kind": "on_hire", "photos": PHOTOS, "reading": {"hour_meter": 1200}},
+        format="json",
+    )
+    resp = auth(hire.hirer).get(f"{HIRES}/{hire.id}/handovers")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body) == 1
+    record = body[0]
+    assert record["kind"] == "on_hire"
+    assert record["submitted_by_role"] == "supplier"
+    assert record["confirmed_at"] is None
+    assert record["reading"] == {"hour_meter": 1200}
+
+
+def test_list_handovers_marks_hirer_submission(auth, listing):
+    hire = _hire(listing, on_hire=True)
+    auth(hire.hirer).post(
+        f"{HIRES}/{hire.id}/handovers", {"kind": "off_hire", "photos": PHOTOS}, format="json"
+    )
+    resp = auth(hire.hirer).get(f"{HIRES}/{hire.id}/handovers")
+    assert resp.json()[0]["submitted_by_role"] == "hirer"
+
+
+def test_list_handovers_reflects_confirmation(auth, listing):
+    hire = _hire(listing, confirmed=True)
+    submitted = auth(hire.supplier).post(
+        f"{HIRES}/{hire.id}/handovers", {"kind": "on_hire", "photos": PHOTOS}, format="json"
+    )
+    handover_id = submitted.json()["id"]
+    auth(hire.hirer).post(f"/api/v1/handovers/{handover_id}/confirm", {}, format="json")
+    resp = auth(hire.hirer).get(f"{HIRES}/{hire.id}/handovers")
+    assert resp.json()[0]["confirmed_at"] is not None
+
+
+def test_non_party_cannot_list_handovers(auth, listing):
+    hire = _hire(listing, confirmed=True)
+    stranger = UserFactory()
+    resp = auth(stranger).get(f"{HIRES}/{hire.id}/handovers")
+    assert resp.status_code == 404
+
+
 # --- disputes ---------------------------------------------------------------
 def test_party_raises_dispute_during_on_hire(auth, listing):
     hire = _hire(listing, on_hire=True)

@@ -20,6 +20,8 @@ import {
 } from "./search-params";
 import type {
   GeocodeResponse,
+  Hire,
+  HandoverRecord,
   ListAssetItem,
   ListLocationListing,
   ListLocationYard,
@@ -108,10 +110,35 @@ export function useGeocode(q: string) {
 
 export const hireKeys = {
   all: ["hires"] as const,
+  list: () => ["hires", "list"] as const,
   detail: (id: string) => ["hire", id] as const,
+  handovers: (id: string) => ["hire-handovers", id] as const,
   refundPreview: (id: string) => ["refund-preview", id] as const,
   payment: (id: string) => ["payment", id] as const,
 };
+
+type HirePage = { next: string | null; results: Hire[] };
+
+/** S9 My Hires: every hire the caller is party to (walks all cursor pages),
+ *  partitioned into tabs client-side. Persisted (["hires"]) so it renders cold.
+ *  Gentle poll keeps it live-ish until Ably realtime lands (8E). */
+export function useHires(refetchInterval = 30_000) {
+  return useQuery({
+    queryKey: hireKeys.list(),
+    refetchInterval,
+    queryFn: async () => {
+      const all: Hire[] = [];
+      let path: string | null = "/hires?role=hirer";
+      while (path) {
+        const page: HirePage = await apiFetch<HirePage>(path);
+        all.push(...page.results);
+        const qs = page.next ? page.next.split("?")[1] : null;
+        path = qs ? `/hires?${qs}` : null;
+      }
+      return all;
+    },
+  });
+}
 
 /** S8/S10: pass refetchInterval to poll (webhook is truth — never the redirect). */
 export function useHire(id: string | null, refetchInterval?: number) {
@@ -120,6 +147,61 @@ export function useHire(id: string | null, refetchInterval?: number) {
     queryFn: () => apiFetch<HireDetail>(`/hires/${id}`),
     enabled: id !== null,
     refetchInterval,
+  });
+}
+
+/** S10: the hire's handover records (bare array; ≤2). */
+export function useHandovers(hireId: string | null) {
+  return useQuery({
+    queryKey: hireKeys.handovers(hireId ?? "none"),
+    queryFn: () => apiFetch<HandoverRecord[]>(`/hires/${hireId}/handovers`),
+    enabled: hireId !== null,
+  });
+}
+
+export type SubmitHandoverPayload = {
+  kind: "on_hire" | "off_hire";
+  photos: string[];
+  reading?: Record<string, unknown>;
+};
+
+/** S11: submit an on-hire/off-hire record. The counterparty confirms it. */
+export function useSubmitHandover(hireId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SubmitHandoverPayload) =>
+      apiFetch<HandoverRecord>(`/hires/${hireId}/handovers`, { method: "POST", body: payload }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: hireKeys.handovers(hireId) });
+      void qc.invalidateQueries({ queryKey: hireKeys.detail(hireId) });
+    },
+  });
+}
+
+/** S10/S11: confirm the counterparty's record — advances the hire's state. */
+export function useConfirmHandover(hireId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (handoverId: string) =>
+      apiFetch<HandoverRecord>(`/handovers/${handoverId}/confirm`, { method: "POST", body: {} }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: hireKeys.handovers(hireId) });
+      void qc.invalidateQueries({ queryKey: hireKeys.detail(hireId) });
+      void qc.invalidateQueries({ queryKey: hireKeys.all });
+    },
+  });
+}
+
+/** S10 Raise issue → In Dispute (server enforces the on_hire / ≤72h window). */
+export function useRaiseDispute(hireId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reason: string) =>
+      apiFetch<HireDetail>(`/hires/${hireId}/dispute`, { method: "POST", body: { reason } }),
+    onSuccess: (hire) => {
+      qc.setQueryData(hireKeys.detail(hireId), hire);
+      void qc.invalidateQueries({ queryKey: hireKeys.all });
+    },
   });
 }
 

@@ -74,7 +74,9 @@ test("accepted: countdown + vault LockedTerms + Pay now; no fee leak", async () 
   expect(screen.getByText("₦900,000")).toBeTruthy();
   expect(screen.getByText("Terms locked at acceptance")).toBeTruthy();
   expect(screen.getByText("left to pay")).toBeTruthy();
-  expect(screen.getByText("Pay now")).toBeTruthy();
+  // The button label depends on the SEPARATE payment-status query clearing its
+  // busy spinner — await it rather than reading it synchronously off the hire.
+  expect(await screen.findByText("Pay now")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
 });
 

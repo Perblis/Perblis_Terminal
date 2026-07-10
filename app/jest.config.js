@@ -10,4 +10,8 @@ module.exports = {
 
   ],
   clearMocks: true,
+  // Cold first-render of a screen suite (NativeWind + reanimated + expo mocks)
+  // can exceed jest's 5s default on a contended CI runner — give real headroom
+  // without masking a genuine hang.
+  testTimeout: 15000,
 };

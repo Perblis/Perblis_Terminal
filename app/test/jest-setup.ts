@@ -79,3 +79,41 @@ jest.mock("react-native-reanimated", () => {
 jest.mock("expo-audio", () => ({
   createAudioPlayer: jest.fn(() => ({ play: jest.fn(), remove: jest.fn() })),
 }));
+
+jest.mock("expo-image-manipulator", () => {
+  const makeContext = () => {
+    const renderAsync = jest.fn(async () => ({
+      saveAsync: jest.fn(async () => ({
+        uri: "file:///resized.jpg",
+        width: 1920,
+        height: 1080,
+      })),
+    }));
+    const ctx = { resize: jest.fn(), renderAsync };
+    ctx.resize.mockReturnValue(ctx); // chainable, no self-reference in initializer
+    return ctx;
+  };
+  return {
+    ImageManipulator: { manipulate: jest.fn(() => makeContext()) },
+    SaveFormat: { JPEG: "jpeg", PNG: "png", WEBP: "webp" },
+  };
+});
+
+jest.mock("expo-file-system/legacy", () => ({
+  getInfoAsync: jest.fn(async () => ({ exists: true, size: 500_000 })),
+  uploadAsync: jest.fn(async () => ({ status: 200, body: "" })),
+  FileSystemUploadType: { BINARY_CONTENT: 0 },
+}));
+
+jest.mock("expo-image-picker", () => ({
+  requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  launchCameraAsync: jest.fn(async () => ({
+    canceled: false,
+    assets: [{ uri: "file:///cam.jpg", width: 4000, height: 3000 }],
+  })),
+  launchImageLibraryAsync: jest.fn(async () => ({
+    canceled: false,
+    assets: [{ uri: "file:///lib.jpg", width: 4000, height: 3000 }],
+  })),
+  MediaType: { Images: "images" },
+}));
