@@ -105,6 +105,12 @@ jest.mock("expo-file-system/legacy", () => ({
   FileSystemUploadType: { BINARY_CONTENT: 0 },
 }));
 
+jest.mock("ably", () => ({
+  Realtime: class {
+    channels = { get: () => ({ subscribe: jest.fn(), unsubscribe: jest.fn() }) };
+  },
+}));
+
 jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({

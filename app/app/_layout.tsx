@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { HandoverQueueDrainer } from "../components/shell/handover-queue-drainer";
 import { QueryProvider } from "../components/shell/query-provider";
+import { RealtimeInvalidator } from "../components/shell/realtime-invalidator";
 import { SessionExpiredGate } from "../components/shell/session-expired-gate";
 import { ThemeRoot } from "../components/shell/theme-root";
 import { useAppFonts } from "../lib/fonts";
@@ -34,6 +35,7 @@ export default function RootLayout() {
           <StatusBar style="auto" />
           <SessionExpiredGate />
           <HandoverQueueDrainer />
+          <RealtimeInvalidator />
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeRoot>
       </QueryProvider>

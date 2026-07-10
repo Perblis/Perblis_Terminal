@@ -18,6 +18,7 @@
     "export": "expo export --platform android --output-dir dist-export"
   },
   "dependencies": {
+    "ably": "^2.23.0",
     "@expo-google-fonts/archivo": "^0.4.2",
     "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
     "@expo-google-fonts/inter": "^0.4.2",

@@ -241,13 +241,17 @@ export type HandoverRecord = {
 export type Conversation = {
   id: string;
   kind: "enquiry" | "hire";
+  hire_id: string | null; // set on hire conversations → deep-link to S10
   counterparty: { id: string; name: string; verified: boolean };
   listing: { id: string; title: string; thumb_url: string | null } | null;
   yard_name: string | null;
-  last_message_preview: string;
+  last_message_preview: string | null;
   last_message_at: string | null;
   unread_count: number;
 };
+
+/** The conversations-list response injects an aggregate unread badge count. */
+export type ConversationsPage = Paginated<Conversation> & { unread_total: number };
 
 export type Message = {
   id: string;
