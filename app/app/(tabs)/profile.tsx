@@ -61,7 +61,9 @@ export default function ProfileTab() {
         <BodyText className="text-text-secondary">
           You’re browsing as a guest. Sign in to request hires and message suppliers.
         </BodyText>
-        <Button label="Sign in" onPress={() => router.push("/auth/login")} />
+        {/* reauth=1 → login pops back here on success instead of replacing
+            to the tabs (which left the login screen stuck on top). */}
+        <Button label="Sign in" onPress={() => router.push("/auth/login?reauth=1")} />
       </View>
     );
   }
