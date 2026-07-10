@@ -10,6 +10,8 @@ import { Button } from "../components/ui/button";
 import { KeyboardSpacer } from "../components/ui/keyboard-spacer";
 import { TextField } from "../components/ui/text-field";
 import { BodyText, DisplayText } from "../components/ui/text";
+import { ApiError } from "../lib/api";
+import { prepareVerificationDoc } from "../lib/media";
 import { useSubmitVerification } from "../lib/queries";
 
 type Kind = "identity" | "business";
@@ -25,7 +27,9 @@ export default function Verify() {
   const pick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, allowsMultipleSelection: true });
     if (result.canceled) return;
-    setDocs((prev) => [...prev, ...result.assets.map((a) => ({ uri: a.uri }))].slice(0, 5));
+    // Downscale before attach — the server caps each document at 5 MB.
+    const prepared = await Promise.all(result.assets.map((a) => prepareVerificationDoc(a)));
+    setDocs((prev) => [...prev, ...prepared].slice(0, 5));
   };
 
   const canSubmit = docs.length > 0 && (kind !== "business" || rc.trim().length > 0);
@@ -85,7 +89,17 @@ export default function Verify() {
         </View>
 
         {kind === "business" ? (
-          <TextField label="RC number" placeholder="e.g. RC 1234567" value={rc} onChangeText={setRc} />
+          <TextField
+            label="RC number"
+            placeholder="e.g. RC 1234567"
+            value={rc}
+            onChangeText={setRc}
+            error={
+              submit.error instanceof ApiError
+                ? (submit.error.fields?.rc_number?.[0] as string | undefined)
+                : undefined
+            }
+          />
         ) : null}
 
         {docs.length > 0 ? (
@@ -97,6 +111,13 @@ export default function Verify() {
         ) : null}
 
         <Button variant="secondary" label="Add document" onPress={() => void pick()} />
+        {submit.isError ? (
+          <BodyText className="text-body-sm text-text-danger">
+            {submit.error instanceof ApiError
+              ? submit.error.message
+              : "Something went wrong. Check your connection and try again."}
+          </BodyText>
+        ) : null}
         <Button label="Submit for review" busy={submit.isPending} disabled={!canSubmit} onPress={onSubmit} />
         <KeyboardSpacer />
       </ScrollView>

@@ -48,6 +48,21 @@ type PresignResponse = {
 export type CapturedPhoto = { uri: string; width?: number; height?: number };
 
 /**
+ * Downscale a picked verification document to ≤1600px wide JPEG — the server
+ * caps each document at 5 MB and full-resolution phone photos routinely
+ * exceed it (the picker's `quality` compresses but never resizes).
+ */
+export async function prepareVerificationDoc(asset: CapturedPhoto): Promise<{ uri: string }> {
+  const context = ImageManipulator.manipulate(asset.uri);
+  if (asset.width !== undefined && asset.width > 1600) {
+    context.resize({ width: 1600 });
+  }
+  const rendered = await context.renderAsync();
+  const image = await rendered.saveAsync({ compress: 0.7, format: SaveFormat.JPEG });
+  return { uri: image.uri };
+}
+
+/**
  * Resize → presign → PUT a handover photo, returning the private-bucket object
  * key to attach to the record. Only downscales (never upscales); the presigned
  * PUT URL is R2-absolute in prod and a relative dev receiver locally, so it is
