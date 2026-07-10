@@ -1,9 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { Image, Pressable, ScrollView, Share, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Gallery } from "../../components/listing/gallery";
+import { ReportSheet } from "../../components/listing/report-sheet";
 import { SpecTable } from "../../components/listing/spec-table";
 import { StaticMiniMap } from "../../components/map/terminal-map";
 import { TierBadge } from "../../components/search/listing-row";
@@ -13,7 +15,7 @@ import { BodyText, DisplayText, Money, MonoText } from "../../components/ui/text
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
 import { guardIntent } from "../../lib/guest-intent";
 import { resolveMediaUrl } from "../../lib/media";
-import { useListing, useSpecTemplate } from "../../lib/queries";
+import { useCreateEnquiry, useListing, useSpecTemplate } from "../../lib/queries";
 import { useSession } from "../../stores/session";
 
 function PriceCell({ label, display }: { label: string; display: string | null }) {
@@ -37,6 +39,8 @@ export default function ListingDetail() {
     listing?.asset_type ?? null,
     listing?.spec_template_version ?? null,
   );
+  const createEnquiry = useCreateEnquiry();
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -95,18 +99,30 @@ export default function ListingDetail() {
               ←
             </DisplayText>
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Share"
-            onPress={() =>
-              void Share.share({ message: `${listing.title} on Terminal — ₦ from ${listing.daily_price_display}/day` })
-            }
-            className="h-10 w-10 items-center justify-center rounded-full bg-black/50"
-          >
-            <Svg width={18} height={18} viewBox="0 0 24 24">
-              <Path d="M12 3v13M7 8l5-5 5 5M5 13v7h14v-7" stroke="#FFFFFF" strokeWidth={2} fill="none" />
-            </Svg>
-          </Pressable>
+          <View className="flex-row gap-2">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share"
+              onPress={() =>
+                void Share.share({ message: `${listing.title} on Terminal — ₦ from ${listing.daily_price_display}/day` })
+              }
+              className="h-10 w-10 items-center justify-center rounded-full bg-black/50"
+            >
+              <Svg width={18} height={18} viewBox="0 0 24 24">
+                <Path d="M12 3v13M7 8l5-5 5 5M5 13v7h14v-7" stroke="#FFFFFF" strokeWidth={2} fill="none" />
+              </Svg>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Report listing"
+              onPress={() => setReportOpen(true)}
+              className="h-10 w-10 items-center justify-center rounded-full bg-black/50"
+            >
+              <DisplayText className="text-h3" style={{ color: "#FFFFFF" }}>
+                ⋯
+              </DisplayText>
+            </Pressable>
+          </View>
         </View>
 
         <View className="gap-4 p-4">
@@ -200,8 +216,14 @@ export default function ListingDetail() {
           <Button
             variant="secondary"
             label="Enquire"
+            busy={createEnquiry.isPending}
             onPress={() =>
-              protectedAction(`/listing/${listing.id}`, () => router.push("/(tabs)/messages" as never))
+              protectedAction(`/listing/${listing.id}`, () =>
+                createEnquiry.mutate(
+                  { listing_id: listing.id },
+                  { onSuccess: (conv) => router.push(`/messages/${conv.id}` as never) },
+                ),
+              )
             }
           />
         </View>
@@ -216,6 +238,8 @@ export default function ListingDetail() {
           />
         </View>
       </View>
+
+      <ReportSheet listingId={listing.id} visible={reportOpen} onClose={() => setReportOpen(false)} />
     </View>
   );
 }

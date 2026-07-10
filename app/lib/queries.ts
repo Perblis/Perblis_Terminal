@@ -392,3 +392,12 @@ export function useDeleteAccount() {
     mutationFn: () => apiFetch<void>("/me", { method: "DELETE" }),
   });
 }
+
+/** F10 report a listing (throttle 5/day/user server-side). No reporter-side
+ *  state is returned or cached — anti-gaming. */
+export function useReportListing(listingId: string) {
+  return useMutation({
+    mutationFn: (payload: { reason: string; note?: string }) =>
+      apiFetch<unknown>(`/listings/${listingId}/reports`, { method: "POST", body: payload }),
+  });
+}
