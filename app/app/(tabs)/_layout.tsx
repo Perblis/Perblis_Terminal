@@ -3,10 +3,13 @@ import { useColorScheme } from "react-native";
 import { nativewindVars } from "@terminal/tokens";
 
 import { HiresIcon, MapIcon, MessagesIcon, ProfileIcon } from "../../components/ui/tab-icons";
+import { useConversations } from "../../lib/queries";
 
 export default function TabsLayout() {
   const scheme = useColorScheme();
   const theme = nativewindVars[scheme === "dark" ? "dark" : "light"];
+  const { data: conversations } = useConversations();
+  const unread = conversations?.unread_total ?? 0;
 
   return (
     <Tabs
@@ -31,7 +34,11 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="messages"
-        options={{ title: "Messages", tabBarIcon: ({ color }) => <MessagesIcon color={color} /> }}
+        options={{
+          title: "Messages",
+          tabBarIcon: ({ color }) => <MessagesIcon color={color} />,
+          tabBarBadge: unread > 0 ? unread : undefined,
+        }}
       />
       <Tabs.Screen
         name="profile"
