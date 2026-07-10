@@ -1,16 +1,14 @@
 // V10 sound kit: exactly three mechanical sounds (message received, payment
-// success, handover confirm), ring-switch-respecting, with a settings
-// toggle (8E). Asset files are NOT yet bundled — CC0 sourcing needs network
-// access (recorded follow-up) — so every player is currently a silent no-op
-// with the wiring in place: drop the .m4a files into assets/sounds/ and
-// fill AUDIO_SOURCES to go live.
+// success, handover confirm), ring-switch-respecting. All three are
+// self-authored (CC0/public domain) synthesized tones — the PAID stamp
+// thunk, the both-ticks confirm, and the message tick.
 import { createAudioPlayer } from "expo-audio";
 
-// CC0/self-authored assets (public domain). Drop more in as they land.
 const AUDIO_SOURCES: { paymentSuccess?: number; messageReceived?: number; handoverConfirm?: number } =
   {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    paymentSuccess: require("../assets/sounds/payment-success.wav"),
     messageReceived: require("../assets/sounds/message-received.wav"),
+    handoverConfirm: require("../assets/sounds/handover-confirm.wav"),
   };
 
 function play(source?: number): void {

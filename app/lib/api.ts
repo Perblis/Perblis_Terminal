@@ -84,6 +84,25 @@ function emitSessionExpired(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Account-suspended signal → the S17 blocking screen (root layout
+// subscribes). Mid-session suspension usually surfaces as a dead refresh
+// (the Ops cascade bumps the JWT `tv` claim), but a still-valid access
+// token can hit a 403 `account_suspended` first — route straight to S17
+// instead of letting the error bubble as a generic failure (F12).
+
+type AccountSuspendedListener = () => void;
+const accountSuspendedListeners = new Set<AccountSuspendedListener>();
+
+export function onAccountSuspended(listener: AccountSuspendedListener): () => void {
+  accountSuspendedListeners.add(listener);
+  return () => accountSuspendedListeners.delete(listener);
+}
+
+function emitAccountSuspended(): void {
+  for (const l of accountSuspendedListeners) l();
+}
+
+// ---------------------------------------------------------------------------
 // Single-flight refresh: concurrent 401s share one refresh call. A single
 // device serves a single user, so one module-level promise is correct here
 // (the portal keys by refresh token because one isolate serves many users).
@@ -172,7 +191,11 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     }
   }
 
-  if (!resp.ok) throw await parseError(resp);
+  if (!resp.ok) {
+    const error = await parseError(resp);
+    if (error.code === "account_suspended") emitAccountSuspended();
+    throw error;
+  }
   if (resp.status === 204) return undefined as T;
   return (await resp.json()) as T;
 }
