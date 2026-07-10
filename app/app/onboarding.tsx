@@ -42,7 +42,10 @@ export default function Onboarding() {
   };
 
   return (
-    <View className="flex-1 bg-surface-inverse">
+    // Fixed ink backdrop — the chart-tease scene is drawn dark (V3), so the
+    // screen stays ink in both themes rather than flipping with
+    // surface-inverse.
+    <View className="flex-1 bg-ink-900">
       <ChartTease />
       <View className="flex-1" style={{ paddingTop: insets.top + 24 }}>
         <View className="items-center">
@@ -59,7 +62,7 @@ export default function Onboarding() {
           onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
           renderItem={({ item }) => (
             <View style={{ width }} className="justify-end px-6 pb-8">
-              <DisplayText className="text-display-lg text-text-inverse">{item.title}</DisplayText>
+              <DisplayText className="text-display-lg text-paper-0">{item.title}</DisplayText>
               <BodyText className="mt-3 text-body-lg text-ink-300">{item.body}</BodyText>
             </View>
           )}

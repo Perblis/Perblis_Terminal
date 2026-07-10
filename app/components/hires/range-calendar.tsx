@@ -116,7 +116,13 @@ export function RangeCalendar({
               >
                 <MonoText
                   className={`text-body-sm ${
-                    disabled ? "text-ink-300" : isEdge ? "text-text-on-brand" : "text-text-primary"
+                    disabled
+                      ? "text-ink-300"
+                      : isEdge
+                        ? "text-text-on-brand"
+                        : isBetween
+                          ? "text-amber-900"
+                          : "text-text-primary"
                   }`}
                 >
                   {Number(day.slice(-2))}

@@ -21,7 +21,7 @@ const styles: Record<HireStatus, string> = {
   requested: "bg-amber-100 text-amber-900",
   accepted: "bg-blue-50 text-blue-900",
   confirmed: "bg-teal-50 text-teal-900",
-  on_hire: "bg-green-600 text-text-inverse",
+  on_hire: "bg-green-700 text-paper-0",
   completed: "bg-ink-100 text-ink-600",
   declined: "border border-ink-300 bg-transparent text-ink-500",
   expired: "border border-ink-300 bg-transparent text-ink-500",

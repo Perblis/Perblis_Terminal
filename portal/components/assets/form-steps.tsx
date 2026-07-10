@@ -197,7 +197,7 @@ export function SpecsStep({ draft, set }: StepProps) {
           rows={4}
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
-          className="rounded-sm border border-border-default bg-surface-card p-s3 text-body-sm outline-none placeholder:text-ink-400"
+          className="rounded-sm border border-border-default bg-surface-card p-s3 text-body-sm outline-none placeholder:text-ink-500"
           placeholder="Condition, what's included, site requirements, anything a hirer should know before requesting."
         />
         <p className={`text-caption ${draft.description.trim().length >= 50 ? "text-ink-500" : "text-amber-900"}`}>
@@ -324,7 +324,7 @@ export function PricingStep({ draft, set }: StepProps) {
           {naiveDaily !== null && preview.total < naiveDaily ? (
             <>
               <span className="text-text-secondary"> — beats </span>
-              <Money kobo={naiveDaily} className="font-normal text-ink-400 line-through" />
+              <Money kobo={naiveDaily} className="font-normal text-ink-500 line-through" />
             </>
           ) : null}
           <span className="text-text-secondary">)</span>

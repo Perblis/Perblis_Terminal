@@ -41,7 +41,7 @@ const STATUS_EXPLAINER: Record<ListingStatus, string> = {
 
 const STATUS_STYLE: Record<ListingStatus, string> = {
   draft: "bg-ink-100 text-ink-600",
-  live: "bg-green-600 text-paper-0",
+  live: "bg-green-700 text-paper-0",
   paused: "bg-amber-100 text-amber-900",
   archived: "border border-ink-300 text-ink-500",
   removed: "bg-red-50 text-red-900",
@@ -324,7 +324,7 @@ export default function AssetsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or type"
-            className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-400"
+            className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-500"
           />
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by status" className="h-9 rounded-sm border border-border-default bg-surface-card px-s2 text-body-sm">
@@ -417,7 +417,7 @@ export default function AssetsPage() {
                 <tbody key={groupYard ?? "all"}>
                   {groupByYard ? (
                     <tr>
-                      <td colSpan={columns.length} className="bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-500">
+                      <td colSpan={columns.length} className="bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
                         {yardName(groupYard)}
                       </td>
                     </tr>

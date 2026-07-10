@@ -239,7 +239,7 @@ export default function MessagesPage() {
                               </p>
                             ) : null}
                           </div>
-                          <p className="mt-px flex items-center gap-s1 font-mono text-mono-sm text-ink-400">
+                          <p className="mt-px flex items-center gap-s1 font-mono text-mono-sm text-ink-500">
                             {new Date(m.sent_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                             {mine ? <Check size={11} aria-label="Sent" /> : null}
                           </p>
@@ -251,7 +251,7 @@ export default function MessagesPage() {
                         <div className="max-w-[75%] rounded-md border border-border-default bg-surface-card px-s3 py-s2 text-body opacity-60">
                           <p className="whitespace-pre-wrap break-words">{p.body}</p>
                         </div>
-                        <p className="mt-px font-mono text-mono-sm text-ink-400">
+                        <p className="mt-px font-mono text-mono-sm text-ink-500">
                           <Check size={11} className="inline text-ink-300" aria-label="Sending" />
                         </p>
                       </li>
@@ -280,7 +280,7 @@ export default function MessagesPage() {
                     }
                   }}
                   placeholder="Write a message…"
-                  className="max-h-32 min-h-12 flex-1 resize-y rounded-sm border border-border-default p-s3 text-body outline-none placeholder:text-ink-400"
+                  className="max-h-32 min-h-12 flex-1 resize-y rounded-sm border border-border-default p-s3 text-body outline-none placeholder:text-ink-500"
                 />
                 <button
                   type="button"

@@ -118,7 +118,7 @@ export function YardsPanel({ open, onClose }: { open: boolean; onClose: () => vo
                       {pin ? (
                         <MapView className="h-24 w-28 shrink-0" center={pin} marker={pin} interactive={false} zoom={13} />
                       ) : (
-                        <div className="flex h-24 w-28 shrink-0 items-center justify-center bg-surface-sunken text-caption text-ink-500">
+                        <div className="flex h-24 w-28 shrink-0 items-center justify-center bg-surface-sunken text-caption text-ink-600">
                           No pin
                         </div>
                       )}

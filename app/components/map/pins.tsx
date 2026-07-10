@@ -1,18 +1,35 @@
 // Pin system per 06 §3. Anatomy is normative; the V5 feel (spring drop,
 // crosshair select ring, haptic tick) is applied by TerminalMap around
 // these — the components themselves are static and testable.
-import { Image, View, useColorScheme } from "react-native";
+import { Image, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { nativewindVars } from "@terminal/tokens";
+import { tokens } from "@terminal/tokens";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { useThemeTokens } from "../../lib/theme";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import type { MapYard, MapSoloListing } from "../../lib/types";
 import { MonoText, BodyText } from "../ui/text";
 
-function useMapTokens() {
-  const scheme = useColorScheme();
-  return nativewindVars[scheme === "dark" ? "dark" : "light"] as Record<string, string>;
+const useMapTokens = useThemeTokens;
+
+/** WCAG relative luminance of a #RRGGBB value. */
+function luminance(hex: string): number {
+  const n = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(n.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Ink glyph on light class fills, paper glyph on dark ones — a fixed white
+ * glyph fails non-text contrast on the amber/green 500 fills the dark theme
+ * uses (e.g. white on amber-500 ≈ 2.1:1).
+ */
+function glyphColorFor(fill: string): string {
+  return luminance(fill) > 0.2 ? tokens.color.colorInk900 : tokens.color.colorPaper0;
 }
 
 /** 32px class-coloured teardrop with the paper class glyph (06 §3). */
@@ -36,7 +53,7 @@ export function AssetPin({ listing, selected = false }: { listing: MapSoloListin
         />
       </Svg>
       <View style={{ position: "absolute", top: size * 0.22 }}>
-        <Glyph size={size * 0.5} color="#FFFFFF" />
+        <Glyph size={size * 0.5} color={glyphColorFor(fill)} />
       </View>
     </View>
   );
@@ -83,7 +100,7 @@ export function YardPin({
         {yard.supplier.logo ? (
           <Image source={{ uri: yard.supplier.logo }} style={{ width: 40, height: 40 }} />
         ) : (
-          <MonoText style={{ color: t["--surface-brand"], fontSize: 14 }}>{initials}</MonoText>
+          <MonoText style={{ color: t["--text-brand-on-inverse"], fontSize: 14 }}>{initials}</MonoText>
         )}
       </View>
       {/* count badge */}
@@ -99,10 +116,10 @@ export function YardPin({
       {yard.supplier.badge ? (
         <View
           className="absolute items-center justify-center rounded-full"
-          style={{ left: -2, top: 6, width: 16, height: 16, backgroundColor: t["--text-link"] }}
+          style={{ left: -2, top: 6, width: 16, height: 16, backgroundColor: tokens.color.colorBlue600 }}
         >
           <Svg width={10} height={10} viewBox="0 0 24 24">
-            <Path d="M4 12l6 6 10 -12" stroke="#FFFFFF" strokeWidth={3.5} fill="none" />
+            <Path d="M4 12l6 6 10 -12" stroke={tokens.color.colorPaper0} strokeWidth={3.5} fill="none" />
           </Svg>
         </View>
       ) : null}
@@ -133,9 +150,9 @@ export function ClusterPin({ count }: { count: number }) {
     <View
       accessibilityLabel={`${count} listings — zoom in`}
       className="items-center justify-center rounded-full"
-      style={{ width: 36, height: 36, backgroundColor: "#3A3F4A", borderWidth: 1, borderColor: t["--surface-card"] }}
+      style={{ width: 36, height: 36, backgroundColor: tokens.color.colorInk700, borderWidth: 1, borderColor: t["--surface-card"] }}
     >
-      <MonoText style={{ color: "#FFFFFF", fontSize: 13 }}>{count}</MonoText>
+      <MonoText style={{ color: tokens.color.colorPaper0, fontSize: 13 }}>{count}</MonoText>
     </View>
   );
 }

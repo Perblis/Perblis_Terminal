@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { TextInput, View, type TextInputProps } from "react-native";
 
+import { useThemeTokens } from "../../lib/theme";
 import { BodyText } from "./text";
 
 type Props = TextInputProps & {
@@ -14,6 +15,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
   { label, error, hint, ...rest },
   ref,
 ) {
+  const tk = useThemeTokens();
   return (
     <View className="gap-1.5">
       <BodyText className="text-body-sm font-sans-medium text-text-secondary">{label}</BodyText>
@@ -23,7 +25,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
         className={`min-h-12 rounded-md border bg-surface-card px-4 py-3 font-sans text-body text-text-primary ${
           error ? "border-text-danger" : "border-border-strong"
         }`}
-        placeholderTextColor="#8D93A0"
+        placeholderTextColor={tk["--text-tertiary"]}
         {...rest}
       />
       {error ? (

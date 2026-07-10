@@ -14,7 +14,7 @@ export function PlateLockup({ size = "lg" }: { size?: "lg" | "sm" }) {
       <TCrane size={glyph} />
       <View className="border-l-2 border-surface-brand pl-3">
         <DisplayText
-          className={`font-display-bold tracking-widest text-text-inverse ${size === "lg" ? "text-3xl" : "text-lg"}`}
+          className={`font-display-bold tracking-widest text-paper-0 ${size === "lg" ? "text-3xl" : "text-lg"}`}
         >
           TERMINAL
         </DisplayText>

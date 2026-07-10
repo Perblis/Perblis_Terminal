@@ -163,7 +163,7 @@ function Checklist() {
             <li key={item.label} className="flex items-center gap-s3 rounded-sm border border-border-default px-s3 py-s2">
               <span
                 className={`grid size-s5 shrink-0 place-items-center rounded-pill ${
-                  item.done ? "bg-green-600 text-paper-0" : "border border-ink-300 text-transparent"
+                  item.done ? "bg-green-700 text-paper-0" : "border border-ink-300 text-transparent"
                 }`}
                 aria-hidden
               >
@@ -332,7 +332,7 @@ export default function DashboardPage() {
               <Card className="p-0">
                 {dayGroups.map(([day, dayEvents]) => (
                   <div key={day}>
-                    <p className="border-b border-border-default bg-surface-sunken px-s4 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-500">
+                    <p className="border-b border-border-default bg-surface-sunken px-s4 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
                       {day}
                     </p>
                     <ul>

@@ -3,13 +3,15 @@ import Svg, { Path } from "react-native-svg";
 
 import { resolveMediaUrl } from "../../lib/media";
 import { relTime } from "../../lib/rel-time";
+import { useThemeTokens } from "../../lib/theme";
 import type { Conversation } from "../../lib/types";
 import { BodyText } from "../ui/text";
 
 function VerifiedTick() {
+  const tk = useThemeTokens();
   return (
     <Svg width={13} height={13} viewBox="0 0 24 24">
-      <Path d="M4 12 l5 5 L20 6" stroke="#059669" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M4 12 l5 5 L20 6" stroke={tk["--status-onHire"]} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }

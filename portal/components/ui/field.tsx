@@ -44,7 +44,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className="h-full w-full bg-transparent px-s3 text-body-sm text-text-primary outline-none placeholder:text-ink-400 disabled:cursor-not-allowed"
+          className="h-full w-full bg-transparent px-s3 text-body-sm text-text-primary outline-none placeholder:text-ink-500 disabled:cursor-not-allowed"
           {...rest}
         />
       </div>

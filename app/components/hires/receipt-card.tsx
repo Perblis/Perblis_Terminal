@@ -31,7 +31,10 @@ function Bracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
 
 export const ReceiptCard = forwardRef<View, { hire: Hire }>(function ReceiptCard({ hire }, ref) {
   return (
-    <View ref={ref} collapsable={false} className="overflow-hidden rounded-lg bg-surface-inverse">
+    // Fixed ink plate: the artefact is captured and shared as an image, so it
+    // must render identically in both themes (surface-inverse flips to paper
+    // in dark and would invert the whole receipt).
+    <View ref={ref} collapsable={false} className="overflow-hidden rounded-lg bg-ink-900">
       <View className="items-center gap-4 px-6 pb-5 pt-6">
         <Bracket corner="tl" />
         <Bracket corner="tr" />
@@ -51,7 +54,7 @@ export const ReceiptCard = forwardRef<View, { hire: Hire }>(function ReceiptCard
           <BodyText className="text-body-sm text-ink-300" numberOfLines={1}>
             {hire.listing_title}
           </BodyText>
-          <Money display={hire.hire_value_display} hero className="text-text-inverse" />
+          <Money display={hire.hire_value_display} hero className="text-paper-0" />
           <MonoText className="text-body-sm text-ink-300">
             {formatDateRange(hire.start_date, hire.end_date, hire.duration_days)}
           </MonoText>

@@ -39,16 +39,15 @@ export function Gallery({ photos, topInset }: { photos: ListingPhoto[]; topInset
 
   if (ordered.length === 0) {
     return (
-      <View className="items-center justify-center bg-surface-inverse" style={{ height: height + topInset, paddingTop: topInset }}>
-        <MonoText className="text-body" style={{ color: "#F59E0B" }}>
-          No photos yet
-        </MonoText>
+      // Fixed ink letterbox — the immersive gallery stays dark in both themes.
+      <View className="items-center justify-center bg-ink-900" style={{ height: height + topInset, paddingTop: topInset }}>
+        <MonoText className="text-body text-amber-500">No photos yet</MonoText>
       </View>
     );
   }
 
   return (
-    <View style={{ height: height + topInset }} className="bg-surface-inverse">
+    <View style={{ height: height + topInset }} className="bg-ink-900">
       <FlatList
         ref={listRef}
         data={ordered}

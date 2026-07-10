@@ -1,5 +1,6 @@
 // Pin state matrix per 06 §3: badge/dim/tick/count behaviours.
 import { render } from "@testing-library/react-native";
+import { nativewindVars } from "@terminal/tokens";
 
 import type { MapSoloListing, MapYard } from "../../lib/types";
 import { AssetPin, ClusterPin, YardPin, availabilityCaption } from "./pins";
@@ -68,4 +69,14 @@ test("cluster is a drab mono count", async () => {
 test("availability caption vocabulary", () => {
   expect(availabilityCaption({ available: true })).toBe("Available now");
   expect(availabilityCaption({ available: false })).toBe("Currently on hire");
+});
+
+test("yard initials use brand-on-inverse, never raw brand amber (contrast)", async () => {
+  // surface-inverse flips to paper in dark, where amber-500 text fails AA —
+  // the initials must track text/brand-on-inverse for the active theme.
+  const { getByText } = await render(<YardPin yard={YARD} />);
+  const initials = getByText("KH");
+  const styles = [initials.props.style].flat(Infinity);
+  const color = styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
+  expect(color).toBe(nativewindVars.light["--text-brand-on-inverse"]);
 });

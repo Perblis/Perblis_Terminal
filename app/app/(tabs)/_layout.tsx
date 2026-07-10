@@ -1,13 +1,10 @@
 import { Tabs } from "expo-router";
-import { useColorScheme } from "react-native";
-import { nativewindVars } from "@terminal/tokens";
+import { tokens } from "@terminal/tokens";
 
 import { HiresIcon, MapIcon, MessagesIcon, ProfileIcon } from "../../components/ui/tab-icons";
 import { useConversations } from "../../lib/queries";
 
 export default function TabsLayout() {
-  const scheme = useColorScheme();
-  const theme = nativewindVars[scheme === "dark" ? "dark" : "light"];
   const { data: conversations } = useConversations();
   const unread = conversations?.unread_total ?? 0;
 
@@ -15,11 +12,14 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme["--surface-brand"],
-        tabBarInactiveTintColor: theme["--text-tertiary"],
+        // Fixed ink shell (8A): the tab bar is a brand plate in both themes —
+        // surface-inverse would flip it to paper in dark. Inactive tint is
+        // ink-400 (≥4.5:1 on ink-900); active stays amber.
+        tabBarActiveTintColor: tokens.color.colorAmber500,
+        tabBarInactiveTintColor: tokens.color.colorInk400,
         tabBarStyle: {
-          backgroundColor: theme["--surface-inverse"],
-          borderTopColor: theme["--border-strong"],
+          backgroundColor: tokens.color.colorInk900,
+          borderTopColor: tokens.color.colorInk700,
         },
         tabBarLabelStyle: { fontFamily: "Inter_500Medium", fontSize: 11 },
       }}

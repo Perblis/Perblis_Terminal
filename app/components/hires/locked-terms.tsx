@@ -36,7 +36,10 @@ function LockGlyph() {
 
 export function LockedTerms({ hire }: { hire: Hire }) {
   return (
-    <View className="rounded-lg bg-surface-inverse p-6">
+    // Fixed ink vault: the panel's brackets/lock/captions are drawn for a
+    // dark plate, so it stays ink in both themes rather than flipping with
+    // surface-inverse.
+    <View className="rounded-lg bg-ink-900 p-6">
       <Bracket corner="tl" />
       <Bracket corner="tr" />
       <Bracket corner="bl" />
@@ -48,7 +51,7 @@ export function LockedTerms({ hire }: { hire: Hire }) {
         </View>
         <View className="items-center">
           <BodyText className="text-body-sm text-ink-300">You pay</BodyText>
-          <Money display={hire.hire_value_display} hero className="text-text-inverse" />
+          <Money display={hire.hire_value_display} hero className="text-paper-0" />
         </View>
         <MonoText className="text-body-sm text-ink-300">
           {formatDateRange(hire.start_date, hire.end_date, hire.duration_days)}

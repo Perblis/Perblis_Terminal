@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 
+import { useThemeTokens } from "../../lib/theme";
 import { BodyText } from "../ui/text";
 
 /** Message composer — multiline input + send. Draft clears before send (the
  *  screen owns the optimistic pending bubble). No send haptic (V8). */
 export function Composer({ onSend }: { onSend: (body: string) => void }) {
+  const tk = useThemeTokens();
   const [draft, setDraft] = useState("");
   const canSend = draft.trim().length > 0;
   const submit = () => {
@@ -19,7 +21,7 @@ export function Composer({ onSend }: { onSend: (body: string) => void }) {
       <TextInput
         className="max-h-28 flex-1 rounded-md border border-border-strong bg-surface-page px-3 py-2 font-sans text-body text-text-primary"
         placeholder="Message"
-        placeholderTextColor="#8D93A0"
+        placeholderTextColor={tk["--text-tertiary"]}
         value={draft}
         onChangeText={setDraft}
         multiline

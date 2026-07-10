@@ -73,14 +73,23 @@ function contrast(fg: string, bg: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// [foreground token, background token, min ratio]
+// [foreground token, background token, min ratio] — asserted in BOTH themes.
+// Dark mode is a live remap (wave-8-vision V1), so every pair that holds in
+// light must hold after the remap too; a light-only gate let amber-on-white
+// and near-white-on-white combinations ship in dark.
 const REQUIRED_PAIRS: Array<[string, string, number]> = [
   ["text/primary", "surface/page", 4.5],
+  ["text/primary", "surface/card", 4.5],
   ["text/secondary", "surface/page", 4.5],
+  ["text/secondary", "surface/card", 4.5],
+  ["text/tertiary", "surface/card", 4.5],
   ["text/inverse", "surface/inverse", 4.5],
   ["text/on-brand", "action/primary", 4.5],
+  ["text/on-brand", "surface/brand", 4.5],
+  ["text/brand-on-inverse", "surface/inverse", 4.5],
   ["text/link", "surface/card", 4.5],
   ["text/danger", "surface/card", 4.5],
+  ["text/money", "surface/card", 4.5],
 ];
 // Note: border/focus is amber-500 by design (02 §2) — a 2px ring + 1px paper
 // gap, not a text/icon pair, so it is intentionally not gated as a ≥3:1
@@ -92,17 +101,19 @@ const FORBIDDEN_TEXT_PAIRS: Array<[string, string]> = [["surface/brand", "surfac
 
 function assertContrast(): void {
   const failures: string[] = [];
-  for (const [fg, bg, min] of REQUIRED_PAIRS) {
-    const ratio = contrast(light[fg], light[bg]);
-    if (ratio < min) {
-      failures.push(`${fg} on ${bg}: ${ratio.toFixed(2)}:1 < ${min}:1`);
+  for (const [themeName, theme] of [
+    ["light", light],
+    ["dark", dark],
+  ] as const) {
+    for (const [fg, bg, min] of REQUIRED_PAIRS) {
+      const ratio = contrast(theme[fg], theme[bg]);
+      if (ratio < min) {
+        failures.push(`[${themeName}] ${fg} on ${bg}: ${ratio.toFixed(2)}:1 < ${min}:1`);
+      }
     }
   }
-  // Dark mode: primary text must hold on the dark page.
-  const darkRatio = contrast(dark["text/primary"], dark["surface/page"]);
-  if (darkRatio < 4.5) {
-    failures.push(`[dark] text/primary on surface/page: ${darkRatio.toFixed(2)}:1 < 4.5:1`);
-  }
+  // Forbidden pairs are light-only: on dark surfaces amber legitimately
+  // clears AA, which is exactly why brand-on-inverse exists.
   for (const [fg, bg] of FORBIDDEN_TEXT_PAIRS) {
     const ratio = contrast(light[fg], light[bg]);
     if (ratio >= 4.5) {
@@ -114,7 +125,7 @@ function assertContrast(): void {
     for (const f of failures) console.error(`  - ${f}`);
     process.exit(1);
   }
-  console.log(`Contrast gate passed (${REQUIRED_PAIRS.length + 1} pairs).`);
+  console.log(`Contrast gate passed (${REQUIRED_PAIRS.length} pairs × 2 themes).`);
 }
 
 // --- Flattening (ch.10 §2: {tier}/{category}/{name} -> flat camelCase) ---

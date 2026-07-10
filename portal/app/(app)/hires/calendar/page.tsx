@@ -135,7 +135,7 @@ export default function CalendarPage() {
                 return (
                   <div
                     key={day}
-                    className={`relative py-s2 text-center font-mono text-mono-sm ${weekend ? "bg-paper-100 text-ink-400" : "text-ink-500"} ${todayCol === day ? "font-medium text-amber-900" : ""}`}
+                    className={`relative py-s2 text-center font-mono text-mono-sm ${weekend ? "bg-paper-100 text-ink-600" : "text-ink-500"} ${todayCol === day ? "font-medium text-amber-900" : ""}`}
                   >
                     {day}
                     {todayCol === day ? <span className="absolute inset-y-0 left-1/2 w-px bg-amber-500" aria-hidden /> : null}
@@ -146,7 +146,7 @@ export default function CalendarPage() {
 
             {rows.map(([yardId, yardListings]) => (
               <div key={yardId ?? "none"}>
-                <div className="border-b border-border-default bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-500">
+                <div className="border-b border-border-default bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
                   {yardName(yardId)}
                 </div>
                 {yardListings.map((listing) => {
