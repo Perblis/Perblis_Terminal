@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Terminal design tokens \u2014 one source, multi-platform outputs (design-system ch.10).",
+  "description": "Terminal design tokens — one source, multi-platform outputs (design-system ch.10).",
   "main": "tokens.ts",
   "types": "tokens.ts",
   "exports": {
@@ -22,7 +22,10 @@
     "admin.css"
   ],
   "scripts": {
-    "build": "node build.ts",
-    "check": "node build.ts"
+    "build": "tsx build.ts",
+    "check": "tsx build.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.0"
   }
 }
