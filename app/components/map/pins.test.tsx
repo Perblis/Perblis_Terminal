@@ -1,9 +1,11 @@
-// Pin state matrix per 06 §3 anatomy under the D-023 plate revision:
-// badge/dim/tick/count behaviours are unchanged; the frame is a fixed ink
-// equipment tag.
+// Pin state matrix per 06 §3 anatomy under the D-023 plate revision and the
+// 2026-07-11 glance revision: plates carry compact prices and real class
+// glyphs; badge/dim/tick/count behaviours are unchanged; the frame is a
+// fixed ink equipment tag.
 import { render } from "@testing-library/react-native";
 import { tokens } from "@terminal/tokens";
 
+import { compactNaira } from "../../lib/naira";
 import type { MapSoloListing, MapYard } from "../../lib/types";
 import { AssetPin, ClusterPin, YardPin, availabilityCaption } from "./pins";
 
@@ -33,9 +35,27 @@ const YARD: MapYard = {
   listings: [],
 };
 
-test("asset plate carries the class + title accessibility label", async () => {
-  const { getByLabelText } = await render(<AssetPin listing={SOLO} />);
-  expect(getByLabelText("Plant & Machinery listing: 20t Excavator")).toBeTruthy();
+test("compactNaira scales kobo to pin-legible strings", () => {
+  expect(compactNaira(25_000_000)).toBe("₦250k");
+  expect(compactNaira(180_000_000)).toBe("₦1.8m");
+  expect(compactNaira(1_200_000_000)).toBe("₦12m");
+  expect(compactNaira(50_000)).toBe("₦500");
+});
+
+test("asset plate carries class, title, price and availability in the label + the compact price", async () => {
+  const { getByLabelText, getByText } = await render(<AssetPin listing={SOLO} />);
+  expect(
+    getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day"),
+  ).toBeTruthy();
+  expect(getByText("₦250k")).toBeTruthy();
+});
+
+test("on-hire solo plate dims to 45% but still renders (never removed)", async () => {
+  const { getByLabelText } = await render(<AssetPin listing={{ ...SOLO, available: false }} />);
+  const pin = getByLabelText(
+    "Plant & Machinery listing: 20t Excavator, from ₦250,000 a day, currently on hire",
+  );
+  expect(pin.props.style).toMatchObject({ opacity: 0.45 });
 });
 
 test("yard plate shows listing_count unfiltered and matching_count filtered", async () => {
@@ -45,21 +65,36 @@ test("yard plate shows listing_count unfiltered and matching_count filtered", as
   expect(filtered.getByText("3")).toBeTruthy();
 });
 
+test("yard plate carries the amber from-price row", async () => {
+  const { getByText } = await render(<YardPin yard={YARD} />);
+  const price = getByText("from ₦250k");
+  const styles = [price.props.style].flat(Infinity);
+  const color = styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
+  expect(color).toBe(tokens.color.colorAmber500);
+});
+
+test("yard plate skips the price row when there is no from-price", async () => {
+  const { queryByText } = await render(<YardPin yard={{ ...YARD, price_from: 0 }} />);
+  expect(queryByText(/^from /)).toBeNull();
+});
+
 test("zero-match yard dims to 40% but still renders (never removed)", async () => {
   const { getByLabelText } = await render(
     <YardPin yard={{ ...YARD, matching_count: 0 }} filtered />,
   );
-  const pin = getByLabelText("Yard: Apapa Yard, 0 listings");
+  const pin = getByLabelText("Yard: Apapa Yard, 0 listings, from ₦250,000 a day");
   expect(pin.props.style).toMatchObject({ opacity: 0.4 });
 });
 
-test("initials fall back when there is no logo; ≤3 class index squares", async () => {
-  const { getByText, getByLabelText } = await render(<YardPin yard={YARD} />);
+test("initials fall back when there is no logo; ≤3 class glyphs name the offer", async () => {
+  const { getByText, getByTestId } = await render(<YardPin yard={YARD} />);
   expect(getByText("KH")).toBeTruthy();
-  // 4 classes in the mix — anatomy caps index squares at 3
-  const pin = getByLabelText("Yard: Apapa Yard, 8 listings");
-  const squaresRow = pin.children[pin.children.length - 1] as { children: unknown[] };
-  expect(squaresRow.children).toHaveLength(3);
+  // 4 classes in the mix — anatomy caps the glyph strip at 3
+  const glyphStrip = getByTestId("yard-class-glyphs");
+  expect(glyphStrip.children).toHaveLength(3);
+  expect(glyphStrip.props.accessibilityLabel).toBe(
+    "Offers Plant & Machinery, Trucks & Haulage, Warehousing & Storage",
+  );
 });
 
 test("cluster is a drab mono count", async () => {
@@ -83,6 +118,6 @@ test("yard initials are brand amber on the fixed ink plate (contrast holds in bo
 
 test("selected plates switch to the amber frame (no ring, no motion)", async () => {
   const { getByLabelText } = await render(<AssetPin listing={SOLO} selected />);
-  const pin = getByLabelText("Plant & Machinery listing: 20t Excavator");
+  const pin = getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day");
   expect(pin.props.style).toMatchObject({ borderColor: tokens.color.colorAmber500, borderWidth: 2 });
 });

@@ -26,7 +26,14 @@ export default function MapTab() {
   const insets = useSafeAreaInsets();
   const tk = useThemeTokens();
   const mapRef = useRef<TerminalMapHandle>(null);
-  const { region, classFilter, setRegion, setClassFilter } = useMapState();
+  const { region, classFilter, setRegion, setClassFilter, pendingFocus, clearFocus } = useMapState();
+
+  // One-shot focus handed over from another screen (S13 yard card).
+  useEffect(() => {
+    if (!pendingFocus) return;
+    mapRef.current?.flyTo(pendingFocus.centerLng, pendingFocus.centerLat, pendingFocus.zoom);
+    clearFocus();
+  }, [pendingFocus, clearFocus]);
 
   const [bbox, setBbox] = useState<Bbox | null>(null);
   const [selection, setSelection] = useState<MapSelection>(null);

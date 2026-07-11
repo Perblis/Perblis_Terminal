@@ -98,12 +98,13 @@ test("expiry (system-cancelled): dates-released copy + re-request; no fee leak",
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
 });
 
-test("confirmed: stamp + receipt artefact with ONLY the hirer total", async () => {
+test("confirmed: receipt document with the PAID marker and ONLY the hirer total", async () => {
   mockApi({ ...BASE_HIRE, status: "confirmed" });
   const screen = await renderScreen(<Pay />);
   expect(await screen.findByText("You’re confirmed")).toBeTruthy();
   expect(screen.getAllByText("PAID").length).toBeGreaterThan(0);
-  expect(screen.getAllByText("₦900,000").length).toBeGreaterThan(0); // hero + receipt
+  expect(screen.getByText("OFFICIAL RECEIPT")).toBeTruthy();
+  expect(screen.getAllByText("₦900,000").length).toBeGreaterThan(0); // receipt total
   expect(screen.getByText("Share receipt")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
 });

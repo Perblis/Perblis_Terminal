@@ -262,3 +262,16 @@ export function useConfirmHandover(hireId: string) {
     },
   });
 }
+
+export function useSubmitHandover(hireId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { kind: "on_hire" | "off_hire"; photos: string[]; reading: Record<string, unknown> }) =>
+      bff<HandoverRecord>(`/hires/${hireId}/handovers`, { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: hireKeys.handovers(hireId) });
+      void qc.invalidateQueries({ queryKey: hireKeys.detail(hireId) });
+      void qc.invalidateQueries({ queryKey: ["hires"] });
+    },
+  });
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Banknote,
   Boxes,
   CalendarDays,
   LayoutDashboard,
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/assets", label: "Assets", icon: Boxes },
   { href: "/hires", label: "Hires", icon: Truck },
   { href: "/hires/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/earnings", label: "Earnings", icon: Banknote },
   { href: "/messages", label: "Messages", icon: MessageSquare },
   { href: "/storefront", label: "Storefront", icon: Store },
 ];

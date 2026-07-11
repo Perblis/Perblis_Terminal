@@ -230,6 +230,7 @@ export type HandoverRecord = {
   kind: "on_hire" | "off_hire";
   photos: string[];
   reading: Record<string, unknown>;
+  submitted_by_role: "hirer" | "supplier";
   confirmed_at: string | null;
   created_at: string;
 };
@@ -237,6 +238,7 @@ export type HandoverRecord = {
 export type Conversation = {
   id: string;
   kind: "enquiry" | "hire";
+  hire_id?: string | null;
   counterparty: { id: string; name: string; verified: boolean };
   listing: { id: string; title: string; thumb_url: string | null } | null;
   yard_name: string | null;

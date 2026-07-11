@@ -1,0 +1,59 @@
+name: ota
+
+# OTA-on-merge (TSD §6 distribution, V18 OTA-per-slice): every push to main
+# that touches app code publishes an EAS Update to the `preview` branch —
+# installed preview-channel APKs download it in the background and apply it
+# on the next cold launch (fully applied by the second).
+#
+# Requires the EXPO_TOKEN repository secret (expo.dev → account → Access
+# tokens). Until it's set, this job fails loudly rather than pretending.
+#
+# Scope guard: OTA carries JS/assets only. If native dependencies or
+# app.json plugins changed, bump the static runtimeVersion and rebuild the
+# binary instead (docs/runbooks/app-release.md §1) — existing binaries on the
+# old runtimeVersion will simply ignore updates published after the bump.
+# Production-channel builds stay a deliberate manual publish
+# (`eas update --branch production`), not tied to merges.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "packages/tokens/**"
+      - ".github/workflows/ota.yml"
+
+concurrency:
+  group: ota-preview
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version comes from package.json "packageManager" — don't also set it
+      # here or action-setup errors on the duplicate.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens (contrast gate + emit artifacts)
+        run: pnpm --filter @terminal/tokens build
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA update (preview channel)
+        working-directory: app
+        run: eas update --branch preview --non-interactive --message "$(git log -1 --pretty=%s)"

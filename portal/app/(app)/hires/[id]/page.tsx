@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 
 import { CLASS_GLYPHS } from "@/components/brand/class-glyphs";
 import { EventTimeline, HoldToConfirm, LifecycleRail } from "@/components/hires/detail-parts";
+import { HandoverEvidence } from "@/components/hires/handover-evidence";
+import { SubmitHandoverDialog } from "@/components/hires/handover-submit";
 import { LockedTerms } from "@/components/hires/locked-terms";
 import { PageHeader } from "@/components/shell/page-header";
 import { Banner } from "@/components/ui/banner";
@@ -77,7 +79,13 @@ export default function HireDetailPage() {
   const Glyph = CLASS_GLYPHS[h.asset_class];
   const actions = legalSupplierActions(h.status);
   const acceptedEvent = h.events.find((e) => e.to_status === "accepted");
-  const pendingConfirm = (handovers.data ?? []).find((rec) => !rec.confirmed_at);
+  // The record the supplier could file next: on-hire once Confirmed, off-hire
+  // once On Hire — but never when a record of that kind already exists.
+  const nextKind = h.status === "confirmed" ? "on_hire" : h.status === "on_hire" ? "off_hire" : null;
+  const submitKind =
+    nextKind && actions.includes("submit_handover") && !(handovers.data ?? []).some((rec) => rec.kind === nextKind)
+      ? nextKind
+      : null;
 
   async function run(kind: "accept" | "decline" | "cancel" | "dispute", body?: unknown) {
     setActionError(null);
@@ -136,31 +144,40 @@ export default function HireDetailPage() {
             </Card>
           ) : null}
 
-          {(handovers.data ?? []).length > 0 ? (
+          {(handovers.data ?? []).length > 0 || submitKind ? (
             <Card>
-              <h2 className="mb-s3 font-display text-h3 text-text-primary">Handovers</h2>
-              <ul className="flex flex-col gap-s3">
-                {(handovers.data ?? []).map((rec) => (
-                  <li key={rec.id} className="flex items-center justify-between gap-s3 rounded-sm border border-border-default p-s3">
-                    <div>
-                      <p className="text-body-sm font-medium text-text-primary">
-                        {rec.kind === "on_hire" ? "On-hire handover" : "Off-hire handover"} · {rec.photos.length} photos
-                      </p>
-                      <p className="font-mono text-mono-sm text-ink-500">
-                        {new Date(rec.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        {rec.confirmed_at ? " · confirmed" : " · awaiting confirmation"}
-                      </p>
-                    </div>
-                    {!rec.confirmed_at && actions.includes("confirm_handover") ? (
-                      <HoldToConfirm
-                        label="Hold to confirm"
-                        disabled={confirmHandover.isPending}
-                        onConfirm={() => void confirmHandover.mutateAsync(rec.id).catch(() => setActionError("Confirmation failed — if you submitted this handover, the hirer confirms it."))}
-                      />
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+              <div className="mb-s3 flex flex-wrap items-center justify-between gap-s3">
+                <h2 className="font-display text-h3 text-text-primary">Handovers</h2>
+                {submitKind ? <SubmitHandoverDialog hire={h} kind={submitKind} /> : null}
+              </div>
+              {(handovers.data ?? []).length > 0 ? (
+                <ul className="flex flex-col gap-s3">
+                  {(handovers.data ?? []).map((rec) => (
+                    <HandoverEvidence
+                      key={rec.id}
+                      record={rec}
+                      confirmSlot={
+                        !rec.confirmed_at ? (
+                          rec.submitted_by_role === "hirer" && actions.includes("confirm_handover") ? (
+                            <HoldToConfirm
+                              label="Hold to confirm"
+                              disabled={confirmHandover.isPending}
+                              onConfirm={() => void confirmHandover.mutateAsync(rec.id).catch(() => setActionError("Confirmation failed — if you submitted this handover, the hirer confirms it."))}
+                            />
+                          ) : rec.submitted_by_role === "supplier" ? (
+                            <p className="text-caption text-text-secondary">Awaiting the hirer&apos;s confirmation.</p>
+                          ) : null
+                        ) : null
+                      }
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-body-sm text-text-secondary">
+                  No handover recorded yet — whoever is present at the {submitKind === "on_hire" ? "handover" : "return"} submits
+                  it, and the other party confirms.
+                </p>
+              )}
             </Card>
           ) : null}
 
@@ -175,10 +192,23 @@ export default function HireDetailPage() {
           <LockedTerms hire={h} lockedAt={acceptedEvent?.created_at ?? null} />
           <Card>
             <h2 className="mb-s2 font-display text-h3 text-text-primary">Conversation</h2>
-            <p className="text-body-sm text-text-secondary">
-              The hire chat lands here with the Messages slice — for now, reply from your email
-              notifications.
-            </p>
+            {["accepted", "confirmed", "on_hire", "completed", "in_dispute"].includes(h.status) ? (
+              <>
+                <p className="text-body-sm text-text-secondary">
+                  Coordinate the handover, delivery, and anything on-site in the hire chat.
+                </p>
+                <Link
+                  href={`/messages?hire=${h.id}`}
+                  className="mt-s3 inline-flex items-center gap-s1 text-body-sm font-medium text-text-link underline"
+                >
+                  Open the hire chat
+                </Link>
+              </>
+            ) : (
+              <p className="text-body-sm text-text-secondary">
+                The hire chat opens once you accept — enquiries about this asset live in Messages.
+              </p>
+            )}
           </Card>
         </div>
       </div>

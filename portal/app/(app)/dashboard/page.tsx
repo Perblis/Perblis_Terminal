@@ -1,14 +1,17 @@
 "use client";
 
-// P2 · Dashboard. Contextual headline (never a greeting), 4-stat row with
-// corner brackets (D-021), escalating Action-needed, payout strip (F11),
-// day-grouped activity feed, and the 07 §4 onboarding checklist that owns the
-// screen until it's done. Zero stats show an em-dash, never ₦0.
+// P2 · Dashboard, command-center shape: contextual headline (never a
+// greeting), the 07 §4 onboarding checklist that owns the screen until done,
+// then the WORK — every pending request with inline accept/decline and the
+// handovers due today — then money (4-stat row with corner brackets, D-021;
+// detail lives on /earnings) and the day-grouped activity feed. Zero stats
+// show an em-dash, never ₦0.
 import { ArrowRight, Check, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { HandoversDue, RequestQueue } from "@/components/hires/request-queue";
 import { PageHeader } from "@/components/shell/page-header";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
@@ -252,7 +255,11 @@ export default function DashboardPage() {
 
       {isSupplier ? (
         <>
-          <div className="grid gap-s3 sm:grid-cols-2 xl:grid-cols-4">
+          {/* the work: pending requests + today's handovers */}
+          <RequestQueue />
+          <HandoversDue />
+
+          <div className="mt-s5 grid gap-s3 sm:grid-cols-2 xl:grid-cols-4">
             {stats.isPending || payouts.isPending ? (
               [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full" />)
             ) : (
@@ -265,22 +272,23 @@ export default function DashboardPage() {
                       ? `last month ${summary.earned_prev_month_display}`
                       : "completed hires land here"
                   }
-                  href="/hires"
+                  href="/earnings"
+                />
+                <StatCard
+                  label="Queued payout"
+                  value={summary && summary.queued_total > 0 ? summary.queued_total_display : "—"}
+                  caption={
+                    summary && summary.frozen_total > 0
+                      ? `${summary.frozen_total_display} on hold — dispute`
+                      : "payouts run weekly"
+                  }
+                  href="/earnings"
                 />
                 <StatCard
                   label="On hire now"
                   value={onHire > 0 ? `${onHire}/${fleetSize || "—"}` : "—"}
                   caption={fleetSize > 0 ? `${fleetSize} listed asset${fleetSize > 1 ? "s" : ""}` : "list an asset to get started"}
                   href="/hires"
-                />
-                <StatCard
-                  label="Action needed"
-                  value={needsResponse > 0 ? String(needsResponse) : "—"}
-                  caption={
-                    needsResponse > 0 && countdown ? `nearest expires ${countdown.live ? "in " : ""}${countdown.text}` : "requests wait 24h for you"
-                  }
-                  href="/hires"
-                  tone={needsResponse > 0 ? "amber" : undefined}
                 />
                 <StatCard
                   label="Unread messages"
@@ -292,7 +300,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* payout strip (F11) */}
+          {/* payout strip (F11) — the one-line ledger; detail on /earnings */}
           {summary ? (
             <Card className="mt-s4 flex flex-wrap items-center gap-s4 bg-surface-sunken p-s4">
               <p className="text-body-sm text-text-secondary">
@@ -308,12 +316,17 @@ export default function DashboardPage() {
                   <span className="text-violet-900"> · {summary.frozen_total_display} on hold — dispute</span>
                 ) : null}
               </p>
-              {summary.last_paid ? (
-                <p className="ml-auto text-caption text-ink-500">
-                  last payout <span className="font-mono">{summary.last_paid.amount_display}</span>
-                  {summary.last_paid.paid_ref ? <span className="font-mono"> · {summary.last_paid.paid_ref}</span> : null}
-                </p>
-              ) : null}
+              <p className="ml-auto flex items-center gap-s3 text-caption text-ink-500">
+                {summary.last_paid ? (
+                  <span>
+                    last payout <span className="font-mono">{summary.last_paid.amount_display}</span>
+                    {summary.last_paid.paid_ref ? <span className="font-mono"> · {summary.last_paid.paid_ref}</span> : null}
+                  </span>
+                ) : null}
+                <Link href="/earnings" className="font-medium text-text-link underline">
+                  Payout history
+                </Link>
+              </p>
             </Card>
           ) : null}
 
