@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
 import { ApiError, bff, isAllowedPhotoType, mediaUrl, putPresignedUpload } from "@/lib/api";
+import { resizeImage } from "@/lib/image-resize";
 import { toLngLat } from "@/lib/map-coords";
 import { geocode, keys, useInvalidate, useMe, useSpecTemplate, useYards } from "@/lib/queries";
 import type { AssetClass, GeocodeResult, Listing, PresignResult } from "@/lib/types";
@@ -28,25 +29,6 @@ const MapView = dynamic(() => import("@/components/map/map-view").then((m) => m.
 // --- ④ Photos ---------------------------------------------------------------
 
 type UploadState = { name: string; progress: number; error?: string; file?: File };
-
-/** 07 §9: client resize to ≤1920px JPEG before the presigned PUT. */
-async function resizeImage(file: File): Promise<Blob> {
-  if (!isAllowedPhotoType(file.type)) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
-    if (scale === 1 && file.size <= 1024 * 1024 && file.type === "image/jpeg") return file;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    return await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b ?? file), "image/jpeg", 0.82),
-    );
-  } catch {
-    return file; // resize is best-effort; the server enforces the 10MB cap
-  }
-}
 
 export function PhotosStep({
   listing,

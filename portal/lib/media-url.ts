@@ -1,5 +1,5 @@
 /** Object-key prefixes served from the public media bucket (TSD §3.9). */
-const PUBLIC_KEY_PREFIXES = ["listings/", "logos/", "avatars/"] as const;
+const PUBLIC_KEY_PREFIXES = ["listings/", "logos/", "avatars/", "handovers/"] as const;
 
 /** Extract an R2 object key from a public media URL returned by the API. */
 export function publicMediaKeyFromUrl(url: string): string | null {
