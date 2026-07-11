@@ -21,6 +21,7 @@ import { useCountdown } from "../../lib/use-countdown";
 import {
   useCancelHire,
   useConfirmHandover,
+  useConversations,
   useHandovers,
   useHire,
   useRaiseDispute,
@@ -33,6 +34,7 @@ export default function HireDetail() {
   const hireId = id ?? null;
   const { data: hire } = useHire(hireId, undefined);
   const { data: handovers } = useHandovers(hireId);
+  const { data: conversations } = useConversations();
   const confirmHandover = useConfirmHandover(id ?? "");
 
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -108,11 +110,15 @@ export default function HireDetail() {
           </View>
         ) : null}
 
-        {/* Conversation — contact unlocks once Confirmed (full wiring: 8E). */}
-        {["confirmed", "on_hire", "completed", "in_dispute"].includes(hire.status) ? (
+        {/* Conversation — the hire thread exists from acceptance; open it
+            directly rather than dropping the hirer on the Messages tab. */}
+        {["accepted", "confirmed", "on_hire", "completed", "in_dispute"].includes(hire.status) ? (
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push("/(tabs)/messages" as never)}
+            onPress={() => {
+              const conv = conversations?.results.find((c) => c.hire_id === hire.id);
+              router.push((conv ? `/messages/${conv.id}` : "/(tabs)/messages") as never);
+            }}
             className="flex-row items-center justify-between rounded-lg border border-border-default bg-surface-card p-4 active:bg-surface-sunken"
           >
             <BodyText className="font-sans-semibold text-text-primary">Message the supplier</BodyText>

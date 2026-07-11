@@ -3,11 +3,12 @@ import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-nat
 import Svg, { Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText, DisplayText, MonoText } from "../../components/ui/text";
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
 import { guardIntent } from "../../lib/guest-intent";
-import { useStorefront } from "../../lib/queries";
+import { useCreateEnquiry, useStorefront } from "../../lib/queries";
 import { resolveMediaUrl } from "../../lib/media";
 import { useSession } from "../../stores/session";
 
@@ -43,6 +44,7 @@ export default function Storefront() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useSession((s) => s.me);
   const { data, isLoading, error } = useStorefront(id ?? null);
+  const createEnquiry = useCreateEnquiry();
 
   if (isLoading) {
     return (
@@ -78,8 +80,12 @@ export default function Storefront() {
       router.push(gate.authHref);
       return;
     }
-    // Conversations wire up in slice 8E — the storefront enquiry starts there.
-    router.push("/(tabs)/messages" as never);
+    if (!id || createEnquiry.isPending) return;
+    // Get-or-create the general enquiry, then land straight in the thread.
+    createEnquiry.mutate(
+      { supplier_id: id },
+      { onSuccess: (conv) => router.push(`/messages/${conv.id}` as never) },
+    );
   };
 
   return (
@@ -222,15 +228,7 @@ export default function Storefront() {
         className="absolute inset-x-0 bottom-0 border-t border-border bg-surface-card px-4 pt-3"
         style={{ paddingBottom: insets.bottom + 12 }}
       >
-        <Pressable
-          accessibilityRole="button"
-          onPress={message}
-          className="min-h-12 items-center justify-center rounded-md bg-surface-brand py-3.5 active:opacity-90"
-        >
-          <BodyText className="font-sans-semibold text-text-on-brand">
-            Message {data.business_name}
-          </BodyText>
-        </Pressable>
+        <Button label={`Message ${data.business_name}`} busy={createEnquiry.isPending} onPress={message} />
       </View>
     </View>
   );
