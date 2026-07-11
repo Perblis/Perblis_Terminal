@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import ProfileTab from "../../app/(tabs)/profile";
 import * as authApi from "../../lib/auth-api";
+import type { Me } from "../../lib/types";
 import { useSession } from "../../stores/session";
 import { renderScreen } from "../render";
 
@@ -13,7 +14,7 @@ jest.mock("expo-router", () => ({
 jest.mock("expo-application", () => ({ nativeApplicationVersion: "1.0.0" }));
 jest.spyOn(authApi, "logout").mockResolvedValue(undefined);
 
-const ME = { id: "me1", full_name: "Ada Obi", email: "ada@e.com", phone: "0800", is_supplier: false, is_hirer: true, account_level: "basic", is_phone_verified: true, is_email_verified: true, is_verified: false };
+const ME: Me = { id: "me1", full_name: "Ada Obi", email: "ada@e.com", phone: "0800", is_supplier: false, is_hirer: true, account_level: "basic", is_phone_verified: true, is_email_verified: true, is_verified: false } as Me;
 
 beforeEach(() => {
   (router.push as jest.Mock).mockClear();
