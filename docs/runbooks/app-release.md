@@ -52,9 +52,16 @@ pnpm exec eas build --profile production --platform ios    # store-ready (channe
 
 ## 3. Shipping a slice (OTA — JS-only changes)
 
-Publish **to the branch matching the installed binary's channel** (EAS maps a channel to
-the same-named branch by default). The founder's preview APK is on channel **`preview`** —
-publishing to `production` never reaches it:
+**Automated (default path):** `.github/workflows/ota.yml` publishes to the `preview`
+branch on every merge to `main` that touches `app/**` or `packages/tokens/**` — the
+installed preview APK picks the slice up with no manual step. One-time setup: create an
+access token at expo.dev (account → Access tokens) and add it as the **`EXPO_TOKEN`**
+repository secret on GitHub; until then the workflow fails loudly. Production-channel
+publishes stay deliberate and manual (below), not tied to merges.
+
+**Manual:** publish **to the branch matching the installed binary's channel** (EAS maps a
+channel to the same-named branch by default). The founder's preview APK is on channel
+**`preview`** — publishing to `production` never reaches it:
 
 ```bash
 cd app && pnpm exec eas update --branch preview --message "slice <name>"     # preview APKs
