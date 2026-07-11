@@ -5,32 +5,27 @@ local Android builds → founder device, iOS via the EAS free tier, `expo-update
 JS-only changes). The manual E2E checklist at the bottom is the wave's mandatory release
 test — run it, on a physical device, before calling any release done.
 
-## 1. One-time setup (founder machine — needs EAS auth)
+## 1. OTA state (no one-time setup left)
 
-```bash
-cd app
-pnpm exec eas init                # links the project — writes owner + extra.eas.projectId
-pnpm exec eas update:configure    # adds updates.url (https://u.expo.dev/<projectId>)
-```
+**OTA is ARMED in the committed config**: `app.json` carries `updates.url`
+(`https://u.expo.dev/<projectId>`), `extra.eas.projectId`, `owner`, and
+`updates.checkAutomatically: ON_LOAD` / `fallbackToCacheTimeout: 0`; `eas.json` carries the
+channels. `eas init` / `eas update:configure` are already done — running them again is a
+no-op. `Updates.isEnabled` is true in any binary built from this config.
 
-The committed `app.json` already carries `updates.checkAutomatically/fallbackToCacheTimeout/
-requestHeaders` and `eas.json` carries the channels — `update:configure` only adds the URL,
-nothing conflicts. **Until `updates.url` exists, the whole OTA path (including the S17
-update-required gate) is deliberately inert** (`Updates.isEnabled === false`).
+`runtimeVersion` is the **static string `"0.1.1"`** (the fingerprint policy was dropped to
+unblock EAS builds on the pnpm monorepo). Consequences:
 
-Fingerprint sanity check (proves `fingerprint.config.js` is honored — a `criticalIndex`
-bump must NOT shift the runtime version, or critical updates can never reach shipped
-binaries):
+- `fingerprint.config.js` is dead config under the static policy; a `criticalIndex` bump
+  can never shift the runtime version by construction (no sanity check needed).
+- **Whenever native dependencies or `app.json` plugins change, bump `runtimeVersion` by
+  hand and rebuild/reinstall** — OTA only reaches binaries whose runtimeVersion matches
+  exactly. A forgotten bump ships JS referencing natives the binary doesn't have (crash)
+  instead of being safely refused; a bumped version without a rebuilt binary shows up as
+  "update never arrives".
 
-```bash
-pnpm exec expo-updates fingerprint:generate --platform android   # note the hash
-# bump extra.updates.criticalIndex in app.json, re-run — the hash must be identical
-# (revert the bump afterwards)
-```
-
-**Rebuild + reinstall the binary once after slice 8F lands** — `updates.url`, the channel
-request header, and the `expo-updates` plugin are native config; a binary built before
-them can never receive OTA.
+**Binaries built before `updates.url` landed (pre-`b7b405e`) can never receive OTA** —
+rebuild + reinstall those once.
 
 ## 2. Builds
 
@@ -42,8 +37,10 @@ pnpm exec expo run:android                         # dev client (day-to-day)
 pnpm exec expo run:android --variant release       # release build for the device demo
 ```
 
-Locally-built release binaries follow the **production** update channel via
-`updates.requestHeaders["expo-channel-name"]` in `app.json`.
+**Locally-built binaries receive no OTA** — `app.json` carries no
+`updates.requestHeaders["expo-channel-name"]`, so only EAS builds (which inject their
+profile's channel) poll a branch. Use the EAS preview/production profiles for any binary
+that must take updates.
 
 iOS + EAS builds (free tier):
 
@@ -55,21 +52,26 @@ pnpm exec eas build --profile production --platform ios    # store-ready (channe
 
 ## 3. Shipping a slice (OTA — JS-only changes)
 
+Publish **to the branch matching the installed binary's channel** (EAS maps a channel to
+the same-named branch by default). The founder's preview APK is on channel **`preview`** —
+publishing to `production` never reaches it:
+
 ```bash
-cd app && pnpm exec eas update --branch production --message "slice <name>"
+cd app && pnpm exec eas update --branch preview --message "slice <name>"     # preview APKs
+cd app && pnpm exec eas update --branch production --message "slice <name>"  # production builds
 ```
 
-Devices pick it up silently on next cold launch (`checkAutomatically: ON_LOAD`). Rebuild
-the binary instead whenever `app.json` plugins or native dependencies changed — the
-fingerprint runtime version makes stale binaries refuse the mismatched bundle rather than
-crash, so a forgotten rebuild shows up as "update never arrives".
+Devices apply it across **two cold launches**: launch #1 downloads in the background
+(never blocking — `fallbackToCacheTimeout: 0`), launch #2 (full kill + reopen, not just
+backgrounding) runs the new bundle. Rebuild the binary instead whenever `app.json` plugins
+or native dependencies changed — and bump the static `runtimeVersion` when you do (§1).
 
 ### Critical (blocking) update
 
 For an update every user must take before continuing (S17 update-required gate):
 
 1. In `app/app.json`, bump `extra.updates.criticalIndex` by 1. Commit.
-2. Publish as usual: `pnpm exec eas update --branch production --message "critical: <why>"`.
+2. Publish as usual to the binary's branch: `pnpm exec eas update --branch preview --message "critical: <why>"` (or `--branch production` for production builds).
 
 Running apps download it in the background (launch + foregrounding, throttled to 15 min)
 and then block on the S17 "Update required" screen until restarted. Don't bump the index

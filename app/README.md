@@ -26,15 +26,18 @@ iOS goes through EAS (free tier):
 pnpm exec eas build --profile development --platform ios
 ```
 
-First EAS use: `pnpm exec eas init` (links the project — writes `extra.eas.projectId`), then `pnpm exec eas update:configure` to arm **OTA updates**. After that, each merged slice ships as an OTA push:
+**OTA updates are ARMED** — `updates.url`, `extra.eas.projectId`, and `owner` are committed in `app.json` (no `eas init` / `eas update:configure` needed). Each merged JS-only slice ships as an OTA push **to the branch matching the installed binary's channel** — the founder's preview APK is on channel `preview`:
 
 ```bash
-pnpm exec eas update --branch production --message "slice 8B"
+pnpm exec eas update --branch preview --message "slice <name>"     # preview APKs (founder device)
+pnpm exec eas update --branch production --message "slice <name>"  # production builds
 ```
 
-The dev client picks updates up on restart. Rebuild the client only when `app.json` plugins or native dependencies change (the `runtimeVersion: fingerprint` policy makes stale clients refuse mismatched bundles rather than crash).
+Devices apply it across **two cold launches**: launch #1 downloads in the background (`ON_LOAD`, `fallbackToCacheTimeout: 0`), launch #2 (full kill + reopen) runs the new bundle.
 
-**Full release procedure — builds, channels, the critical-update (S17 gate) flow, perf gate, and the mandatory J2/J3/J8 manual E2E checklist: [`docs/runbooks/app-release.md`](../docs/runbooks/app-release.md).** Until `eas update:configure` adds `updates.url`, the entire OTA path (including the update-required gate) is deliberately inert. Bumping `extra.updates.criticalIndex` in `app.json` marks the next published update as blocking; `fingerprint.config.js` keeps that bump from shifting the fingerprint runtime version.
+`runtimeVersion` is the **static string** `"0.1.1"` (the fingerprint policy was dropped to unblock EAS builds — `fingerprint.config.js` is dead config). That means: whenever native dependencies or `app.json` plugins change, **manually bump `runtimeVersion` and rebuild/reinstall the binary** — OTA only reaches binaries whose runtimeVersion matches exactly, and publishing JS that references new natives without a bump would crash instead of being refused.
+
+**Full release procedure — builds, channels, the critical-update (S17 gate) flow, perf gate, and the mandatory J2/J3/J8 manual E2E checklist: [`docs/runbooks/app-release.md`](../docs/runbooks/app-release.md).** Bumping `extra.updates.criticalIndex` in `app.json` marks the next published update as blocking; with a static runtimeVersion the bump can never shift the runtime version by construction.
 
 ## Environment
 

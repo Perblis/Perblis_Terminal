@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { HandoverQueueDrainer } from "../components/shell/handover-queue-drainer";
+import { SessionHydrator } from "../components/shell/session-hydrator";
 import { QueryProvider } from "../components/shell/query-provider";
 import { RealtimeInvalidator } from "../components/shell/realtime-invalidator";
 import { SessionExpiredGate } from "../components/shell/session-expired-gate";
@@ -52,6 +53,7 @@ export default function RootLayout() {
       <QueryProvider>
         <ThemeRoot>
           <StatusBar style="auto" />
+          <SessionHydrator />
           <SessionExpiredGate />
           <SuspendedGate />
           <HandoverQueueDrainer />

@@ -2,6 +2,7 @@ import { Image, Pressable, View } from "react-native";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { resolveMediaUrl } from "../../lib/media";
 import type { MapSelection } from "./terminal-map";
 import { availabilityCaption } from "./pins";
 import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
@@ -21,7 +22,7 @@ export function PeekCard({
 }) {
   return (
     <Animated.View
-      entering={SlideInDown.springify().damping(18)}
+      entering={SlideInDown.duration(200)}
       exiting={SlideOutDown}
       className="absolute inset-x-3 rounded-lg border border-border bg-surface-card p-3 shadow-lg"
       style={{ bottom: bottomInset + 12 }}
@@ -31,7 +32,7 @@ export function PeekCard({
           <>
             {selection.listing.photo ? (
               <Image
-                source={{ uri: selection.listing.photo }}
+                source={{ uri: resolveMediaUrl(selection.listing.photo) }}
                 style={{ width: 72, height: 54, borderRadius: 6 }}
               />
             ) : (

@@ -13,13 +13,14 @@ import {
 import * as Haptics from "expo-haptics";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { View, useColorScheme, type NativeSyntheticEvent } from "react-native";
-import Animated, { ZoomIn, useReducedMotion } from "react-native-reanimated";
+import { useReducedMotion } from "react-native-reanimated";
 
 import { getSoloFeatures, buildSoloIndex, type SoloFeature } from "../../lib/cluster";
+import { findPressedPin, type PressablePin } from "../../lib/map-press";
 import { LIBERTY_URL, getTerminalChartStyle, type TerminalChartStyle } from "../../lib/map-style";
 import type { Bbox } from "../../lib/search-params";
 import type { MapSoloListing, MapYard } from "../../lib/types";
-import { AssetPin, ClusterPin, CrosshairRing, YardPin } from "./pins";
+import { AssetPin, ClusterPin, YardPin } from "./pins";
 
 export type MapSelection =
   | { kind: "yard"; yard: MapYard }
@@ -41,8 +42,6 @@ type Props = {
   /** Fired on every settle; the parent owns the fetch debounce. */
   onRegionChanged: (bbox: Bbox, zoom: number, center: [number, number]) => void;
   onMapError?: () => void;
-  /** First-launch reveal (V7④) — staggered pin drops; parent flips it off after. */
-  reveal?: boolean;
   /** Cap on rendered items — ">200 ⇒ zoom in" is the parent's chip. */
   renderCap?: number;
 };
@@ -58,7 +57,6 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
     onSelect,
     onRegionChanged,
     onMapError,
-    reveal = false,
     renderCap = 200,
   },
   ref,
@@ -113,12 +111,46 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
           lat: l.point.coordinates[1],
         }));
 
-  const entering = (index: number) =>
-    reducedMotion
-      ? undefined
-      : ZoomIn.springify().damping(14).delay(reveal ? Math.min(index, 20) * 40 : 0);
-
   const shown = soloFeatures.slice(0, renderCap);
+
+  // JS-side tap resolution: the map press event always fires, so pins are
+  // hit-tested here (lib/map-press) — native Marker onPress is unreliable on
+  // physical Android devices (maplibre-react-native #557/#1018). When the
+  // native path does work it consumes the tap before this handler runs.
+  const pressablePins: PressablePin[] = [
+    ...yards.map((yard) => ({
+      kind: "yard" as const,
+      yard,
+      lng: yard.point.coordinates[0],
+      lat: yard.point.coordinates[1],
+    })),
+    ...shown.map((f) =>
+      f.kind === "cluster"
+        ? { kind: "cluster" as const, id: f.id, count: f.count, expansionZoom: f.expansionZoom, lng: f.lng, lat: f.lat }
+        : { kind: "solo" as const, listing: f.listing, lng: f.lng, lat: f.lat },
+    ),
+  ];
+
+  const expandCluster = (lng: number, lat: number, expansionZoom: number) =>
+    cameraRef.current?.easeTo({
+      center: [lng, lat],
+      zoom: expansionZoom,
+      duration: reducedMotion ? 0 : 450,
+    });
+
+  const handleMapPress = (e: NativeSyntheticEvent<{ lngLat: [number, number] }>) => {
+    const [lng, lat] = e.nativeEvent.lngLat;
+    const hit = findPressedPin(pressablePins, { lng, lat }, viewport?.zoom ?? initialZoom);
+    if (!hit) {
+      onSelect(null);
+    } else if (hit.kind === "yard") {
+      select({ kind: "yard", yard: hit.yard });
+    } else if (hit.kind === "solo") {
+      select({ kind: "listing", listing: hit.listing });
+    } else {
+      expandCluster(hit.lng, hit.lat, hit.expansionZoom);
+    }
+  };
 
   return (
     <MapLibreMap
@@ -129,7 +161,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
       logo={false}
       onDidFailLoadingMap={onMapError}
       onRegionDidChange={handleRegionChange}
-      onPress={() => onSelect(null)}
+      onPress={handleMapPress}
     >
       <Camera
         ref={cameraRef}
@@ -137,47 +169,32 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
       />
 
       {/* Yard pins — never clustered, never dissolve (FSD §6). */}
-      {yards.map((yard, i) => {
+      {yards.map((yard) => {
         const [lng, lat] = yard.point.coordinates;
         const isSelected = selection?.kind === "yard" && selection.yard.yard_id === yard.yard_id;
         return (
           <Marker
             key={yard.yard_id}
             lngLat={[lng, lat]}
-            anchor="bottom"
+            anchor="center"
             onPress={() => select({ kind: "yard", yard })}
           >
-            <Animated.View entering={entering(i)}>
-              {isSelected ? (
-                <View style={{ position: "absolute", left: -4, top: 0 }} pointerEvents="none">
-                  <CrosshairRing size={60} />
-                </View>
-              ) : null}
-              <YardPin yard={yard} filtered={filtered} selected={isSelected} />
-            </Animated.View>
+            <YardPin yard={yard} filtered={filtered} selected={isSelected} />
           </Marker>
         );
       })}
 
       {/* Solo pins + drab spatial clusters (dissolve on zoom). */}
-      {shown.map((f, i) => {
+      {shown.map((f) => {
         if (f.kind === "cluster") {
           return (
             <Marker
               key={`c-${f.id}`}
               lngLat={[f.lng, f.lat]}
               anchor="center"
-              onPress={() =>
-                cameraRef.current?.easeTo({
-                  center: [f.lng, f.lat],
-                  zoom: f.expansionZoom,
-                  duration: reducedMotion ? 0 : 450,
-                })
-              }
+              onPress={() => expandCluster(f.lng, f.lat, f.expansionZoom)}
             >
-              <Animated.View entering={entering(yards.length + i)}>
-                <ClusterPin count={f.count} />
-              </Animated.View>
+              <ClusterPin count={f.count} />
             </Marker>
           );
         }
@@ -186,17 +203,10 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
           <Marker
             key={f.listing.id}
             lngLat={[f.lng, f.lat]}
-            anchor="bottom"
+            anchor="center"
             onPress={() => select({ kind: "listing", listing: f.listing })}
           >
-            <Animated.View entering={entering(yards.length + i)}>
-              {isSelected ? (
-                <View style={{ position: "absolute", left: -10, top: -6 }} pointerEvents="none">
-                  <CrosshairRing size={58} />
-                </View>
-              ) : null}
-              <AssetPin listing={f.listing} selected={isSelected} />
-            </Animated.View>
+            <AssetPin listing={f.listing} selected={isSelected} />
           </Marker>
         );
       })}

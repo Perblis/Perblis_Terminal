@@ -6,6 +6,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { VerifyOtp } from "../../components/auth/verify-otp";
+import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { TextField } from "../../components/ui/text-field";
@@ -142,6 +143,7 @@ export default function Login() {
             </>
           )}
         </View>
+        <KeyboardSpacer />
       </ScrollView>
     </KeyboardAvoidingView>
   );

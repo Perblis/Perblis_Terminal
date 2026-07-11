@@ -20,7 +20,6 @@ import { useThemeTokens } from "../../lib/theme";
 import type { Bbox } from "../../lib/search-params";
 import { YardSheet } from "../../components/map/yard-sheet";
 import { useMapState } from "../../stores/map-state";
-import { useOnboarding } from "../../stores/onboarding";
 
 /** S4 Map (Home) — the front door. Terminal Chart + pins per 06 §3. */
 export default function MapTab() {
@@ -28,7 +27,6 @@ export default function MapTab() {
   const tk = useThemeTokens();
   const mapRef = useRef<TerminalMapHandle>(null);
   const { region, classFilter, setRegion, setClassFilter } = useMapState();
-  const { mapRevealPlayed, markMapRevealPlayed } = useOnboarding();
 
   const [bbox, setBbox] = useState<Bbox | null>(null);
   const [selection, setSelection] = useState<MapSelection>(null);
@@ -42,15 +40,6 @@ export default function MapTab() {
     const sub = NetInfo.addEventListener((s) => setOffline(s.isConnected === false));
     return () => sub();
   }, []);
-
-  // First-launch reveal plays once (V7④).
-  const reveal = !mapRevealPlayed;
-  useEffect(() => {
-    if (reveal) {
-      const t = setTimeout(markMapRevealPlayed, 2500);
-      return () => clearTimeout(t);
-    }
-  }, [reveal, markMapRevealPlayed]);
 
   // The parent owns the 400ms fetch debounce (S4 spec).
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,7 +103,6 @@ export default function MapTab() {
         onSelect={setSelection}
         onRegionChanged={onRegionChanged}
         onMapError={() => setTilesFailed(true)}
-        reveal={reveal}
       />
 
       {/* Floating search pill + filter bar */}

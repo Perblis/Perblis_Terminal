@@ -34,7 +34,7 @@ const persister = createSyncStoragePersister({ storage: queryStorage });
 
 // 8F offline posture (TSD §6): My Hires and Messages render cold. Only these
 // families dehydrate — map/search noise stays out of MMKV.
-const PERSIST_ALLOWLIST = ["hires", "hire", "conversations", "messages", "me"];
+const PERSIST_ALLOWLIST = ["hires", "hire", "conversations", "messages"];
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   useEffect(() => {

@@ -7,6 +7,7 @@ import { Image, Pressable, ScrollView, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { resolveMediaUrl } from "../../lib/media";
 import type { AssetClass, MapYard, MapYardListing } from "../../lib/types";
 import { availabilityCaption } from "./pins";
 import { Sheet } from "../ui/sheet";
@@ -54,7 +55,7 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
       <View className="flex-row items-center gap-3 border-b border-border px-4 pb-3">
         <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-surface-inverse">
           {yard.supplier.logo ? (
-            <Image source={{ uri: yard.supplier.logo }} style={{ width: 44, height: 44 }} />
+            <Image source={{ uri: resolveMediaUrl(yard.supplier.logo) }} style={{ width: 44, height: 44 }} />
           ) : (
             <MonoText className="text-body text-text-brand-on-inverse">{initials}</MonoText>
           )}
@@ -119,7 +120,7 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
                 className="flex-row items-center gap-3 border-b border-border px-4 py-3 active:bg-surface-sunken"
               >
                 {listing.photo ? (
-                  <Image source={{ uri: listing.photo }} style={{ width: 64, height: 48, borderRadius: 6 }} />
+                  <Image source={{ uri: resolveMediaUrl(listing.photo) }} style={{ width: 64, height: 48, borderRadius: 6 }} />
                 ) : (
                   <View
                     className="items-center justify-center rounded-md bg-surface-sunken"
