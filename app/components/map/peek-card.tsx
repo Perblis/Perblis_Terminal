@@ -55,18 +55,40 @@ export function PeekCard({
             </View>
           </>
         ) : (
-          <View className="flex-1">
-            <DisplayText className="text-h3" numberOfLines={1}>
-              {selection.yard.name}
-            </DisplayText>
-            <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
-              {selection.yard.supplier.name} · {selection.yard.listing_count} assets
-            </BodyText>
-            <View className="mt-0.5 flex-row items-baseline gap-1">
-              <Money display={selection.yard.price_from_display} />
-              <BodyText className="text-caption text-text-tertiary">/ day from</BodyText>
+          <>
+            {selection.yard.supplier.logo ? (
+              <Image
+                source={{ uri: resolveMediaUrl(selection.yard.supplier.logo) }}
+                style={{ width: 54, height: 54, borderRadius: 6 }}
+              />
+            ) : (
+              <View className="items-center justify-center rounded-md bg-surface-inverse" style={{ width: 54, height: 54 }}>
+                <MonoText className="text-body text-text-brand-on-inverse">
+                  {selection.yard.supplier.name
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((w) => w[0]?.toUpperCase() ?? "")
+                    .join("")}
+                </MonoText>
+              </View>
+            )}
+            <View className="flex-1">
+              <DisplayText className="text-h3" numberOfLines={1}>
+                {selection.yard.name}
+              </DisplayText>
+              <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
+                {selection.yard.supplier.name} · {selection.yard.listing_count} assets ·{" "}
+                {selection.yard.listings.filter((l) => l.available).length} available
+              </BodyText>
+              <BodyText className="text-caption text-text-tertiary" numberOfLines={1}>
+                {selection.yard.class_mix.map((c) => CLASS_BY_VALUE[c].label).join(" · ")}
+              </BodyText>
+              <View className="mt-0.5 flex-row items-baseline gap-1">
+                <Money display={selection.yard.price_from_display} />
+                <BodyText className="text-caption text-text-tertiary">/ day from</BodyText>
+              </View>
             </View>
-          </View>
+          </>
         )}
         <BodyText className="text-text-link">Open →</BodyText>
       </Pressable>

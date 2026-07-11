@@ -17,3 +17,16 @@ export function formatNairaInput(kobo: number | null | undefined): string {
   if (kobo === null || kobo === undefined) return "";
   return Math.floor(kobo / 100).toLocaleString("en-NG");
 }
+
+/** Pin/chip-scale money: 25_000_000 kobo → "₦250k"; 180_000_000 → "₦1.8m".
+ *  Glance-legible on a map plate; full display strings render everywhere else. */
+export function compactNaira(kobo: number): string {
+  const naira = Math.floor(kobo / 100);
+  if (naira >= 1_000_000) {
+    const m = naira / 1_000_000;
+    const rounded = m >= 10 ? Math.round(m) : Math.round(m * 10) / 10;
+    return `₦${rounded}m`;
+  }
+  if (naira >= 1_000) return `₦${Math.round(naira / 1_000)}k`;
+  return `₦${naira}`;
+}
