@@ -80,12 +80,19 @@ export default function CalendarPage() {
   }
 
   function utilisation(listingId: string, unitCount: number): number {
-    const busy = new Set<number>();
+    // Unit-days on hire over unit-days available: a day counts once per
+    // concurrent hire, capped at the listing's unit count.
+    const units = Math.max(1, unitCount);
+    const hiresPerDay = new Map<number, number>();
     for (const h of hiresByListing.get(listingId) ?? []) {
       if (h.status !== "confirmed" && h.status !== "on_hire") continue;
-      for (let d = dayOf(h.start_date, true); d <= dayOf(h.end_date, false); d += 1) busy.add(d);
+      for (let d = dayOf(h.start_date, true); d <= dayOf(h.end_date, false); d += 1) {
+        hiresPerDay.set(d, (hiresPerDay.get(d) ?? 0) + 1);
+      }
     }
-    return Math.round((busy.size / daysInMonth) * 100 / Math.max(1, unitCount));
+    let unitDays = 0;
+    for (const count of hiresPerDay.values()) unitDays += Math.min(count, units);
+    return Math.round((unitDays / (daysInMonth * units)) * 100);
   }
 
   const yardName = (id: string | null) => (yards.data ?? []).find((y) => y.id === id)?.name ?? "No yard";
@@ -152,7 +159,7 @@ export default function CalendarPage() {
                 {yardListings.map((listing) => {
                   const meta = CLASS_BY_VALUE[listing.asset_class];
                   const Glyph = CLASS_GLYPHS[listing.asset_class];
-                  const util = utilisation(listing.id, 1);
+                  const util = utilisation(listing.id, listing.unit_count || 1);
                   return (
                     <div
                       key={listing.id}

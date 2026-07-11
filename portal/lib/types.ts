@@ -238,6 +238,7 @@ export type HandoverRecord = {
 export type Conversation = {
   id: string;
   kind: "enquiry" | "hire";
+  hire_id?: string | null;
   counterparty: { id: string; name: string; verified: boolean };
   listing: { id: string; title: string; thumb_url: string | null } | null;
   yard_name: string | null;

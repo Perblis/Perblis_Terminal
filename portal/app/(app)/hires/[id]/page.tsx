@@ -192,10 +192,23 @@ export default function HireDetailPage() {
           <LockedTerms hire={h} lockedAt={acceptedEvent?.created_at ?? null} />
           <Card>
             <h2 className="mb-s2 font-display text-h3 text-text-primary">Conversation</h2>
-            <p className="text-body-sm text-text-secondary">
-              The hire chat lands here with the Messages slice — for now, reply from your email
-              notifications.
-            </p>
+            {["accepted", "confirmed", "on_hire", "completed", "in_dispute"].includes(h.status) ? (
+              <>
+                <p className="text-body-sm text-text-secondary">
+                  Coordinate the handover, delivery, and anything on-site in the hire chat.
+                </p>
+                <Link
+                  href={`/messages?hire=${h.id}`}
+                  className="mt-s3 inline-flex items-center gap-s1 text-body-sm font-medium text-text-link underline"
+                >
+                  Open the hire chat
+                </Link>
+              </>
+            ) : (
+              <p className="text-body-sm text-text-secondary">
+                The hire chat opens once you accept — enquiries about this asset live in Messages.
+              </p>
+            )}
           </Card>
         </div>
       </div>

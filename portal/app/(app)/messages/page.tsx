@@ -7,7 +7,8 @@
 // spec'd keyless fallback — Ably fan-out arrives with 7E, indistinguishable
 // beyond latency (F7). Keyboard: ↑↓ threads, Enter → composer.
 import { Check, Lock, Send } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { PageHeader } from "@/components/shell/page-header";
@@ -32,8 +33,17 @@ function relTime(iso: string | null): string {
 }
 
 export default function MessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesInner />
+    </Suspense>
+  );
+}
+
+function MessagesInner() {
   const me = useMe();
   const qc = useQueryClient();
+  const searchParams = useSearchParams();
   const [filter, setFilter] = useState<Filter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -53,9 +63,22 @@ export default function MessagesPage() {
     return list;
   }, [conversations.data, filter]);
 
+  // Deep links: ?c={conversationId} or ?hire={hireId} open that thread.
+  const linkedConv = searchParams.get("c");
+  const linkedHire = searchParams.get("hire");
   useEffect(() => {
-    if (!activeId && threads.length > 0) setActiveId(threads[0].id);
-  }, [threads, activeId]);
+    if (activeId) return;
+    const all = conversations.data?.results ?? [];
+    const linked =
+      (linkedConv ? all.find((c) => c.id === linkedConv) : undefined) ??
+      (linkedHire ? all.find((c) => c.hire_id === linkedHire) : undefined);
+    if (linked) {
+      setActiveId(linked.id);
+      if (linked.kind !== filter && filter !== "all") setFilter("all");
+      return;
+    }
+    if (threads.length > 0) setActiveId(threads[0].id);
+  }, [threads, activeId, conversations.data, linkedConv, linkedHire, filter]);
 
   const active = threads.find((c) => c.id === activeId) ?? null;
 
