@@ -1,7 +1,8 @@
+import * as Haptics from "expo-haptics";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { captureRef } from "react-native-view-shot";
@@ -9,11 +10,11 @@ import { captureRef } from "react-native-view-shot";
 import { CountdownPill } from "../../components/hires/countdown-pill";
 import { LockedTerms } from "../../components/hires/locked-terms";
 import { ReceiptCard } from "../../components/hires/receipt-card";
-import { Stamp } from "../../components/hires/stamp";
 import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { useCountdown } from "../../lib/use-countdown";
 import { useHire, usePaymentStatus } from "../../lib/queries";
+import { playPaymentSuccess } from "../../lib/sounds";
 
 /**
  * S8 Pay. The webhook is the only truth: after the Paystack browser sheet
@@ -33,6 +34,17 @@ export default function Pay() {
   );
   const countdown = useCountdown(hire?.payment_deadline);
   const receiptRef = useRef<View>(null);
+
+  // The signature-moment signals (V7① haptic + V10 sound) fire once when the
+  // webhook flips the hire to paid — previously the Stamp's mount effect.
+  const success = hire?.status === "confirmed" || hire?.status === "on_hire";
+  const successSignalled = useRef(false);
+  useEffect(() => {
+    if (!success || successSignalled.current) return;
+    successSignalled.current = true;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    playPaymentSuccess();
+  }, [success]);
 
   const openCheckout = async () => {
     const url = payment.data?.authorization_url;
@@ -61,22 +73,27 @@ export default function Pay() {
     );
   }
 
-  // Success — the stamp moment + receipt artefact.
+  // Success — a composed confirmation around the receipt document (the
+  // rotated-stamp theatrics retired with D-023's motion restraint).
   if (hire.status === "confirmed" || hire.status === "on_hire") {
     return (
       <ScrollView
         className="flex-1 bg-surface-page"
-        contentContainerStyle={{ padding: 24, paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{ padding: 24, paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }}
       >
-        <View className="items-center gap-5">
-          <Stamp label="PAID" />
-          <DisplayText className="text-h2">You’re confirmed</DisplayText>
-          <BodyText className="text-center text-text-secondary">
-            The supplier has been notified. Contact details unlock in Messages, and handover
-            happens on your start date.
-          </BodyText>
+        <View className="gap-6">
+          <View className="gap-2">
+            <BodyText className="text-overline tracking-widest text-text-tertiary">
+              PAYMENT COMPLETE
+            </BodyText>
+            <DisplayText className="text-h1">You’re confirmed</DisplayText>
+            <BodyText className="text-text-secondary">
+              The supplier has been notified. Contact details unlock in Messages, and handover
+              happens on your start date.
+            </BodyText>
+          </View>
           <ReceiptCard ref={receiptRef} hire={hire} />
-          <View className="w-full gap-3">
+          <View className="gap-3">
             <Button label="Share receipt" onPress={() => void shareReceipt()} />
             <Button
               variant="secondary"
