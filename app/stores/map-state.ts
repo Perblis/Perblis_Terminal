@@ -17,8 +17,13 @@ type MapState = {
   /** Region + filters persist across sessions (J8 — the app remembers). */
   region: MapRegion;
   classFilter: AssetClass | null;
+  /** One-shot camera request from another screen (e.g. S13 yard card → S4);
+   *  the map consumes and clears it. Never persisted. */
+  pendingFocus: MapRegion | null;
   setRegion: (region: MapRegion) => void;
   setClassFilter: (c: AssetClass | null) => void;
+  requestFocus: (region: MapRegion) => void;
+  clearFocus: () => void;
 };
 
 export const useMapState = create<MapState>()(
@@ -26,9 +31,17 @@ export const useMapState = create<MapState>()(
     (set) => ({
       region: LAGOS_DEFAULT,
       classFilter: null,
+      pendingFocus: null,
       setRegion: (region) => set({ region }),
       setClassFilter: (classFilter) => set({ classFilter }),
+      // Seed region too, so a cold-mounted map opens on target directly.
+      requestFocus: (region) => set({ pendingFocus: region, region }),
+      clearFocus: () => set({ pendingFocus: null }),
     }),
-    { name: "terminal.map-state", storage: createJSONStorage(() => zustandStorage) },
+    {
+      name: "terminal.map-state",
+      storage: createJSONStorage(() => zustandStorage),
+      partialize: (s) => ({ region: s.region, classFilter: s.classFilter }),
+    },
   ),
 );
