@@ -156,7 +156,8 @@ The ₦250k Basic cap is evaluated at request time against `hire_value`; the req
 
 ### 7.1 Request
 - Hirer selects start/end dates on listing detail; dates with no availability are blocked in the picker. Preview shows winning scheme ("14 days → 2 × weekly — best price") and **the total payable only** (D-014). Optional note to supplier. Terms acknowledgment checkbox (ToS + hire terms).
-- **Availability (unit-aware):** a date range is available iff for the listing, `overlapping_holds < unit_count`, where holding states = **Confirmed, On Hire, and Accepted with unexpired payment window**. `Requested` does NOT hold dates.
+- **Availability (unit-aware):** a date range is available iff for the listing, `overlapping_holds < unit_count`, where holding states = **Confirmed, On Hire, and Accepted with unexpired payment window**. `Requested` does NOT hold dates. The picker reads a public per-day availability endpoint (`GET /listings/{id}/availability`, counts only — no counterparty data) so held days are struck before the hirer requests; the 409 `availability_conflict` at submit remains the race safety-net.
+- **Supplier manual date-blocks (D-024):** a supplier can block date ranges on a listing (maintenance, off-platform commitments) from the CalendarGantt. A block is a **hard hold on the whole listing** — it strikes those days in the hirer picker and rejects request/accept/pay exactly as a fully-booked range would. Blocks never touch existing hires.
 - Multiple overlapping `Requested` hires are allowed — **first-to-pay wins**. When a hire enters Confirmed, overlapping Requested/Accepted hires that now exceed remaining capacity are auto-declined (`no_longer_available`), with notifications.
 - Basic-level cap: requests with `hire_value > ₦250,000` are blocked with a verification prompt (§4.1).
 
@@ -184,7 +185,7 @@ The ₦250k Basic cap is evaluated at request time against `hire_value`; the req
 ### 7.4 Handover Records (lite)
 - Two per hire: **on-hire** and **off-hire**. Either party initiates, the counterparty confirms in-app. Contents: ≥2 photos, class-specific reading (hour meter — Plant; odometer — Trucks; none — spaces, which use condition/occupancy notes; per 03 §7), optional notes, both parties' confirmation taps.
 - Non-blocking in MVP (no deadlines or penalties), but refusal to confirm weakens that party's dispute position (PB §10.4 defaults applied as Ops guidance).
-- Photos go to the private bucket; visible only to the two parties and Ops.
+- Photos go to the private bucket; visible only to the two parties and Ops (D-025 — binding; served as short-lived presigned GETs on both surfaces). Photo objects are **purged 90 days after the off-hire handover is confirmed** (D-026); the record itself — kind, reading, timestamps, confirmations — is retained indefinitely as dispute/transaction evidence.
 
 ### 7.5 Extensions
 Not in MVP — cancel-and-rebook. `parent_hire` reserved for Phase 2.
