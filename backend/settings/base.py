@@ -297,6 +297,14 @@ PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="")
 PAYSTACK_CALLBACK_URL = env(
     "PAYSTACK_CALLBACK_URL", default="https://terminal-portal.nwabueze.workers.dev/"
 )
+# App deep-link return: when set (the api base URL in prod), per-transaction
+# callbacks point at GET {base}/api/v1/payments/return?hire_id=… — a static
+# page that forwards the payer back into the hirer app via
+# {APP_RETURN_SCHEME}://pay/{hire_id}. Empty ⇒ the static PAYSTACK_CALLBACK_URL
+# above keeps today's portal-redirect behavior. UX only; webhook-driven
+# confirmation is untouched either way.
+PAYMENT_RETURN_BASE_URL = env("PAYMENT_RETURN_BASE_URL", default="")
+APP_RETURN_SCHEME = env("APP_RETURN_SCHEME", default="terminal")
 
 # Bachs.io (D-017) — retained behind the gateway as the alternate provider.
 BACHS_API_BASE = env("BACHS_API_BASE", default="https://sandbox-api.bachs.io/v1")

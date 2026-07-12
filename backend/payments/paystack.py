@@ -61,8 +61,9 @@ def create_checkout(*, reference: str, amount_kobo: int, customer_email: str, hi
     }
     # Where Paystack redirects the payer's browser after checkout (UX only;
     # confirmation stays webhook-driven). Paystack appends ?reference=&trxref=.
-    if settings.PAYSTACK_CALLBACK_URL:
-        payload["callback_url"] = settings.PAYSTACK_CALLBACK_URL
+    callback_url = _callback_url(hire_id)
+    if callback_url:
+        payload["callback_url"] = callback_url
 
     try:
         resp = httpx.post(
@@ -82,6 +83,20 @@ def create_checkout(*, reference: str, amount_kobo: int, customer_email: str, hi
         "authorization_url": data.get("authorization_url", ""),
         "charge_id": str(data.get("id", "")),
     }
+
+
+def _callback_url(hire_id: str) -> str:
+    """The post-checkout browser redirect for this transaction.
+
+    Prefer the app-return page (deep-links the payer back into the hirer app);
+    fall back to the static portal URL while ``PAYMENT_RETURN_BASE_URL`` is
+    unset. Paystack requires an http(s) URL here — the custom app scheme lives
+    behind the return page, never in the callback itself.
+    """
+    base = settings.PAYMENT_RETURN_BASE_URL
+    if base:
+        return f"{base.rstrip('/')}/api/v1/payments/return?hire_id={hire_id}"
+    return settings.PAYSTACK_CALLBACK_URL
 
 
 def verify_charge(*, reference: str, charge_id: str = "") -> Charge:

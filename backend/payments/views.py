@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import json
+import uuid
 
 import structlog
+from django.conf import settings
+from django.shortcuts import render
+from django.views import View
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -91,3 +95,25 @@ class SupplierPayoutListView(GenericAPIView):
         response = self.get_paginated_response(self.get_serializer(page, many=True).data)
         response.data["summary"] = services.payout_summary(supplier=request.user)
         return response
+
+
+class PaymentReturnView(View):
+    """The post-checkout browser landing page — forwards the payer into the app.
+
+    Paystack's ``callback_url`` must be http(s), so this static page bridges to
+    the ``terminal://pay/{hire_id}`` deep link (immediate JS redirect + a
+    visible fallback link). Pure UX: **zero reads or writes of hire/payment
+    state** — it renders for any UUID-shaped ``hire_id`` (and generically for
+    garbage), so it is neither an oracle nor an enumeration surface. The hire
+    is only ever marked paid by the verified webhook flow.
+    """
+
+    def get(self, request):
+        raw = request.GET.get("hire_id", "")
+        try:
+            hire_id = str(uuid.UUID(raw))
+        except (TypeError, ValueError):
+            hire_id = ""
+        scheme = settings.APP_RETURN_SCHEME
+        deep_link = f"{scheme}://pay/{hire_id}" if hire_id else f"{scheme}://"
+        return render(request, "payments/return.html", {"deep_link": deep_link})
