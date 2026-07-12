@@ -2,12 +2,12 @@
   "expo": {
     "name": "Terminal",
     "slug": "terminal",
-    "version": "0.1.1",
+    "version": "0.1.3",
     "scheme": "terminal",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "runtimeVersion": "0.1.1",
+    "runtimeVersion": "1",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
@@ -28,6 +28,7 @@
     },
     "android": {
       "package": "com.terminal.hirer",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#16181D",
         "foregroundImage": "./assets/android-icon-foreground.png",
