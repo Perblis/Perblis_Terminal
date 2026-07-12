@@ -121,3 +121,22 @@ test("selected plates switch to the amber frame (no ring, no motion)", async () 
   const pin = getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day");
   expect(pin.props.style).toMatchObject({ borderColor: tokens.color.colorAmber500, borderWidth: 2 });
 });
+
+test("compact solo plate is glyph-only (the carousel card carries the price)", async () => {
+  const { queryByText, getByLabelText } = await render(<AssetPin listing={SOLO} compact />);
+  expect(queryByText("₦250k")).toBeNull();
+  // The accessibility label keeps the full story even when the plate shrinks.
+  expect(
+    getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day"),
+  ).toBeTruthy();
+});
+
+test("compact yard plate drops the price row + glyph strip; selected restores them", async () => {
+  const compact = await render(<YardPin yard={YARD} compact />);
+  expect(compact.queryByText(`from ${compactNaira(YARD.price_from)}`)).toBeNull();
+  expect(compact.queryByTestId("yard-class-glyphs")).toBeNull();
+
+  const selected = await render(<YardPin yard={YARD} compact selected />);
+  expect(selected.getByText(`from ${compactNaira(YARD.price_from)}`)).toBeTruthy();
+  expect(selected.getByTestId("yard-class-glyphs")).toBeTruthy();
+});

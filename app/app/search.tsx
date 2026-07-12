@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { RangeCalendar, type DateRange as CalendarRange } from "../components/hires/range-calendar";
 import { ListingRow } from "../components/search/listing-row";
 import { EmptyState } from "../components/ui/empty-state";
 import { BodyText, DisplayText, Money, MonoText } from "../components/ui/text";
@@ -24,7 +25,7 @@ const RADII = [5, 10, 25, 50, 100] as const;
 export default function Search() {
   const tk = useThemeTokens();
   const insets = useSafeAreaInsets();
-  const { region, classFilter, setClassFilter } = useMapState();
+  const { region, classFilter, dateRange, setClassFilter, setDateRange } = useMapState();
 
   const [q, setQ] = useState("");
   const [radiusKm, setRadiusKm] = useState<number>(25);
@@ -34,6 +35,8 @@ export default function Search() {
   const [specMax, setSpecMax] = useState("");
   const [groupBy, setGroupBy] = useState<"asset" | "location">("asset");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [datesOpen, setDatesOpen] = useState(false);
+  const [pendingDates, setPendingDates] = useState<CalendarRange>({ start: null, end: null });
 
   const filters: SearchFilters = useMemo(
     () => ({
@@ -43,8 +46,10 @@ export default function Search() {
       priceMaxKobo: parseNairaInput(priceMax),
       specMin: specMin ? Number(specMin) : null,
       specMax: specMax ? Number(specMax) : null,
+      dateFrom: dateRange?.from,
+      dateTo: dateRange?.to,
     }),
-    [classFilter, q, priceMin, priceMax, specMin, specMax],
+    [classFilter, q, priceMin, priceMax, specMin, specMax, dateRange],
   );
 
   const search = useListSearch(
@@ -71,6 +76,13 @@ export default function Search() {
         setSpecMin("");
         setSpecMax("");
       },
+    });
+  }
+  if (dateRange) {
+    activeChips.push({
+      key: "dates",
+      label: `${dateRange.from} → ${dateRange.to}`,
+      clear: () => setDateRange(null),
     });
   }
 
@@ -182,6 +194,30 @@ export default function Search() {
                   </MonoText>
                 </Pressable>
               ))}
+            </View>
+            {/* Dates — 'available' then means "for these dates" */}
+            <View className="flex-row items-center gap-2">
+              <BodyText className="text-body-sm text-text-secondary">Dates</BodyText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Choose hire dates"
+                onPress={() => {
+                  setPendingDates(
+                    dateRange ? { start: dateRange.from, end: dateRange.to } : { start: null, end: null },
+                  );
+                  setDatesOpen(true);
+                }}
+                className={`rounded-full border px-3 py-1.5 ${dateRange ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+              >
+                <MonoText className={`text-body-sm ${dateRange ? "text-text-inverse" : "text-text-primary"}`}>
+                  {dateRange ? `${dateRange.from} → ${dateRange.to}` : "Any dates"}
+                </MonoText>
+              </Pressable>
+              {dateRange ? (
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear dates" onPress={() => setDateRange(null)}>
+                  <BodyText className="text-body-sm text-text-tertiary">✕</BodyText>
+                </Pressable>
+              ) : null}
             </View>
             {/* Price */}
             <View className="flex-row gap-3">
@@ -310,6 +346,39 @@ export default function Search() {
           }
         />
       )}
+
+      {/* Hire-dates picker (shared RangeCalendar) */}
+      {datesOpen ? (
+        <View className="absolute inset-0 items-center justify-center bg-black/40 px-4">
+          <View className="w-full gap-3 rounded-lg bg-surface-card p-4">
+            <DisplayText className="text-h3">When do you need it?</DisplayText>
+            <RangeCalendar range={pendingDates} onChange={setPendingDates} />
+            <BodyText className="text-caption text-text-tertiary">
+              Results then show what’s free for those dates, not just today.
+            </BodyText>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                if (pendingDates.start && pendingDates.end) {
+                  setDateRange({ from: pendingDates.start, to: pendingDates.end });
+                }
+                setDatesOpen(false);
+              }}
+              disabled={!pendingDates.start || !pendingDates.end}
+              className={`min-h-12 items-center justify-center rounded-md py-3 ${pendingDates.start && pendingDates.end ? "bg-surface-brand" : "bg-surface-sunken"}`}
+            >
+              <BodyText className="font-sans-semibold text-text-on-brand">Apply dates</BodyText>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setDatesOpen(false)}
+              className="min-h-12 items-center justify-center py-2"
+            >
+              <BodyText className="text-text-secondary">Cancel</BodyText>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

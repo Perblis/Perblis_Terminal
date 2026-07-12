@@ -179,7 +179,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
             anchor="center"
             onPress={() => select({ kind: "yard", yard })}
           >
-            <YardPin yard={yard} filtered={filtered} selected={isSelected} />
+            <YardPin yard={yard} filtered={filtered} selected={isSelected} compact={!isSelected} />
           </Marker>
         );
       })}
@@ -206,7 +206,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
             anchor="center"
             onPress={() => select({ kind: "listing", listing: f.listing })}
           >
-            <AssetPin listing={f.listing} selected={isSelected} />
+            <AssetPin listing={f.listing} selected={isSelected} compact={!isSelected} />
           </Marker>
         );
       })}

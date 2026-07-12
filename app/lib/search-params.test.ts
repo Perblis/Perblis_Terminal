@@ -37,6 +37,18 @@ test("list query: radius mode + grouping + page size", () => {
   expect(p.get("bbox")).toBeNull(); // bbox XOR radius
 });
 
+test("date window goes both-or-neither (server 400s a lone bound)", () => {
+  const both = new URLSearchParams(
+    mapSearchQuery(BBOX, { dateFrom: "2026-08-10", dateTo: "2026-08-14" }),
+  );
+  expect(both.get("date_from")).toBe("2026-08-10");
+  expect(both.get("date_to")).toBe("2026-08-14");
+
+  const lone = new URLSearchParams(mapSearchQuery(BBOX, { dateFrom: "2026-08-10" }));
+  expect(lone.get("date_from")).toBeNull();
+  expect(lone.get("date_to")).toBeNull();
+});
+
 test("bbox validity", () => {
   expect(isValidBbox(BBOX)).toBe(true);
   expect(isValidBbox({ ...BBOX, maxLng: BBOX.minLng })).toBe(false);
