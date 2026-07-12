@@ -1,22 +1,34 @@
 "use client";
 
 // P8 · CalendarGantt (06 §4) — custom CSS grid, NO calendar dependency
-// (TSD §5). Read-only: availability is set by hires. Yard group headers,
-// per-row utilisation, status-coloured blocks (dashed = tentative), today
-// rule, weekend banding; click a block → P7.
+// (TSD §5). Hires set availability; supplier date-blocks (D-024) are the one
+// writable layer — striped spans, created via "Block dates", removed by
+// clicking one. Yard group headers, per-row utilisation, status-coloured
+// hire blocks (dashed = tentative), today rule, weekend banding; click a
+// hire block → P7.
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { CLASS_GLYPHS } from "@/components/brand/class-glyphs";
+import {
+  AvailabilityBlockDialog,
+  RemoveBlockDialog,
+} from "@/components/hires/availability-block-dialog";
 import { PageHeader } from "@/components/shell/page-header";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CLASS_BY_VALUE } from "@/lib/asset-classes";
-import { useHires, useListings, useYards } from "@/lib/queries";
-import type { Hire, HireStatus7 } from "@/lib/types";
+import { useAvailabilityBlocks, useHires, useListings, useYards } from "@/lib/queries";
+import type { AvailabilityBlock, Hire, HireStatus7 } from "@/lib/types";
+
+// Token-var diagonal stripes — visually distinct from every hire status.
+const BLOCK_STRIPES = {
+  backgroundImage:
+    "repeating-linear-gradient(135deg, var(--surface-sunken) 0 6px, var(--surface-card) 6px 12px)",
+} as const;
 
 const BLOCK_STYLE: Partial<Record<HireStatus7, string>> = {
   requested: "border border-dashed border-amber-600 bg-amber-50 text-amber-900",
@@ -42,6 +54,25 @@ export default function CalendarPage() {
   const hires = useHires({ from: iso(monthStart), to: iso(monthEnd) });
   const listings = useListings();
   const yards = useYards();
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [removingBlock, setRemovingBlock] = useState<AvailabilityBlock | null>(null);
+
+  const activeListings = useMemo(
+    () => (listings.data ?? []).filter((l) => l.status === "live" || l.status === "paused"),
+    [listings.data],
+  );
+  const blocks = useAvailabilityBlocks(activeListings.map((l) => l.id));
+  const blocksByListing = useMemo(() => {
+    const map = new Map<string, AvailabilityBlock[]>();
+    for (const b of blocks.data ?? []) {
+      // Only spans touching the visible month draw.
+      if (b.end_date < iso(monthStart) || b.start_date > iso(monthEnd)) continue;
+      if (!map.has(b.listing_id)) map.set(b.listing_id, []);
+      map.get(b.listing_id)!.push(b);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- monthStart/End derive from anchor
+  }, [blocks.data, anchor]);
 
   const todayCol = useMemo(() => {
     const now = new Date();
@@ -52,15 +83,14 @@ export default function CalendarPage() {
   }, [anchor]);
 
   const rows = useMemo(() => {
-    const active = (listings.data ?? []).filter((l) => l.status === "live" || l.status === "paused");
-    const byYard = new Map<string | null, typeof active>();
-    for (const l of active) {
+    const byYard = new Map<string | null, typeof activeListings>();
+    for (const l of activeListings) {
       const key = l.yard_id;
       if (!byYard.has(key)) byYard.set(key, []);
       byYard.get(key)!.push(l);
     }
     return [...byYard.entries()];
-  }, [listings.data]);
+  }, [activeListings]);
 
   const hiresByListing = useMemo(() => {
     const map = new Map<string, Hire[]>();
@@ -111,11 +141,15 @@ export default function CalendarPage() {
             <Button variant="ghost" size="sm" aria-label="Next month" onClick={() => setAnchor(new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1)))}>
               <ChevronRight size={16} />
             </Button>
+            <Button size="sm" onClick={() => setBlockDialogOpen(true)} disabled={activeListings.length === 0}>
+              Block dates
+            </Button>
           </div>
         }
       />
-      <p className="mb-s3 text-caption text-ink-500" title="Availability is set by hires">
-        Read-only — availability is set by hires. Dashed blocks are tentative (awaiting response or payment).
+      <p className="mb-s3 text-caption text-ink-500" title="Hires set availability; blocks are yours">
+        Hires set availability. Dashed blocks are tentative (awaiting response or payment); striped
+        spans are your date-blocks — click one to remove it.
       </p>
 
       {hires.isPending || listings.isPending ? (
@@ -186,6 +220,23 @@ export default function CalendarPage() {
                       {todayCol ? (
                         <span className="pointer-events-none absolute inset-y-0 w-px bg-amber-500" style={{ left: `calc(14rem + (100% - 14rem) / ${daysInMonth} * ${todayCol - 0.5})` }} aria-hidden />
                       ) : null}
+                      {(blocksByListing.get(listing.id) ?? []).map((b) => {
+                        const startCol = dayOf(b.start_date, true) + 1;
+                        const endCol = dayOf(b.end_date, false) + 2;
+                        return (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setRemovingBlock(b)}
+                            title={`Blocked${b.reason ? ` · ${b.reason}` : ""} — click to remove`}
+                            aria-label={`Blocked ${b.start_date} to ${b.end_date}${b.reason ? ` — ${b.reason}` : ""}`}
+                            className="z-10 my-s1 flex items-center overflow-hidden truncate rounded-sm border border-ink-400 px-s1 text-caption font-medium text-ink-600"
+                            style={{ gridColumn: `${startCol} / ${endCol}`, gridRow: 1, ...BLOCK_STRIPES }}
+                          >
+                            {endCol - startCol > 2 ? "blocked" : ""}
+                          </button>
+                        );
+                      })}
                       {(hiresByListing.get(listing.id) ?? []).map((h) => {
                         const startCol = dayOf(h.start_date, true) + 1;
                         const endCol = dayOf(h.end_date, false) + 2;
@@ -211,6 +262,20 @@ export default function CalendarPage() {
       )}
 
       {hires.isError ? <Banner tone="danger" className="mt-s3">Couldn&apos;t load hires for this month.</Banner> : null}
+      {blocks.isError ? <Banner tone="danger" className="mt-s3">Couldn&apos;t load your date-blocks.</Banner> : null}
+
+      <AvailabilityBlockDialog
+        open={blockDialogOpen}
+        listings={activeListings}
+        onClose={() => setBlockDialogOpen(false)}
+      />
+      <RemoveBlockDialog
+        block={removingBlock}
+        listingTitle={
+          activeListings.find((l) => l.id === removingBlock?.listing_id)?.title ?? "This asset"
+        }
+        onClose={() => setRemovingBlock(null)}
+      />
     </>
   );
 }

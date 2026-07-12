@@ -229,9 +229,23 @@ export type HandoverRecord = {
   hire: string;
   kind: "on_hire" | "off_hire";
   photos: string[];
+  // Short-lived presigned GETs for the private-bucket photos (D-025), same
+  // order as `photos`; empty once purged (D-026). Refetch rather than cache.
+  photo_urls: string[];
   reading: Record<string, unknown>;
   submitted_by_role: "hirer" | "supplier";
   confirmed_at: string | null;
+  photos_purged_at: string | null;
+  created_at: string;
+};
+
+/** A supplier's manual date-block on a listing (D-024) — a hard hold. */
+export type AvailabilityBlock = {
+  id: string;
+  listing_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
   created_at: string;
 };
 

@@ -1,9 +1,10 @@
 "use client";
 
 // Handover evidence on P7 — the record a party is attesting to when they
-// hold-to-confirm. Photos are public-bucket keys (TSD §3.9 `handovers/`)
-// served through the BFF media proxy; readings mirror the app's capture pad
-// (hour_meter / odometer / notes per FSD §7.4).
+// hold-to-confirm. Photos are private-bucket (D-025): the record carries
+// short-lived presigned GETs in `photo_urls` (local-dev relative URLs ride
+// the BFF; R2 presigned URLs pass through). Readings mirror the app's
+// capture pad (hour_meter / odometer / notes per FSD §7.4).
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, type ReactNode } from "react";
 
@@ -65,18 +66,23 @@ export function HandoverEvidence({
         </dl>
       ) : null}
 
-      {record.photos.length > 0 ? (
+      {record.photos_purged_at !== null ? (
+        <p className="mt-s3 text-body-sm text-text-secondary">
+          Photos were removed 90 days after off-hire — readings and confirmations remain on
+          record.
+        </p>
+      ) : record.photo_urls.length > 0 ? (
         <div className="mt-s3 flex flex-wrap gap-s2">
-          {record.photos.map((key, i) => (
+          {record.photo_urls.map((url, i) => (
             <button
-              key={key}
+              key={record.photos[i] ?? url}
               type="button"
               onClick={() => setLightbox(i)}
               className="overflow-hidden rounded-sm border border-border-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
-              aria-label={`View handover photo ${i + 1} of ${record.photos.length}`}
+              aria-label={`View handover photo ${i + 1} of ${record.photo_urls.length}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- R2 keys are runtime-dynamic */}
-              <img src={mediaUrl(null, key) ?? ""} alt="" className="size-20 object-cover" loading="lazy" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- presigned URLs are runtime-dynamic */}
+              <img src={mediaUrl(url) ?? ""} alt="" className="size-20 object-cover" loading="lazy" />
             </button>
           ))}
         </div>
@@ -91,9 +97,9 @@ export function HandoverEvidence({
             <Dialog.Title className="sr-only">Handover photo</Dialog.Title>
             {lightbox !== null ? (
               <figure className="flex flex-col items-center gap-s3">
-                {/* eslint-disable-next-line @next/next/no-img-element -- R2 keys are runtime-dynamic */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- presigned URLs are runtime-dynamic */}
                 <img
-                  src={mediaUrl(null, record.photos[lightbox]) ?? ""}
+                  src={mediaUrl(record.photo_urls[lightbox]) ?? ""}
                   alt={`Handover photo ${lightbox + 1}`}
                   className="max-h-[75vh] w-auto max-w-full rounded-sm object-contain"
                 />
@@ -107,12 +113,12 @@ export function HandoverEvidence({
                     ← Prev
                   </button>
                   <span>
-                    {lightbox + 1} / {record.photos.length}
+                    {lightbox + 1} / {record.photo_urls.length}
                   </span>
                   <button
                     type="button"
                     className="px-s2 py-s1 disabled:opacity-40"
-                    disabled={lightbox === record.photos.length - 1}
+                    disabled={lightbox === record.photo_urls.length - 1}
                     onClick={() => setLightbox(lightbox + 1)}
                   >
                     Next →
