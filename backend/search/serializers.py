@@ -8,6 +8,7 @@ serializer additionally validates the query string.
 
 from __future__ import annotations
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from listings.enums import AssetClass
@@ -40,6 +41,11 @@ class MapSearchParamsSerializer(serializers.Serializer):
         required=False, help_text="Floor for the class ★ headline spec; requires asset_class."
     )
     spec_max = serializers.FloatField(required=False)
+    date_from = serializers.DateField(
+        required=False,
+        help_text="With date_to: 'available' reflects the hire window, not just today.",
+    )
+    date_to = serializers.DateField(required=False)
 
     def validate_bbox(self, value: str) -> list[float]:
         parts = value.split(",")
@@ -71,6 +77,19 @@ class MapSearchParamsSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "spec_min/spec_max require asset_class (the ★ field is per class)."
             )
+        date_from, date_to = attrs.get("date_from"), attrs.get("date_to")
+        if (date_from is None) != (date_to is None):
+            raise serializers.ValidationError("Provide both date_from and date_to, or neither.")
+        if date_from is not None and date_to is not None:
+            if date_to < date_from:
+                raise serializers.ValidationError("date_to must be on or after date_from.")
+            if (date_to - date_from).days >= 90:
+                raise serializers.ValidationError("The date window can span at most 90 days.")
+            # The past isn't hireable — clamp rather than error (calendar UIs
+            # hand over whole months).
+            today = timezone.localdate()
+            attrs["date_from"] = max(date_from, today)
+            attrs["date_to"] = max(date_to, attrs["date_from"])
         return attrs
 
 

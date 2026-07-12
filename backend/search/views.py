@@ -47,6 +47,13 @@ class MapSearchView(GenericAPIView):
                 "spec_min", float, description="Floor for the class ★ spec; requires asset_class."
             ),
             OpenApiParameter("spec_max", float, description="Ceiling for the class ★ spec."),
+            OpenApiParameter(
+                "date_from",
+                str,
+                description="Hire window start (YYYY-MM-DD, with date_to): 'available' "
+                "reflects the window, not just today.",
+            ),
+            OpenApiParameter("date_to", str, description="Hire window end (≤90-day window)."),
         ],
         responses={200: s.MapResponseSerializer},
     )
@@ -86,6 +93,13 @@ class ListSearchView(GenericAPIView):
             OpenApiParameter("price_max", int, description="Daily price ceiling (kobo)."),
             OpenApiParameter("spec_min", float, description="Floor for the class ★ spec."),
             OpenApiParameter("spec_max", float, description="Ceiling for the class ★ spec."),
+            OpenApiParameter(
+                "date_from",
+                str,
+                description="Hire window start (YYYY-MM-DD, with date_to): 'available' "
+                "reflects the window, not just today.",
+            ),
+            OpenApiParameter("date_to", str, description="Hire window end (≤90-day window)."),
             OpenApiParameter("group_by", str, description="'asset' (default) or 'location'."),
             OpenApiParameter("cursor", str, description="Opaque keyset pagination cursor."),
             OpenApiParameter("page_size", int, description="Items per page (≤100, default 20)."),

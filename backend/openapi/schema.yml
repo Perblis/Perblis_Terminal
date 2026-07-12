@@ -1593,6 +1593,17 @@ paths:
           type: string
         description: Opaque keyset pagination cursor.
       - in: query
+        name: date_from
+        schema:
+          type: string
+        description: 'Hire window start (YYYY-MM-DD, with date_to): ''available''
+          reflects the window, not just today.'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+        description: Hire window end (≤90-day window).
+      - in: query
         name: group_by
         schema:
           type: string
@@ -1678,6 +1689,17 @@ paths:
         schema:
           type: string
         description: Viewport 'min_lng,min_lat,max_lng,max_lat'. Provide this OR lat+lng+radius_km.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+        description: 'Hire window start (YYYY-MM-DD, with date_to): ''available''
+          reflects the window, not just today.'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+        description: Hire window end (≤90-day window).
       - in: query
         name: lat
         schema:

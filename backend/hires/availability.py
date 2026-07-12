@@ -173,31 +173,45 @@ def free_units_by_day(
     return result
 
 
-def availability_map(listings, *, on_date: dt.date | None = None, now=None) -> dict:
-    """Bulk ``{listing.id: available_now}`` for many listings in O(1) queries.
+def availability_map(
+    listings,
+    *,
+    on_date: dt.date | None = None,
+    start: dt.date | None = None,
+    end: dt.date | None = None,
+    now=None,
+) -> dict:
+    """Bulk ``{listing.id: available}`` for many listings in O(1) queries.
 
-    "Available now" means a unit is free over ``on_date`` (default today) against
-    *soft* holds and supplier date-blocks — what the map/list ``available`` flag
-    and the yard sheet's "n of m free" caption show. Computed in one grouped
-    aggregate plus one block lookup so search stays within its N+1-free budget.
+    Default (no range): a unit is free over ``on_date`` (today) against *soft*
+    holds and supplier date-blocks — the map/list ``available`` flag and the
+    yard sheet's "n of m free" caption. With ``start``/``end`` (search date
+    filters): **full-range** semantics — any soft hold overlapping any part of
+    the range counts, exactly matching ``is_available``, so an "available" pin
+    never bounces at request time. (Counting *overlapping hires* as "held
+    units" is only a valid capacity number under full-range semantics — do not
+    reuse this aggregate for per-day math; that's ``free_units_by_day``.)
+
+    One grouped aggregate plus one block lookup, so search stays N+1-free.
     """
     listings = list(listings)
     if not listings:
         return {}
-    on_date = on_date or timezone.localdate()
+    if start is None or end is None:
+        start = end = on_date or timezone.localdate()
     now = now or timezone.now()
     ids = [ln.id for ln in listings]
     rows = (
         Hire.objects.filter(listing_id__in=ids)
         .filter(_soft_q(now))
-        .filter(start_date__lte=on_date, end_date__gte=on_date)
+        .filter(start_date__lte=end, end_date__gte=start)
         .values("listing_id")
         .annotate(n=Count("id"))
     )
     held = {row["listing_id"]: row["n"] for row in rows}
     blocked = set(
         AvailabilityBlock.objects.filter(
-            listing_id__in=ids, start_date__lte=on_date, end_date__gte=on_date
+            listing_id__in=ids, start_date__lte=end, end_date__gte=start
         ).values_list("listing_id", flat=True)
     )
     return {ln.id: ln.id not in blocked and held.get(ln.id, 0) < ln.unit_count for ln in listings}
