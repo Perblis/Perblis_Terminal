@@ -5,8 +5,12 @@ import { apiFetch, API_V1 } from "./api";
 
 const API_ORIGIN = API_V1.replace(/\/api\/v1$/, "");
 
-/** Object-key prefixes served from the public media bucket (TSD §3.9). */
-const PUBLIC_KEY_PREFIXES = ["listings/", "logos/", "avatars/", "handovers/"] as const;
+/** Object-key prefixes served from the public media bucket (TSD §3.9).
+ *  `handovers/` is deliberately absent — handover photos are private-bucket
+ *  (D-025) and arrive as presigned `photo_urls`, which must pass through
+ *  `resolveMediaUrl` untouched (rewriting one to the public proxy would 404
+ *  and strip its signature). */
+const PUBLIC_KEY_PREFIXES = ["listings/", "logos/", "avatars/"] as const;
 
 /** Extract an R2 object key from a public media URL returned by the API. */
 export function publicMediaKeyFromUrl(url: string): string | null {
