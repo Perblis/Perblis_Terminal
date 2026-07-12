@@ -23,6 +23,11 @@ urlpatterns = [
         name="refund-preview",
     ),
     path(
+        "listings/<uuid:listing_id>/availability",
+        views.ListingAvailabilityView.as_view(),
+        name="listing-availability",
+    ),
+    path(
         "listings/<uuid:listing_id>/availability-blocks",
         views.ListingAvailabilityBlockView.as_view(),
         name="availability-blocks",

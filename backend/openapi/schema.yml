@@ -1014,6 +1014,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/Listing'
           description: ''
+  /api/v1/listings/{listing_id}/availability:
+    get:
+      operationId: listings_availability_retrieve
+      description: |-
+        Public per-day availability for a Live listing — the hirer calendar's feed.
+
+        Counts only (free units vs unit_count); who holds a date never leaves the
+        server. Paused/archived listings and suspended/deleted suppliers 404.
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Window start (YYYY-MM-DD, default today).
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: Window end (YYYY-MM-DD, default from+29; max 90-day window).
+      tags:
+      - listings
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingAvailability'
+          description: ''
   /api/v1/listings/{listing_id}/availability-blocks:
     get:
       operationId: listings_availability_blocks_list
@@ -1958,6 +1995,24 @@ components:
       required:
       - end_date
       - start_date
+    AvailabilityDay:
+      type: object
+      description: One calendar day of the public availability endpoint (response-only).
+      properties:
+        date:
+          type: string
+          format: date
+          readOnly: true
+        free_units:
+          type: integer
+          readOnly: true
+        available:
+          type: boolean
+          readOnly: true
+      required:
+      - available
+      - date
+      - free_units
     BlankEnum:
       enum:
       - ''
@@ -2681,6 +2736,30 @@ components:
       - weekly_price
       - weekly_price_display
       - yard_id
+    ListingAvailability:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+        unit_count:
+          type: integer
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityDay'
+      required:
+      - days
+      - from
+      - listing_id
+      - to
+      - unit_count
     ListingCreate:
       type: object
       properties:

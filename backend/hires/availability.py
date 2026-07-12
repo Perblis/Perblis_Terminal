@@ -125,6 +125,54 @@ def can_confirm(
     return held < listing.unit_count
 
 
+def free_units_by_day(
+    listing, start: dt.date, end: dt.date, *, now: dt.datetime | None = None
+) -> dict[dt.date, int]:
+    """Per-day free-unit counts over ``[start, end]`` — the hirer calendar's data.
+
+    Two queries (soft holds + blocks) and a difference-array sweep — O(hires +
+    days), never a query per day.
+
+    Deliberately **per-day** counting, unlike the whole-range ``is_available``:
+    two disjoint hires can leave every individual day free while the full range
+    still fails the conservative request/accept gate. The calendar answers
+    "which days are busy"; requests keep gating on the range engine. Do not
+    "fix" that mismatch — it is the intended semantics.
+    """
+    now = now or timezone.now()
+    n_days = (end - start).days + 1
+    delta = [0] * (n_days + 1)
+    holds = (
+        Hire.objects.filter(listing=listing)
+        .filter(_soft_q(now))
+        .filter(start_date__lte=end, end_date__gte=start)
+        .values_list("start_date", "end_date")
+    )
+    for h_start, h_end in holds:
+        i = max((h_start - start).days, 0)
+        j = min((h_end - start).days, n_days - 1)
+        delta[i] += 1
+        delta[j + 1] -= 1
+
+    blocked = [False] * n_days
+    blocks = AvailabilityBlock.objects.filter(
+        listing=listing, start_date__lte=end, end_date__gte=start
+    ).values_list("start_date", "end_date")
+    for b_start, b_end in blocks:
+        i = max((b_start - start).days, 0)
+        j = min((b_end - start).days, n_days - 1)
+        for k in range(i, j + 1):
+            blocked[k] = True
+
+    result: dict[dt.date, int] = {}
+    held = 0
+    for d in range(n_days):
+        held += delta[d]
+        day = start + dt.timedelta(days=d)
+        result[day] = 0 if blocked[d] else max(listing.unit_count - held, 0)
+    return result
+
+
 def availability_map(listings, *, on_date: dt.date | None = None, now=None) -> dict:
     """Bulk ``{listing.id: available_now}`` for many listings in O(1) queries.
 

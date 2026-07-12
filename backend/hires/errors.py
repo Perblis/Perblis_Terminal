@@ -65,6 +65,20 @@ class ListingNotHireable(TerminalError):
     default_detail = "This listing can't be hired right now."
 
 
+class WindowTooLarge(TerminalError):
+    """An availability-calendar window beyond the 90-day cap."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "window_too_large"
+    default_detail = "The availability window can span at most 90 days."
+
+
+class InvalidWindow(TerminalError):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "invalid_window"
+    default_detail = "The 'to' date must be on or after 'from'."
+
+
 class BlockInvalidRange(TerminalError):
     """A supplier date-block with unusable dates (D-024)."""
 

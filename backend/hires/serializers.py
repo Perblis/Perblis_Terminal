@@ -151,6 +151,14 @@ class HireDetailSerializer(HireSerializer):
         fields = (*HireSerializer.Meta.fields, "events")
 
 
+class AvailabilityDaySerializer(serializers.Serializer):
+    """One calendar day of the public availability endpoint (response-only)."""
+
+    date = serializers.DateField(read_only=True)
+    free_units = serializers.IntegerField(read_only=True)
+    available = serializers.BooleanField(read_only=True)
+
+
 class AvailabilityBlockCreateSerializer(serializers.Serializer):
     """A supplier's manual date-block (D-024); range rules live in the service."""
 

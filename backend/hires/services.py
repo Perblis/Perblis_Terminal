@@ -361,6 +361,53 @@ def delete_availability_block(*, user: User, block_id) -> None:
     block.delete()
 
 
+# --- public availability calendar --------------------------------------------
+AVAILABILITY_DEFAULT_DAYS = 30
+AVAILABILITY_MAX_DAYS = 90
+
+
+def listing_availability(
+    *, listing_id, start: dt.date | None = None, end: dt.date | None = None
+) -> dict:
+    """Per-day public availability for a Live listing — counts only, never parties.
+
+    Anonymous-safe: only free-unit counts leave the server; who holds a date is
+    never exposed. Past days are clamped to today (calendar UIs ask for whole
+    months) — a window entirely in the past yields an empty ``days`` list.
+    """
+    from django.shortcuts import get_object_or_404
+
+    listing = get_object_or_404(
+        Listing,
+        id=listing_id,
+        status=ListingStatus.LIVE,
+        supplier__suspended_at__isnull=True,
+        supplier__deleted_at__isnull=True,
+    )
+    today = timezone.localdate()
+    start = start or today
+    end = end or start + dt.timedelta(days=AVAILABILITY_DEFAULT_DAYS - 1)
+    if end < start:
+        raise errors.InvalidWindow()
+    if (end - start).days >= AVAILABILITY_MAX_DAYS:
+        raise errors.WindowTooLarge()
+    start = max(start, today)
+
+    days: list[dict] = []
+    if end >= start:
+        by_day = availability.free_units_by_day(listing, start, end)
+        days = [
+            {"date": day, "free_units": free, "available": free > 0} for day, free in by_day.items()
+        ]
+    return {
+        "listing_id": listing.id,
+        "unit_count": listing.unit_count,
+        "from": start,
+        "to": end,
+        "days": days,
+    }
+
+
 # --- handovers (FSD §7.4) ---------------------------------------------------
 @transaction.atomic
 def submit_handover(

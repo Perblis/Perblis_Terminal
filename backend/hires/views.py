@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import status
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from core.money import display
@@ -150,6 +150,53 @@ class HirePaymentView(GenericAPIView):
         if payment is None:
             raise NoPayment()
         return Response(self.get_serializer(payment).data)
+
+
+class ListingAvailabilityView(GenericAPIView):
+    """Public per-day availability for a Live listing — the hirer calendar's feed.
+
+    Counts only (free units vs unit_count); who holds a date never leaves the
+    server. Paused/archived listings and suspended/deleted suppliers 404.
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = s.AvailabilityDaySerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "from", str, required=False, description="Window start (YYYY-MM-DD, default today)."
+            ),
+            OpenApiParameter(
+                "to",
+                str,
+                required=False,
+                description="Window end (YYYY-MM-DD, default from+29; max 90-day window).",
+            ),
+        ],
+        responses={
+            200: inline_serializer(
+                name="ListingAvailability",
+                fields={
+                    "listing_id": serializers.UUIDField(),
+                    "unit_count": serializers.IntegerField(),
+                    "from": serializers.DateField(),
+                    "to": serializers.DateField(),
+                    "days": s.AvailabilityDaySerializer(many=True),
+                },
+            )
+        },
+    )
+    def get(self, request, listing_id):
+        window = s.HireWindowSerializer(
+            data={
+                "start": request.query_params.get("from"),
+                "end": request.query_params.get("to"),
+            }
+        )
+        window.is_valid(raise_exception=True)
+        payload = services.listing_availability(listing_id=listing_id, **window.validated_data)
+        return Response(payload)
 
 
 class ListingAvailabilityBlockView(GenericAPIView):
