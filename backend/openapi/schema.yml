@@ -2194,6 +2194,11 @@ components:
         kind:
           $ref: '#/components/schemas/KindCc5Enum'
         photos: {}
+        photo_urls:
+          type: array
+          items:
+            type: string
+          readOnly: true
         reading: {}
         submitted_by_role:
           type: string
@@ -2211,6 +2216,7 @@ components:
       - hire
       - id
       - kind
+      - photo_urls
       - submitted_by_role
     HandoverCreate:
       type: object

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from django.urls import include, path
 
-from core.views import MediaPresignView, MediaServeView, MediaUploadView
+from core.views import MediaPresignView, MediaPrivateServeView, MediaServeView, MediaUploadView
 
 app_name = "api"
 
@@ -25,4 +25,5 @@ urlpatterns = [
     # Local-mode (dev/CI) upload/serve receivers; prod uses R2 directly.
     path("media/upload", MediaUploadView.as_view(), name="media-upload"),
     path("media/public", MediaServeView.as_view(), name="media-public"),
+    path("media/private", MediaPrivateServeView.as_view(), name="media-private"),
 ]

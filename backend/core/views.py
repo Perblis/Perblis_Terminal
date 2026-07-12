@@ -66,10 +66,30 @@ class MediaUploadView(APIView):
         if bucket == "public":
             media.store_public_file(key, content, content_type)
         else:
-            from accounts.integrations.media import store_private_file
-
-            store_private_file(key, content, content_type)
+            media.store_private_file(key, content, content_type)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MediaPrivateServeView(APIView):
+    """Local-mode (dev/CI) private-object serve view — the presigned-GET stand-in.
+
+    Reachable only with a valid, unexpired signed token; the token is minted
+    where authorization is enforced (e.g. the handover serializer, parties
+    only), exactly mirroring R2's possession-of-URL trust model. Prod serves
+    genuine R2 presigned GETs and never hits this view.
+    """
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(exclude=True)
+    def get(self, request):
+        token = request.query_params.get("t", "")
+        try:
+            key = media.parse_private_get_token(token)
+            content = media.read_private_file(key)
+        except Exception as exc:  # noqa: BLE001 — bad/expired token or missing key => 404
+            raise Http404() from exc
+        return FileResponse(iter([content]), filename=key.split("/")[-1])
 
 
 class MediaServeView(APIView):

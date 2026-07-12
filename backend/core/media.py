@@ -7,10 +7,12 @@ owning resource (a listing photo, a supplier logo, …).
 
 Two logical buckets:
 
-* **public**  — logos, listing/handover photos. Readable at a stable URL
+* **public**  — logos, avatars, listing photos. Readable at a stable URL
   (``R2_PUBLIC_BASE_URL`` in prod; a local serve view in dev).
-* **private** — verification documents. Never publicly reachable; reads are the
-  short-lived presigned GETs in ``accounts.integrations.media``.
+* **private** — verification documents (``accounts.integrations.media``) and
+  handover photos (D-025 — FSD §7.4: parties + Ops only). Never publicly
+  reachable; reads are short-lived presigned GETs minted where authorization
+  is enforced (the handover serializer / the Ops review queue).
 
 When R2 keys are absent (dev/CI) the presigned PUT points at a local,
 token-authorised receiver view so the upload→attach round-trip still works
@@ -68,7 +70,8 @@ MEDIA_KINDS: dict[str, MediaKind] = {
             (*_IMAGE_TYPES, "application/pdf"),
             "verification",
         ),
-        MediaKind("handover_photo", "public", 10 * MB, _IMAGE_TYPES, "handovers"),
+        # Private per D-025 (FSD §7.4): handover evidence is parties + Ops only.
+        MediaKind("handover_photo", "private", 10 * MB, _IMAGE_TYPES, "handovers"),
     )
 }
 
@@ -201,6 +204,14 @@ def public_url(key: str) -> str:
     return reverse("api:media-public") + f"?key={key}"
 
 
+def delete_public_file(key: str) -> None:
+    """Remove a public-bucket object; a missing key is a no-op (idempotent)."""
+    if _public_is_r2():
+        _r2_client().delete_object(Bucket=settings.R2_PUBLIC_BUCKET, Key=key)
+        return
+    _local_public_path(key).unlink(missing_ok=True)
+
+
 def store_public_file(key: str, content: bytes, content_type: str) -> None:
     if _public_is_r2():
         _r2_client().put_object(
@@ -217,3 +228,74 @@ def read_public_file(key: str) -> bytes:
         obj = _r2_client().get_object(Bucket=settings.R2_PUBLIC_BUCKET, Key=key)
         return obj["Body"].read()
     return _local_public_path(key).read_bytes()
+
+
+# --- private-bucket reads (handover photos, D-025) ---------------------------
+# Verification docs keep their own Ops-only pipeline in
+# ``accounts.integrations.media``; these helpers serve kinds whose presigned
+# GET is minted for the resource's *parties* (authorization happens where the
+# URL is issued — possession of the short-lived URL is the grant, exactly the
+# R2 presigned-GET trust model, mirrored in local mode by a signed token).
+_private_signer = signing.TimestampSigner(salt="core.media-private")
+
+
+def _local_private_path(key: str) -> Path:
+    base = Path(settings.MEDIA_ROOT) / "private"
+    target = (base / key).resolve()
+    if not str(target).startswith(str(base.resolve())):
+        raise ValueError("Invalid private media key.")
+    return target
+
+
+def private_presign_get(key: str, ttl: int | None = None) -> str:
+    """A short-lived URL for a private object — never a public/static URL."""
+    ttl = ttl or settings.R2_PRESIGN_TTL
+    if _private_is_r2():
+        return _r2_client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": settings.R2_PRIVATE_BUCKET, "Key": key},
+            ExpiresIn=ttl,
+        )
+    token = _private_signer.sign(key)
+    return reverse("api:media-private") + f"?t={token}"
+
+
+def parse_private_get_token(token: str, max_age: int | None = None) -> str:
+    """Validate a local-mode private-GET token and return the key (raises on bad/expired)."""
+    return _private_signer.unsign(token, max_age=max_age or settings.R2_PRESIGN_TTL)
+
+
+def read_private_file(key: str) -> bytes:
+    if _private_is_r2():
+        obj = _r2_client().get_object(Bucket=settings.R2_PRIVATE_BUCKET, Key=key)
+        return obj["Body"].read()
+    return _local_private_path(key).read_bytes()
+
+
+def store_private_file(key: str, content: bytes, content_type: str) -> None:
+    if _private_is_r2():
+        _r2_client().put_object(
+            Bucket=settings.R2_PRIVATE_BUCKET, Key=key, Body=content, ContentType=content_type
+        )
+        return
+    path = _local_private_path(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+
+
+def private_file_exists(key: str) -> bool:
+    if _private_is_r2():
+        try:
+            _r2_client().head_object(Bucket=settings.R2_PRIVATE_BUCKET, Key=key)
+            return True
+        except Exception:  # noqa: BLE001 — head 404s raise ClientError
+            return False
+    return _local_private_path(key).exists()
+
+
+def delete_private_file(key: str) -> None:
+    """Remove a private-bucket object; a missing key is a no-op (idempotent)."""
+    if _private_is_r2():
+        _r2_client().delete_object(Bucket=settings.R2_PRIVATE_BUCKET, Key=key)
+        return
+    _local_private_path(key).unlink(missing_ok=True)

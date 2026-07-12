@@ -187,6 +187,11 @@ class HandoverSerializer(serializers.ModelSerializer):
     # submitter). The client uses this to offer "Confirm" only to the other party
     # and to label "you submitted" vs "supplier submitted". No user id / PII leaks.
     submitted_by_role = serializers.SerializerMethodField()
+    # Short-lived presigned GETs for the private-bucket photos (D-025), same
+    # order as ``photos``. Authorization happens where these are minted: the
+    # record is only ever serialized for the hire's parties (404 otherwise).
+    # 15-min TTL — clients refetch the record rather than caching the URLs.
+    photo_urls = serializers.SerializerMethodField()
 
     class Meta:
         model = HandoverRecord
@@ -195,6 +200,7 @@ class HandoverSerializer(serializers.ModelSerializer):
             "hire",
             "kind",
             "photos",
+            "photo_urls",
             "reading",
             "submitted_by_role",
             "confirmed_at",
@@ -203,6 +209,9 @@ class HandoverSerializer(serializers.ModelSerializer):
 
     def get_submitted_by_role(self, obj: HandoverRecord) -> str:
         return "hirer" if obj.submitted_by_id == obj.hire.hirer_id else "supplier"
+
+    def get_photo_urls(self, obj: HandoverRecord) -> list[str]:
+        return [media.private_presign_get(key) for key in obj.photos]
 
 
 class RefundPreviewSerializer(serializers.Serializer):
