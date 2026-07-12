@@ -1,13 +1,17 @@
 // S7 ① bespoke range calendar (no dependency): tap start, tap end; taps
-// before the start restart the range. Min = today. NOTE: held/booked dates
-// are NOT struck — no availability-ranges endpoint exists (recorded gap);
-// the 409 availability_conflict sheet is the race safety-net.
-import { useState } from "react";
+// before the start restart the range. Min = today. With `availability`
+// (GET /listings/{id}/availability) fully-held days are struck and a range
+// can't span one; without it the calendar stays permissive and the 409
+// availability_conflict sheet remains the race safety-net.
+import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { BodyText, DisplayText, MonoText } from "../ui/text";
 
 export type DateRange = { start: string | null; end: string | null };
+
+/** Per-day free/total unit counts, keyed by ISO date. */
+export type AvailabilityByDay = Record<string, { free: number; total: number }>;
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -24,15 +28,25 @@ function monthMatrix(year: number, month: number): (string | null)[] {
   return cells;
 }
 
+function monthBounds(year: number, month: number): { first: string; last: string } {
+  return { first: iso(new Date(year, month, 1)), last: iso(new Date(year, month + 1, 0)) };
+}
+
 export function RangeCalendar({
   range,
   onChange,
   todayIso,
+  availability,
+  onMonthChange,
 }: {
   range: DateRange;
   onChange: (next: DateRange) => void;
   /** Injected for freeze-time tests; defaults to the device clock. */
   todayIso?: string;
+  /** Per-day counts; `undefined` (loading/failed) keeps the permissive grid. */
+  availability?: AvailabilityByDay;
+  /** Fired with the visible month's first/last ISO dates (mount + every flip). */
+  onMonthChange?: (first: string, last: string) => void;
 }) {
   const today = todayIso ?? iso(new Date());
   const [cursor, setCursor] = useState(() => {
@@ -40,18 +54,39 @@ export function RangeCalendar({
     return { year: y, month: m - 1 };
   });
 
+  useEffect(() => {
+    if (!onMonthChange) return;
+    const { first, last } = monthBounds(cursor.year, cursor.month);
+    onMonthChange(first, last);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire per visible month only
+  }, [cursor.year, cursor.month]);
+
   const cells = monthMatrix(cursor.year, cursor.month);
   const monthLabel = new Date(cursor.year, cursor.month, 1).toLocaleDateString("en-GB", {
     month: "long",
     year: "numeric",
   });
 
+  const isHeld = (day: string) => availability?.[day]?.free === 0;
+
+  // A range may not span a fully-held day; if the picked end would, restart
+  // the range at the tapped day instead (mirrors the taps-before-start rule).
+  const rangeIsClear = (start: string, end: string) => {
+    if (!availability) return true;
+    for (const [day, counts] of Object.entries(availability)) {
+      if (day >= start && day <= end && counts.free === 0) return false;
+    }
+    return true;
+  };
+
   const pick = (day: string) => {
-    if (day < today) return;
+    if (day < today || isHeld(day)) return;
     if (!range.start || range.end || day < range.start) {
       onChange({ start: day, end: null });
-    } else {
+    } else if (rangeIsClear(range.start, day)) {
       onChange({ start: range.start, end: day });
+    } else {
+      onChange({ start: day, end: null });
     }
   };
 
@@ -95,14 +130,18 @@ export function RangeCalendar({
       <View className="flex-row flex-wrap">
         {cells.map((day, i) => {
           if (!day) return <View key={`x${i}`} style={{ width: "14.28%", height: 42 }} />;
-          const disabled = day < today;
+          const held = day >= today && isHeld(day);
+          const disabled = day < today || held;
           const isEdge = day === range.start || day === range.end;
           const isBetween = inRange(day) && !isEdge;
+          const counts = availability?.[day];
+          const scarce =
+            !disabled && counts !== undefined && counts.total > 1 && counts.free < counts.total;
           return (
             <Pressable
               key={day}
               accessibilityRole="button"
-              accessibilityLabel={day}
+              accessibilityLabel={held ? `${day} — booked` : day}
               accessibilityState={{ disabled, selected: isEdge || isBetween }}
               disabled={disabled}
               onPress={() => pick(day)}
@@ -116,17 +155,25 @@ export function RangeCalendar({
               >
                 <MonoText
                   className={`text-body-sm ${
-                    disabled
-                      ? "text-ink-300"
-                      : isEdge
-                        ? "text-text-on-brand"
-                        : isBetween
-                          ? "text-amber-900"
-                          : "text-text-primary"
+                    held
+                      ? "text-ink-300 line-through"
+                      : disabled
+                        ? "text-ink-300"
+                        : isEdge
+                          ? "text-text-on-brand"
+                          : isBetween
+                            ? "text-amber-900"
+                            : "text-text-primary"
                   }`}
                 >
                   {Number(day.slice(-2))}
                 </MonoText>
+                {scarce ? (
+                  // Multi-unit scarcity hint: free units left on that day.
+                  <MonoText className="text-[9px] leading-3 text-text-tertiary">
+                    {counts.free} left
+                  </MonoText>
+                ) : null}
               </View>
             </Pressable>
           );
