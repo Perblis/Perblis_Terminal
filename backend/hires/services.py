@@ -21,7 +21,7 @@ from listings.models import Listing
 
 from . import availability, errors, fees, state
 from .enums import ActorKind, CancelledBy, HandoverKind, HireStatus
-from .models import HandoverRecord, Hire, HireEvent
+from .models import AvailabilityBlock, HandoverRecord, Hire, HireEvent
 
 logger = structlog.get_logger(__name__)
 
@@ -308,6 +308,57 @@ def list_hire_events(*, user: User) -> QuerySet[HireEvent]:
         .select_related("hire__listing")
         .order_by("-created_at")
     )
+
+
+# --- availability blocks (D-024) ---------------------------------------------
+MAX_BLOCK_DAYS = 365
+
+
+def _owned_listing(listing_id, user: User) -> Listing:
+    """The caller's own listing, or 404 — never leak another supplier's assets."""
+    from django.shortcuts import get_object_or_404
+
+    return get_object_or_404(Listing, id=listing_id, supplier=user)
+
+
+def create_availability_block(
+    *, user: User, listing_id, start_date: dt.date, end_date: dt.date, reason: str = ""
+) -> AvailabilityBlock:
+    """Block a listing's dates as a hard hold (D-024) — maintenance, off-platform work.
+
+    Overlapping the supplier's own existing blocks is allowed (a harmless
+    union); overlapping an existing hire is allowed too — a block never
+    retro-cancels, it only gates *new* accept/pay capacity.
+    """
+    listing = _owned_listing(listing_id, user)
+    today = timezone.localdate()
+    if end_date < start_date:
+        raise errors.BlockInvalidRange("The end date must be on or after the start date.")
+    if start_date < today:
+        raise errors.BlockInvalidRange("A block can't start in the past.")
+    if (end_date - start_date).days >= MAX_BLOCK_DAYS:
+        raise errors.BlockInvalidRange("A block can span at most a year.")
+    return AvailabilityBlock.objects.create(
+        listing=listing,
+        start_date=start_date,
+        end_date=end_date,
+        reason=reason,
+        created_by=user,
+    )
+
+
+def list_availability_blocks(*, user: User, listing_id) -> QuerySet[AvailabilityBlock]:
+    """The listing's blocks, visible only to its supplier (cursor-paginated by the view)."""
+    listing = _owned_listing(listing_id, user)
+    return listing.availability_blocks.order_by("-created_at")
+
+
+def delete_availability_block(*, user: User, block_id) -> None:
+    """Hard-delete a block (supplier config, not a transaction record — D-024)."""
+    from django.shortcuts import get_object_or_404
+
+    block = get_object_or_404(AvailabilityBlock, id=block_id, listing__supplier=user)
+    block.delete()
 
 
 # --- handovers (FSD §7.4) ---------------------------------------------------

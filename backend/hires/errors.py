@@ -65,6 +65,14 @@ class ListingNotHireable(TerminalError):
     default_detail = "This listing can't be hired right now."
 
 
+class BlockInvalidRange(TerminalError):
+    """A supplier date-block with unusable dates (D-024)."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "block_invalid_range"
+    default_detail = "The block's date range is invalid."
+
+
 class CannotHireOwnListing(TerminalError):
     status_code = status.HTTP_409_CONFLICT
     default_code = "cannot_hire_own_listing"

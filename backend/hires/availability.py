@@ -27,7 +27,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from .enums import HireStatus
-from .models import Hire
+from .models import AvailabilityBlock, Hire
 
 
 def _soft_q(now: dt.datetime) -> Q:
@@ -53,6 +53,17 @@ def _count(listing, start: dt.date, end: dt.date, q: Q, exclude_hire_id) -> int:
     return qs.count()
 
 
+def is_blocked(listing, start: dt.date, end: dt.date) -> bool:
+    """True iff a supplier date-block overlaps ``[start, end]`` (D-024).
+
+    A block is a hard hold on the whole listing — every unit is occupied for
+    its range, so it zeroes both public availability and confirm capacity.
+    """
+    return AvailabilityBlock.objects.filter(
+        listing=listing, start_date__lte=end, end_date__gte=start
+    ).exists()
+
+
 def overlapping_holds(
     listing,
     start: dt.date,
@@ -75,6 +86,8 @@ def free_units(
     now: dt.datetime | None = None,
 ) -> int:
     """Units free over ``[start, end]`` — the "n of m free" caption data (ux/02 S5)."""
+    if is_blocked(listing, start, end):
+        return 0
     held = overlapping_holds(listing, start, end, exclude_hire_id=exclude_hire_id, now=now)
     return max(listing.unit_count - held, 0)
 
@@ -88,6 +101,8 @@ def is_available(
     now: dt.datetime | None = None,
 ) -> bool:
     """True iff at least one unit is free to a *new* hirer across ``[start, end]``."""
+    if is_blocked(listing, start, end):
+        return False
     held = overlapping_holds(listing, start, end, exclude_hire_id=exclude_hire_id, now=now)
     return held < listing.unit_count
 
@@ -99,18 +114,24 @@ def can_confirm(
     *,
     exclude_hire_id=None,
 ) -> bool:
-    """True iff a unit is free to *take* (accept/confirm) — counts hard holds only."""
+    """True iff a unit is free to *take* (accept/confirm) — counts hard holds only.
+
+    A supplier date-block is a hard hold too (D-024): accept/pay reject into a
+    blocked range exactly as they would into a fully-confirmed one.
+    """
+    if is_blocked(listing, start, end):
+        return False
     held = _count(listing, start, end, _hard_q(), exclude_hire_id)
     return held < listing.unit_count
 
 
 def availability_map(listings, *, on_date: dt.date | None = None, now=None) -> dict:
-    """Bulk ``{listing.id: available_now}`` for many listings in **one** query.
+    """Bulk ``{listing.id: available_now}`` for many listings in O(1) queries.
 
     "Available now" means a unit is free over ``on_date`` (default today) against
-    *soft* holds — what the map/list ``available`` flag and the yard sheet's
-    "n of m free" caption show. Computed in a single grouped aggregate so search
-    stays within its N+1-free query budget.
+    *soft* holds and supplier date-blocks — what the map/list ``available`` flag
+    and the yard sheet's "n of m free" caption show. Computed in one grouped
+    aggregate plus one block lookup so search stays within its N+1-free budget.
     """
     listings = list(listings)
     if not listings:
@@ -126,4 +147,9 @@ def availability_map(listings, *, on_date: dt.date | None = None, now=None) -> d
         .annotate(n=Count("id"))
     )
     held = {row["listing_id"]: row["n"] for row in rows}
-    return {ln.id: held.get(ln.id, 0) < ln.unit_count for ln in listings}
+    blocked = set(
+        AvailabilityBlock.objects.filter(
+            listing_id__in=ids, start_date__lte=on_date, end_date__gte=on_date
+        ).values_list("listing_id", flat=True)
+    )
+    return {ln.id: ln.id not in blocked and held.get(ln.id, 0) < ln.unit_count for ln in listings}

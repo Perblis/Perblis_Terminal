@@ -14,7 +14,7 @@ from core import media
 from core.money import display
 
 from .enums import CancelledBy, HandoverKind
-from .models import HandoverRecord, Hire, HireEvent
+from .models import AvailabilityBlock, HandoverRecord, Hire, HireEvent
 
 # Fields visible only to the supplier (and Ops/staff) — never to the hirer.
 _SUPPLIER_ONLY = ("service_fee", "service_fee_display", "payout_amount", "fee_basis")
@@ -149,6 +149,22 @@ class HireDetailSerializer(HireSerializer):
 
     class Meta(HireSerializer.Meta):
         fields = (*HireSerializer.Meta.fields, "events")
+
+
+class AvailabilityBlockCreateSerializer(serializers.Serializer):
+    """A supplier's manual date-block (D-024); range rules live in the service."""
+
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    reason = serializers.CharField(required=False, allow_blank=True, default="", max_length=140)
+
+
+class AvailabilityBlockSerializer(serializers.ModelSerializer):
+    listing_id = serializers.UUIDField(source="listing.id", read_only=True)
+
+    class Meta:
+        model = AvailabilityBlock
+        fields = ("id", "listing_id", "start_date", "end_date", "reason", "created_at")
 
 
 class HandoverCreateSerializer(serializers.Serializer):

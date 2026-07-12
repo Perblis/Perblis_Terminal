@@ -22,6 +22,16 @@ urlpatterns = [
         views.HireRefundPreviewView.as_view(),
         name="refund-preview",
     ),
+    path(
+        "listings/<uuid:listing_id>/availability-blocks",
+        views.ListingAvailabilityBlockView.as_view(),
+        name="availability-blocks",
+    ),
+    path(
+        "availability-blocks/<uuid:block_id>",
+        views.AvailabilityBlockDeleteView.as_view(),
+        name="availability-block-delete",
+    ),
     path("hires/<uuid:hire_id>/handovers", views.HireHandoverView.as_view(), name="handovers"),
     path(
         "handovers/<uuid:handover_id>/confirm",

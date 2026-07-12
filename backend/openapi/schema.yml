@@ -273,6 +273,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/TerminalTokenRefresh'
           description: ''
+  /api/v1/availability-blocks/{block_id}:
+    delete:
+      operationId: availability_blocks_destroy
+      description: '``DELETE`` a date-block (hard delete — supplier config, not a
+        record).'
+      parameters:
+      - in: path
+        name: block_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - availability-blocks
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/conversations:
     get:
       operationId: conversations_list
@@ -995,6 +1014,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/Listing'
           description: ''
+  /api/v1/listings/{listing_id}/availability-blocks:
+    get:
+      operationId: listings_availability_blocks_list
+      description: |-
+        ``GET`` the listing's date-blocks; ``POST`` a new one (D-024, supplier-only).
+
+        Scoped to the listing's own supplier — anyone else 404s (never leak
+        another supplier's maintenance windows).
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - listings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAvailabilityBlockList'
+          description: ''
+    post:
+      operationId: listings_availability_blocks_create
+      description: |-
+        ``GET`` the listing's date-blocks; ``POST`` a new one (D-024, supplier-only).
+
+        Scoped to the listing's own supplier — anyone else 404s (never leak
+        another supplier's maintenance windows).
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - listings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityBlockCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AvailabilityBlockCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvailabilityBlockCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityBlock'
+          description: ''
   /api/v1/listings/{listing_id}/duplicate:
     post:
       operationId: listings_duplicate_create
@@ -1104,7 +1198,7 @@ paths:
       - jwtAuth: []
       responses:
         '204':
-          description: ''
+          description: No response body
   /api/v1/listings/{listing_id}/photos/order:
     patch:
       operationId: listings_photos_order_partial_update
@@ -1816,6 +1910,54 @@ components:
         * `warehousing` - Warehousing & Storage
         * `terminals_yards` - Terminals & Container Yards
         * `land_staging` - Land & Staging
+    AvailabilityBlock:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        listing_id:
+          type: string
+          format: uuid
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        reason:
+          type: string
+          maxLength: 140
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - end_date
+      - id
+      - listing_id
+      - start_date
+    AvailabilityBlockCreate:
+      type: object
+      description: A supplier's manual date-block (D-024); range rules live in the
+        service.
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        reason:
+          type: string
+          default: ''
+          maxLength: 140
+      required:
+      - end_date
+      - start_date
     BlankEnum:
       enum:
       - ''
@@ -2968,6 +3110,25 @@ components:
       description: |-
         * `complete` - complete
         * `cancel` - cancel
+    PaginatedAvailabilityBlockList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityBlock'
     PaginatedConversationList:
       type: object
       required:

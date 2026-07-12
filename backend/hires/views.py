@@ -152,6 +152,47 @@ class HirePaymentView(GenericAPIView):
         return Response(self.get_serializer(payment).data)
 
 
+class ListingAvailabilityBlockView(GenericAPIView):
+    """``GET`` the listing's date-blocks; ``POST`` a new one (D-024, supplier-only).
+
+    Scoped to the listing's own supplier — anyone else 404s (never leak
+    another supplier's maintenance windows).
+    """
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.AvailabilityBlockSerializer
+
+    @extend_schema(responses={200: s.AvailabilityBlockSerializer(many=True)})
+    def get(self, request, listing_id):
+        blocks = services.list_availability_blocks(user=request.user, listing_id=listing_id)
+        page = self.paginate_queryset(blocks)
+        return self.get_paginated_response(self.get_serializer(page, many=True).data)
+
+    @extend_schema(
+        request=s.AvailabilityBlockCreateSerializer,
+        responses={201: s.AvailabilityBlockSerializer},
+    )
+    def post(self, request, listing_id):
+        data = s.AvailabilityBlockCreateSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        block = services.create_availability_block(
+            user=request.user, listing_id=listing_id, **data.validated_data
+        )
+        return Response(self.get_serializer(block).data, status=status.HTTP_201_CREATED)
+
+
+class AvailabilityBlockDeleteView(GenericAPIView):
+    """``DELETE`` a date-block (hard delete — supplier config, not a record)."""
+
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = s.AvailabilityBlockSerializer
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, block_id):
+        services.delete_availability_block(user=request.user, block_id=block_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class HireHandoverView(GenericAPIView):
     """``GET`` the hire's handover records; ``POST`` a new on-hire/off-hire one (FSD §7.4)."""
 
