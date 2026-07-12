@@ -179,7 +179,7 @@ export function useListingMutation(action: "publish" | "pause" | "archive" | "du
 
 // --- hires (7C) ---------------------------------------------------------------
 
-import type { Hire, HireDetail, RefundPreview, HandoverRecord } from "./types";
+import type { AvailabilityBlock, Hire, HireDetail, RefundPreview, HandoverRecord } from "./types";
 
 export const hireKeys = {
   list: (params: string) => ["hires", params] as const,
@@ -187,6 +187,61 @@ export const hireKeys = {
   refundPreview: (id: string) => ["hire-refund-preview", id] as const,
   handovers: (id: string) => ["hire-handovers", id] as const,
 };
+
+// --- availability blocks (D-024) -----------------------------------------------
+
+export const blockKeys = {
+  all: ["availability-blocks"] as const,
+  forListings: (ids: string) => ["availability-blocks", ids] as const,
+};
+
+/** Blocks across the supplier's listings for the CalendarGantt — one
+ *  first-page fetch per listing in parallel (blocks are rare; the newest 20
+ *  per listing more than covers a month view). */
+export function useAvailabilityBlocks(listingIds: string[]) {
+  const key = [...listingIds].sort().join(",");
+  return useQuery({
+    queryKey: blockKeys.forListings(key),
+    enabled: listingIds.length > 0,
+    queryFn: async () => {
+      const pages = await Promise.all(
+        listingIds.map((id) =>
+          bff<Paginated<AvailabilityBlock>>(`/listings/${id}/availability-blocks`),
+        ),
+      );
+      return pages.flatMap((p) => p.results);
+    },
+  });
+}
+
+export function useCreateAvailabilityBlock() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({
+      listingId,
+      ...body
+    }: {
+      listingId: string;
+      start_date: string;
+      end_date: string;
+      reason?: string;
+    }) =>
+      bff<AvailabilityBlock>(`/listings/${listingId}/availability-blocks`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => invalidate(blockKeys.all),
+  });
+}
+
+export function useDeleteAvailabilityBlock() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (blockId: string) =>
+      bff<void>(`/availability-blocks/${blockId}`, { method: "DELETE" }),
+    onSuccess: () => invalidate(blockKeys.all),
+  });
+}
 
 /** Supplier hires, following cursor pages (P6/P8 slice client-side). */
 export function useHires(params: { from?: string; to?: string } = {}) {

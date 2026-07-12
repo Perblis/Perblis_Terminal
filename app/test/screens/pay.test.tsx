@@ -9,7 +9,12 @@ jest.mock("expo-router", () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({ hireId: "h1" }),
 }));
-jest.mock("expo-web-browser", () => ({ openBrowserAsync: jest.fn(async () => ({})) }));
+jest.mock("expo-web-browser", () => ({
+  openAuthSessionAsync: jest.fn(async () => ({ type: "success", url: "terminal://pay/h1" })),
+}));
+jest.mock("expo-linking", () => ({
+  createURL: jest.fn((path: string) => `terminal://${path.replace(/^\//, "")}`),
+}));
 jest.mock("expo-sharing", () => ({
   isAvailableAsync: jest.fn(async () => false),
   shareAsync: jest.fn(async () => {}),
@@ -96,6 +101,31 @@ test("expiry (system-cancelled): dates-released copy + re-request; no fee leak",
   expect(await screen.findByText("The payment window closed")).toBeTruthy();
   expect(screen.getByText("Request again")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
+});
+
+test("Pay now opens an auth session with the app return URL, then polls", async () => {
+  const { fireEvent } = jest.requireActual("@testing-library/react-native");
+  const WebBrowser = jest.requireMock("expo-web-browser");
+  mockApi(BASE_HIRE);
+  const screen = await renderScreen(<Pay />);
+  fireEvent.press(await screen.findByText("Pay now"));
+  // The auth session (not a plain browser sheet) carries the deep-link return
+  // URL so the backend return page can close the sheet back into the app.
+  expect(await screen.findByText("Confirming with bank…")).toBeTruthy();
+  expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
+    "https://checkout.paystack.com/x",
+    "terminal://pay/h1",
+  );
+});
+
+test("a dismissed sheet still polls — the webhook decides, never the redirect", async () => {
+  const { fireEvent } = jest.requireActual("@testing-library/react-native");
+  const WebBrowser = jest.requireMock("expo-web-browser");
+  WebBrowser.openAuthSessionAsync.mockResolvedValueOnce({ type: "dismiss" });
+  mockApi(BASE_HIRE);
+  const screen = await renderScreen(<Pay />);
+  fireEvent.press(await screen.findByText("Pay now"));
+  expect(await screen.findByText("Confirming with bank…")).toBeTruthy();
 });
 
 test("confirmed: receipt document with the PAID marker and ONLY the hirer total", async () => {

@@ -1,13 +1,14 @@
 // A handover record card on S10. The COUNTERPARTY confirms (never the
 // submitter, hires/state.py) — so the hirer sees "Confirm" only on a
 // supplier-submitted, unconfirmed record; their own unconfirmed record shows
-// "awaiting supplier". Photos are private-bucket keys (viewer needs a
-// presigned GET the record doesn't carry), so we show a count, not thumbs.
+// "awaiting supplier". Photos render from the record's presigned
+// `photo_urls` (private bucket, D-025) via the strip's thumbs + lightbox.
 import { View } from "react-native";
 
 import type { HandoverRecord } from "../../lib/types";
 import { Button } from "../ui/button";
 import { BodyText, MonoText } from "../ui/text";
+import { HandoverPhotoStrip } from "./handover-photo-strip";
 
 const KIND_LABEL: Record<HandoverRecord["kind"], string> = {
   on_hire: "On-hire handover",
@@ -49,9 +50,7 @@ export function HandoverRecordCard({
         )}
       </View>
 
-      <BodyText className="text-body-sm text-text-secondary">
-        {record.photos.length} photo{record.photos.length === 1 ? "" : "s"} attached
-      </BodyText>
+      <HandoverPhotoStrip record={record} />
       {lines.map((line) => (
         <MonoText key={line} className="text-body-sm text-text-secondary">
           {line}

@@ -25,6 +25,7 @@ import type {
   GeocodeResponse,
   Hire,
   HandoverRecord,
+  ListingAvailability,
   Message,
   Paginated,
   ListAssetItem,
@@ -49,6 +50,8 @@ export const keys = {
   specTemplate: (c: string, t: string, v: string) => ["spec-template", c, t, v] as const,
   listSearch: (query: string) => ["list-search", query] as const,
   listing: (id: string) => ["listing", id] as const,
+  availability: (id: string, from: string, to: string) =>
+    ["listing-availability", id, from, to] as const,
   storefront: (id: string) => ["storefront", id] as const,
   geocode: (q: string) => ["geocode", q] as const,
 };
@@ -94,6 +97,21 @@ export function useListing(id: string | null) {
     queryKey: keys.listing(id ?? "none"),
     queryFn: () => apiFetch<Listing>(`/listings/${id}`),
     enabled: id !== null,
+  });
+}
+
+/** S7 ①: per-day free-unit counts for the request calendar. Degrades softly —
+ *  a failed fetch leaves the calendar permissive; the 409 sheet stays the
+ *  race safety-net (the server re-checks on every request/accept/pay). */
+export function useListingAvailability(id: string | null, from: string | null, to: string | null) {
+  const enabled = id !== null && from !== null && to !== null;
+  return useQuery({
+    queryKey: keys.availability(id ?? "none", from ?? "", to ?? ""),
+    queryFn: () =>
+      apiFetch<ListingAvailability>(`/listings/${id}/availability?from=${from}&to=${to}`),
+    enabled,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData, // month flips keep the last grid while loading
   });
 }
 

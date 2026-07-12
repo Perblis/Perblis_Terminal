@@ -134,13 +134,16 @@ def distance_km(listing: Listing) -> float:
     return round(listing.distance.km, 1)
 
 
-def annotate_availability(listings: list[Listing]) -> None:
+def annotate_availability(listings: list[Listing], params: dict | None = None) -> None:
     """Tag each listing with ``_available`` via one bulk query (Wave 4, TSD §3.4).
 
     Read by the summary builders below; keeps the endpoints N+1-free. Listings
-    with no current hold default to available.
+    with no current hold default to available. With ``date_from``/``date_to``
+    params the flag reflects the hirer's chosen window (full-range semantics,
+    matching what a request for those dates would be allowed) instead of today.
     """
-    avail = availability_map(listings)
+    params = params or {}
+    avail = availability_map(listings, start=params.get("date_from"), end=params.get("date_to"))
     for listing in listings:
         listing._available = avail.get(listing.id, True)
 

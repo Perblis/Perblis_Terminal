@@ -11,15 +11,17 @@ describe("publicMediaKeyFromUrl", () => {
       ),
     ).toBe("listings/0197-xyz.jpg");
     expect(publicMediaKeyFromUrl("https://cdn.example.com/logos/l.webp")).toBe("logos/l.webp");
-    expect(publicMediaKeyFromUrl("https://cdn.example.com/handovers/h.jpg")).toBe(
-      "handovers/h.jpg",
-    );
   });
 
   it("rejects non-public prefixes and non-URLs", () => {
     expect(publicMediaKeyFromUrl("https://x.r2.cloudflarestorage.com/verifications/v.pdf")).toBe(
       null,
     );
+    // Handover photos are private-bucket (D-025): their presigned photo_urls
+    // must pass through untouched — never rewritten onto the public proxy.
+    expect(
+      publicMediaKeyFromUrl("https://x.r2.cloudflarestorage.com/handovers/h.jpg?X-Amz-Sig=s"),
+    ).toBe(null);
     expect(publicMediaKeyFromUrl("not-a-url")).toBe(null);
     expect(publicMediaKeyFromUrl("")).toBe(null);
   });

@@ -76,7 +76,7 @@ terminal/
 | `suppliers` | SupplierProfile, Yard, storefront read API, strikes |
 | `listings` | Listing, Unit, SpecTemplate (+ validation), photos, Report, duplicate action |
 | `search` | Map + list search, yard aggregation |
-| `hires` | Hire, HireEvent, HandoverRecord; state machine `hires/state.py`; fees `hires/fees.py`; availability `hires/availability.py` |
+| `hires` | Hire, HireEvent, HandoverRecord, AvailabilityBlock (D-024); state machine `hires/state.py`; fees `hires/fees.py`; availability `hires/availability.py` |
 | `payments` | Payment, Refund, Payout, PaystackEvent; client, webhook, reconciliation |
 | `messaging` | Conversation, Message, masking, Ably token endpoint, unread counters |
 | `ops` | Admin site, queues, dashboard, dispute actions, weekly digest |
@@ -142,6 +142,7 @@ SELECT count(*) FROM hires
    AND start_date <= :end AND end_date >= :start;
 -- range available iff count < listing.unit_count
 ```
+**Supplier date-blocks (D-024):** an `AvailabilityBlock (listing, start_date, end_date, reason, created_by)` overlapping the range is a **hard hold on the whole listing** — `is_available`, `free_units`, and `can_confirm` all return zero/false when a block overlaps, so accept/pay reject through the same row-lock re-check (no new state-machine edges). Folded into the bulk `availability_map` (search) and the per-day `free_units_by_day` (the public calendar) with one extra indexed query each. Read-only endpoint `GET /listings/{id}/availability?from=&to=` returns per-day free-unit counts (counts only, ≤90-day window); `/search/map` + `/search/list` accept optional `date_from`/`date_to` so the `available` flag reflects a chosen window.
 **Race rule (binding):** `accept_hire` and `apply_payment_success` execute in a transaction that first takes `SELECT … FOR UPDATE` **on the listing row**, then re-checks availability, then writes. Two concurrent payments on the last unit cannot both pass; the loser's payment triggers automatic refund (full) + apology notification — this path must be tested. On entering `confirmed`, the same transaction auto-declines overflowed requested/accepted hires and queues their notifications on commit.
 
 ### 3.5 State machine & timers
@@ -190,7 +191,7 @@ SELECT count(*) FROM hires
 **Serialization rule (D-014):** the Hire serializer is **role-shaped** — `service_fee` and `payout_amount` fields are present only when `request.user == hire.supplier` or staff. This is enforced in the serializer layer with tests, not left to clients.
 
 ### 3.9 Media pipeline
-Client → `POST media/presign` (validates kind, content-type, ≤ size cap; returns key + presigned PUT) → direct R2 upload → attach key via the owning endpoint. Public bucket via R2 public domain (listing photos ≤10MB accepted but clients pre-resize to ≤1920px/~1MB via Expo ImageManipulator / portal canvas). Private bucket (verification docs, handover photos): presigned GET, 15-min expiry, owner+Ops only. Weekly orphan sweep deletes unattached keys >7 days old.
+Client → `POST media/presign` (validates kind, content-type, ≤ size cap; returns key + presigned PUT) → direct R2 upload → attach key via the owning endpoint. Public bucket via R2 public domain (listing photos ≤10MB accepted but clients pre-resize to ≤1920px/~1MB via Expo ImageManipulator / portal canvas). Private bucket (verification docs, handover photos — D-025): presigned GET, 15-min expiry, parties+Ops only; handover reads are minted as `photo_urls` on the handover serializer (participants-only access is enforced where the URL is issued). Weekly orphan sweep deletes unattached keys >7 days old. **Handover-photo retention (D-026):** photo objects are purged 90 days after the off-hire handover is confirmed (idempotent daily `purge_handover_photos` sweep, marker `HandoverRecord.photos_purged_at`); the record rows are retained indefinitely.
 
 ### 3.10 Masking implementation
 On message create: regex Nigerian phones (`(\+?234|0)[789][01]\d{8}` + spaced/dotted variants) + emails → `body_masked` stored alongside `body`. Serving: hire conversations serve `body` once the hire is paid, else `body_masked`; enquiry conversations always serve `body_masked`. Original `body` retained (Ops/dispute visibility). Masking notice is a UI concern (MaskedContact component, doc 08 §3.4).

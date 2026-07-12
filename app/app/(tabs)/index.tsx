@@ -7,7 +7,11 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FilterBar } from "../../components/map/filter-bar";
-import { PeekCard } from "../../components/map/peek-card";
+import {
+  PinCarousel,
+  carouselItems,
+  type CarouselItem,
+} from "../../components/map/pin-carousel";
 import {
   TerminalMap,
   type MapSelection,
@@ -26,7 +30,8 @@ export default function MapTab() {
   const insets = useSafeAreaInsets();
   const tk = useThemeTokens();
   const mapRef = useRef<TerminalMapHandle>(null);
-  const { region, classFilter, setRegion, setClassFilter, pendingFocus, clearFocus } = useMapState();
+  const { region, classFilter, dateRange, setRegion, setClassFilter, pendingFocus, clearFocus } =
+    useMapState();
 
   // One-shot focus handed over from another screen (S13 yard card).
   useEffect(() => {
@@ -63,11 +68,12 @@ export default function MapTab() {
 
   const search = useMapSearch(
     bbox ?? { minLng: Number.NaN, minLat: Number.NaN, maxLng: Number.NaN, maxLat: Number.NaN },
-    { assetClass: classFilter },
+    { assetClass: classFilter, dateFrom: dateRange?.from, dateTo: dateRange?.to },
   );
 
   const yards = search.data?.yards ?? [];
   const solos = search.data?.listings ?? [];
+  const items = carouselItems(yards, solos);
   const total = search.data ? yards.reduce((n, y) => n + y.matching_count, 0) + solos.length : null;
   const overCap = yards.length + solos.length > 200;
   const emptyViewport = search.data && yards.length === 0 && solos.length === 0;
@@ -86,15 +92,25 @@ export default function MapTab() {
     if (pos) mapRef.current?.flyTo(pos.coords.longitude, pos.coords.latitude, 13);
   };
 
-  const openSelection = () => {
-    if (!selection) return;
-    if (selection.kind === "listing") {
-      router.push(`/listing/${selection.listing.id}` as never);
+  const openItem = (item: CarouselItem) => {
+    if (item.kind === "listing") {
+      router.push(`/listing/${item.listing.id}` as never);
     } else {
       // S5 opens in-screen from the map payload — drag-dismiss preserves
       // the map position (zero navigation, zero fetches).
-      setYardSheet(selection.yard);
+      setYardSheet(item.yard);
     }
+  };
+
+  // Swiping the carousel selects the card's pin and pans to it (zoom kept).
+  const onCarouselActive = (item: CarouselItem) => {
+    const next =
+      item.kind === "yard"
+        ? ({ kind: "yard", yard: item.yard } as const)
+        : ({ kind: "listing", listing: item.listing } as const);
+    setSelection(next);
+    const point = item.kind === "yard" ? item.yard.point : item.listing.point;
+    mapRef.current?.flyTo(point.coordinates[0], point.coordinates[1]);
   };
 
   return (
@@ -162,7 +178,7 @@ export default function MapTab() {
         accessibilityLabel="Centre the map on my location"
         onPress={() => setLocateAsk(true)}
         className="absolute right-4 h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-card shadow-md"
-        style={{ bottom: insets.bottom + (selection ? 132 : 24) }}
+        style={{ bottom: insets.bottom + (items.length > 0 ? 116 : 24) }}
       >
         <Svg width={22} height={22} viewBox="0 0 24 24">
           <Circle cx={12} cy={12} r={6.5} stroke={tk["--text-primary"]} strokeWidth={2} fill="none" />
@@ -211,9 +227,16 @@ export default function MapTab() {
         </View>
       ) : null}
 
-      {/* Peek card */}
-      {selection && !yardSheet ? (
-        <PeekCard selection={selection} onOpen={openSelection} bottomInset={insets.bottom} />
+      {/* Snap-to-pin carousel — the browsing surface (replaces the peek card).
+          Swipe ↔ pin selection stay in sync; tap a card to open it. */}
+      {items.length > 0 && !yardSheet ? (
+        <PinCarousel
+          items={items}
+          selection={selection}
+          onActive={onCarouselActive}
+          onOpen={openItem}
+          bottomInset={insets.bottom}
+        />
       ) : null}
 
       {/* S5 Yard Sheet */}

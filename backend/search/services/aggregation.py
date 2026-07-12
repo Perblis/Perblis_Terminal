@@ -55,7 +55,7 @@ def search_map(params: dict) -> dict:
     """Aggregate Live listings in the area into yard pins + solo pins (TSD §3.7)."""
     star = star_field(params["asset_class"]) if params.get("asset_class") else None
     listings = list(common.base_listings(params)[0])
-    common.annotate_availability(listings)
+    common.annotate_availability(listings, params)
 
     # First pass: Live listings per real yard, to decide yard pin vs. solo pin.
     yard_counts: dict = {}

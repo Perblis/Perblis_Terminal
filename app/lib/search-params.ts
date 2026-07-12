@@ -10,6 +10,10 @@ export type SearchFilters = {
   priceMaxKobo?: number | null;
   specMin?: number | null;
   specMax?: number | null;
+  /** Hire window (both-or-neither — the server rejects one without the other);
+   *  'available' then reflects the window instead of just today. */
+  dateFrom?: string | null;
+  dateTo?: string | null;
 };
 
 export type Bbox = {
@@ -30,6 +34,11 @@ function appendFilters(params: URLSearchParams, f: SearchFilters): void {
   if (f.assetClass) {
     if (f.specMin != null) params.set("spec_min", String(f.specMin));
     if (f.specMax != null) params.set("spec_max", String(f.specMax));
+  }
+  // Dates go both-or-neither (server 400s a lone bound).
+  if (f.dateFrom && f.dateTo) {
+    params.set("date_from", f.dateFrom);
+    params.set("date_to", f.dateTo);
   }
 }
 

@@ -1,18 +1,23 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PriceHero } from "../../components/hires/price-hero";
 import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
-import { RangeCalendar, type DateRange } from "../../components/hires/range-calendar";
+import {
+  RangeCalendar,
+  type AvailabilityByDay,
+  type DateRange,
+} from "../../components/hires/range-calendar";
 import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText, MonoText } from "../../components/ui/text";
 import { TextField } from "../../components/ui/text-field";
 import { ApiError } from "../../lib/api";
 import { formatDateRange } from "../../lib/hire-domain";
 import { quoteEstimate } from "../../lib/pricing";
-import { useCreateHire, useListing } from "../../lib/queries";
+import { keys, useCreateHire, useListing, useListingAvailability } from "../../lib/queries";
 import type { HireDetail } from "../../lib/types";
 
 type Step = 1 | 2 | 3;
@@ -32,9 +37,24 @@ export default function HireRequest() {
   const { listingId } = useLocalSearchParams<{ listingId: string }>();
   const { data: listing } = useListing(listingId ?? null);
   const createHire = useCreateHire();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>(1);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
+  // The calendar's visible month drives the availability window (the server
+  // clamps past days to today; entirely-past months come back empty = clear).
+  const [month, setMonth] = useState<{ first: string; last: string } | null>(null);
+  const availabilityQuery = useListingAvailability(
+    listingId ?? null,
+    month?.first ?? null,
+    month?.last ?? null,
+  );
+  const availability = useMemo<AvailabilityByDay | undefined>(() => {
+    const days = availabilityQuery.data?.days;
+    const total = availabilityQuery.data?.unit_count ?? 1;
+    if (!days) return undefined; // loading/failed → permissive grid
+    return Object.fromEntries(days.map((d) => [d.date, { free: d.free_units, total }]));
+  }, [availabilityQuery.data]);
   const [note, setNote] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [conflict, setConflict] = useState(false);
@@ -67,7 +87,13 @@ export default function HireRequest() {
       setSubmitted(hire);
     } catch (e) {
       if (e instanceof ApiError && e.code === "availability_conflict") {
-        // F3 409 race: refreshed pick — dates cleared, back to ①.
+        // F3 409 race: refreshed pick — dates cleared, back to ①. Refetch the
+        // calendar so "the calendar is up to date" is literally true.
+        if (month) {
+          void queryClient.invalidateQueries({
+            queryKey: keys.availability(listing.id, month.first, month.last),
+          });
+        }
         setConflict(true);
         return;
       }
@@ -145,7 +171,17 @@ export default function HireRequest() {
         {step === 1 ? (
           <View className="gap-3">
             <DisplayText className="text-h2">When do you need it?</DisplayText>
-            <RangeCalendar range={range} onChange={setRange} />
+            <RangeCalendar
+              range={range}
+              onChange={setRange}
+              availability={availability}
+              onMonthChange={(first, last) => setMonth({ first, last })}
+            />
+            {availabilityQuery.isError ? (
+              <BodyText className="text-caption text-text-tertiary">
+                Live availability isn’t loading — your dates are checked when you send.
+              </BodyText>
+            ) : null}
             {estimate ? (
               <View className="rounded-md bg-surface-sunken px-3.5 py-2.5">
                 <MonoText className="text-body-sm">{estimate.durationLine}</MonoText>

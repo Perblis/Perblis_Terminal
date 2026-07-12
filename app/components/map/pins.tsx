@@ -42,12 +42,22 @@ function plateFrame(selected: boolean) {
  * yards — informative, never removed). The class hue stays an index mark,
  * not the body of the pin (D-023).
  */
-export function AssetPin({ listing, selected = false }: { listing: MapSoloListing; selected?: boolean }) {
+export function AssetPin({
+  listing,
+  selected = false,
+  compact = false,
+}: {
+  listing: MapSoloListing;
+  selected?: boolean;
+  /** Carousel mode: the card carries the detail, so the plate shrinks to a
+   *  glyph-only tag (the selected pin keeps the full plate + amber border). */
+  compact?: boolean;
+}) {
   const t = useThemeTokens();
   const meta = CLASS_BY_VALUE[listing.asset_class];
   const strip = t[meta.varKey];
   const Glyph = CLASS_GLYPHS[listing.asset_class];
-  const height = selected ? 28 : 24;
+  const height = selected ? 28 : compact ? 20 : 24;
   return (
     <View
       accessibilityLabel={`${meta.label} listing: ${listing.title}, from ${listing.price_from_display} a day${listing.available ? "" : ", currently on hire"}`}
@@ -62,9 +72,9 @@ export function AssetPin({ listing, selected = false }: { listing: MapSoloListin
     >
       <View style={{ width: 3, backgroundColor: strip }} />
       <View style={{ justifyContent: "center", paddingLeft: 5 }}>
-        <Glyph size={13} color={PAPER} />
+        <Glyph size={compact && !selected ? 11 : 13} color={PAPER} />
       </View>
-      {listing.price_from > 0 ? (
+      {!compact && listing.price_from > 0 ? (
         <View style={{ justifyContent: "center", paddingHorizontal: 5 }}>
           <MonoText style={{ color: PAPER, fontSize: 11 }}>{compactNaira(listing.price_from)}</MonoText>
         </View>
@@ -85,13 +95,18 @@ export function YardPin({
   yard,
   filtered = false,
   selected = false,
+  compact = false,
 }: {
   yard: MapYard;
   filtered?: boolean;
   selected?: boolean;
+  /** Carousel mode: drop the price row and class glyphs — initials + count
+   *  only (the yard card carries the detail). */
+  compact?: boolean;
 }) {
   const dimmed = filtered && yard.matching_count === 0;
   const count = filtered ? yard.matching_count : yard.listing_count;
+  const showDetail = !compact || selected;
   const initials = yard.supplier.name
     .split(/\s+/)
     .slice(0, 2)
@@ -116,7 +131,7 @@ export function YardPin({
           <View style={{ justifyContent: "center", paddingHorizontal: 7 }}>
             <MonoText style={{ color: PAPER, fontSize: 13 }}>{count}</MonoText>
           </View>
-          {glyphClasses.length > 0 ? (
+          {showDetail && glyphClasses.length > 0 ? (
             <>
               <View style={{ width: 1, backgroundColor: INK_RULE }} />
               <View
@@ -132,7 +147,7 @@ export function YardPin({
             </>
           ) : null}
         </View>
-        {yard.price_from > 0 ? (
+        {showDetail && yard.price_from > 0 ? (
           <View
             style={{
               borderTopWidth: 1,

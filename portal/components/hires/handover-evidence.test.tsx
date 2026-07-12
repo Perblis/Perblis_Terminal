@@ -1,5 +1,7 @@
-// The supplier must be able to SEE what they are confirming: photos ride the
-// BFF public-media proxy and readings render as labelled rows.
+// The supplier must be able to SEE what they are confirming: photos render
+// from the record's presigned photo_urls (private bucket, D-025 — local-dev
+// relative URLs ride the BFF, R2 presigned URLs pass through untouched) and
+// readings render as labelled rows.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -12,19 +14,29 @@ const record: HandoverRecord = {
   hire: "h1",
   kind: "on_hire",
   photos: ["handovers/abc.jpg", "handovers/def.jpg"],
+  photo_urls: [
+    "/api/v1/media/private?t=token-abc",
+    "https://acc.r2.cloudflarestorage.com/handovers/def.jpg?X-Amz-Signature=sig",
+  ],
   reading: { hour_meter: "4021.5", notes: "Fuel at half tank" },
   submitted_by_role: "hirer",
   confirmed_at: null,
+  photos_purged_at: null,
   created_at: "2026-07-01T09:15:00Z",
 };
 
 describe("HandoverEvidence", () => {
-  it("renders photo thumbnails through the BFF media proxy", () => {
+  it("renders thumbnails from presigned photo_urls (BFF for local, pass-through for R2)", () => {
     render(<HandoverEvidence record={record} />, { container: document.body.appendChild(document.createElement("ul")) });
     const thumbs = screen.getAllByRole("button", { name: /View handover photo/ });
     expect(thumbs).toHaveLength(2);
-    const img = thumbs[0].querySelector("img");
-    expect(img?.getAttribute("src")).toBe("/bff/media/public?key=handovers%2Fabc.jpg");
+    expect(thumbs[0].querySelector("img")?.getAttribute("src")).toBe(
+      "/bff/media/private?t=token-abc",
+    );
+    // R2 presigned URL keeps its signature — never rewritten to the public proxy.
+    expect(thumbs[1].querySelector("img")?.getAttribute("src")).toBe(
+      "https://acc.r2.cloudflarestorage.com/handovers/def.jpg?X-Amz-Signature=sig",
+    );
   });
 
   it("renders labelled reading rows and the submitted-by line", () => {
@@ -38,9 +50,19 @@ describe("HandoverEvidence", () => {
   });
 
   it("says so when no photos are attached", () => {
-    render(<HandoverEvidence record={{ ...record, photos: [] }} />, {
+    render(<HandoverEvidence record={{ ...record, photos: [], photo_urls: [] }} />, {
       container: document.body.appendChild(document.createElement("ul")),
     });
     expect(screen.getByText("No photos attached.")).toBeInTheDocument();
+  });
+
+  it("shows the D-026 retention note once photos are purged", () => {
+    render(
+      <HandoverEvidence
+        record={{ ...record, photos: [], photo_urls: [], photos_purged_at: "2026-11-01T00:00:00Z" }}
+      />,
+      { container: document.body.appendChild(document.createElement("ul")) },
+    );
+    expect(screen.getByText(/removed 90 days after off-hire/)).toBeInTheDocument();
   });
 });

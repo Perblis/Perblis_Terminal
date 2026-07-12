@@ -14,7 +14,7 @@ from core import media
 from core.money import display
 
 from .enums import CancelledBy, HandoverKind
-from .models import HandoverRecord, Hire, HireEvent
+from .models import AvailabilityBlock, HandoverRecord, Hire, HireEvent
 
 # Fields visible only to the supplier (and Ops/staff) — never to the hirer.
 _SUPPLIER_ONLY = ("service_fee", "service_fee_display", "payout_amount", "fee_basis")
@@ -151,6 +151,30 @@ class HireDetailSerializer(HireSerializer):
         fields = (*HireSerializer.Meta.fields, "events")
 
 
+class AvailabilityDaySerializer(serializers.Serializer):
+    """One calendar day of the public availability endpoint (response-only)."""
+
+    date = serializers.DateField(read_only=True)
+    free_units = serializers.IntegerField(read_only=True)
+    available = serializers.BooleanField(read_only=True)
+
+
+class AvailabilityBlockCreateSerializer(serializers.Serializer):
+    """A supplier's manual date-block (D-024); range rules live in the service."""
+
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    reason = serializers.CharField(required=False, allow_blank=True, default="", max_length=140)
+
+
+class AvailabilityBlockSerializer(serializers.ModelSerializer):
+    listing_id = serializers.UUIDField(source="listing.id", read_only=True)
+
+    class Meta:
+        model = AvailabilityBlock
+        fields = ("id", "listing_id", "start_date", "end_date", "reason", "created_at")
+
+
 class HandoverCreateSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=HandoverKind.choices)
     # Private-bucket object keys (uploaded via the presign pipeline); ≥2 (FSD §7.4).
@@ -163,6 +187,11 @@ class HandoverSerializer(serializers.ModelSerializer):
     # submitter). The client uses this to offer "Confirm" only to the other party
     # and to label "you submitted" vs "supplier submitted". No user id / PII leaks.
     submitted_by_role = serializers.SerializerMethodField()
+    # Short-lived presigned GETs for the private-bucket photos (D-025), same
+    # order as ``photos``. Authorization happens where these are minted: the
+    # record is only ever serialized for the hire's parties (404 otherwise).
+    # 15-min TTL — clients refetch the record rather than caching the URLs.
+    photo_urls = serializers.SerializerMethodField()
 
     class Meta:
         model = HandoverRecord
@@ -171,14 +200,19 @@ class HandoverSerializer(serializers.ModelSerializer):
             "hire",
             "kind",
             "photos",
+            "photo_urls",
             "reading",
             "submitted_by_role",
             "confirmed_at",
+            "photos_purged_at",
             "created_at",
         )
 
     def get_submitted_by_role(self, obj: HandoverRecord) -> str:
         return "hirer" if obj.submitted_by_id == obj.hire.hirer_id else "supplier"
+
+    def get_photo_urls(self, obj: HandoverRecord) -> list[str]:
+        return [media.private_presign_get(key) for key in obj.photos]
 
 
 class RefundPreviewSerializer(serializers.Serializer):

@@ -101,6 +101,16 @@ beforeEach(() => {
       }
       return { ok: true, status: 201, json: async () => HIRE_201 } as unknown as Response;
     }
+    if (u.includes("/availability")) {
+      const availability = {
+        listing_id: "l1",
+        unit_count: 1,
+        from: "2026-08-01",
+        to: "2026-08-31",
+        days: [], // no holds — every visible day stays pickable
+      };
+      return { ok: true, status: 200, json: async () => availability } as unknown as Response;
+    }
     return { ok: true, status: 200, json: async () => LISTING } as unknown as Response;
   }) as unknown as typeof fetch;
 });

@@ -113,6 +113,44 @@ class HireEvent(BaseModel):
         return f"{self.hire_id}: {self.from_status}→{self.to_status}"
 
 
+class AvailabilityBlock(BaseModel):
+    """A supplier's manual date-block on a listing (D-024).
+
+    A block behaves as a **hard hold on the whole listing** — every unit is
+    occupied for the range, so it gates ``can_confirm`` exactly like a
+    confirmed hire (maintenance, an off-platform commitment). Blocks never
+    touch existing hires and never pass through the hire state machine; they
+    are supplier config, hard-deleted on removal.
+    """
+
+    listing = models.ForeignKey(
+        "listings.Listing", on_delete=models.CASCADE, related_name="availability_blocks"
+    )
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.CharField(max_length=140, blank=True)  # supplier label; never shown to hirers
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="availability_blocks_created",
+    )
+
+    class Meta:
+        indexes = [
+            # Same shape as the hire overlap hot path (TSD §3.4).
+            models.Index(fields=["listing", "start_date", "end_date"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(end_date__gte=models.F("start_date")),
+                name="availability_block_dates_ordered",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Block on {self.listing_id}: {self.start_date}–{self.end_date}"
+
+
 class HandoverRecord(BaseModel):
     """On-hire / off-hire evidence (FSD §7.4). Confirmed by the counterparty.
 
@@ -137,6 +175,10 @@ class HandoverRecord(BaseModel):
         related_name="handovers_confirmed",
     )
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    # D-026: photo objects are purged from storage 90 days after the off-hire
+    # handover is confirmed; the record row (kind, reading, timestamps, roles)
+    # is the transaction history and is retained forever.
+    photos_purged_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [models.Index(fields=["hire", "kind"])]

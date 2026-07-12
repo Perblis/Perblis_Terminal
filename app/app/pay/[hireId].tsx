@@ -1,7 +1,9 @@
 import * as Haptics from "expo-haptics";
+import * as Linking from "expo-linking";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +15,7 @@ import { ReceiptCard } from "../../components/hires/receipt-card";
 import { Button } from "../../components/ui/button";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { useCountdown } from "../../lib/use-countdown";
-import { useHire, usePaymentStatus } from "../../lib/queries";
+import { hireKeys, useHire, usePaymentStatus } from "../../lib/queries";
 import { playPaymentSuccess } from "../../lib/sounds";
 
 /**
@@ -25,6 +27,7 @@ export default function Pay() {
   const insets = useSafeAreaInsets();
   const { hireId } = useLocalSearchParams<{ hireId: string }>();
   const [confirming, setConfirming] = useState(false);
+  const queryClient = useQueryClient();
 
   // Poll fast while confirming; gently otherwise (deadline sweep visibility).
   const { data: hire } = useHire(hireId ?? null, confirming ? 3000 : 30000);
@@ -49,8 +52,18 @@ export default function Pay() {
   const openCheckout = async () => {
     const url = payment.data?.authorization_url;
     if (!url) return;
-    await WebBrowser.openBrowserAsync(url).catch(() => {});
-    // Browser dismissed — start polling; the webhook decides.
+    // An auth session (not a plain browser sheet) so Paystack's redirect to
+    // the backend return page → terminal://pay/{hireId} auto-closes the sheet
+    // and lands the payer back here. Still UX only: whatever the sheet
+    // reports, we poll and the webhook decides.
+    const returnUrl = Linking.createURL(`/pay/${hireId}`);
+    const result = await WebBrowser.openAuthSessionAsync(url, returnUrl).catch(() => null);
+    if (result?.type === "success") {
+      // Came back via the deep link — nudge the pollers for a faster stamp.
+      void queryClient.invalidateQueries({ queryKey: hireKeys.detail(hireId ?? "none") });
+      void queryClient.invalidateQueries({ queryKey: hireKeys.payment(hireId ?? "none") });
+    }
+    // Sheet dismissed or returned — start polling either way.
     setConfirming(true);
   };
 

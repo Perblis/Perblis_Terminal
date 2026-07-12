@@ -231,11 +231,30 @@ export type HandoverRecord = {
   hire: string;
   kind: "on_hire" | "off_hire";
   photos: string[];
+  // Short-lived presigned GETs for the private-bucket photos (D-025), same
+  // order as `photos`; empty once purged (D-026). Refetch rather than cache.
+  photo_urls: string[];
   reading: Record<string, unknown>;
   // Which party submitted — the counterparty confirms (never the submitter).
   submitted_by_role: "hirer" | "supplier";
   confirmed_at: string | null;
+  photos_purged_at: string | null;
   created_at: string;
+};
+
+/** One calendar day of GET /listings/{id}/availability (counts only). */
+export type AvailabilityDay = {
+  date: string;
+  free_units: number;
+  available: boolean;
+};
+
+export type ListingAvailability = {
+  listing_id: string;
+  unit_count: number;
+  from: string;
+  to: string;
+  days: AvailabilityDay[];
 };
 
 export type Conversation = {
