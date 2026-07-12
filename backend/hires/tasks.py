@@ -20,8 +20,8 @@ from django.utils import timezone
 from django_tasks import task
 
 from . import state
-from .enums import ActorKind, CancelledBy, HireStatus
-from .models import Hire
+from .enums import ActorKind, CancelledBy, HandoverKind, HireStatus
+from .models import HandoverRecord, Hire
 
 logger = structlog.get_logger(__name__)
 
@@ -136,3 +136,55 @@ def sweep_hires() -> dict[str, int]:
     result.update(send_due_reminders())
     logger.info("hires.sweep", **result)
     return result
+
+
+# --- handover-photo retention (D-026) -----------------------------------------
+# Photo objects age out of storage this long after the off-hire handover is
+# confirmed; the record rows are retained forever (the transaction history).
+HANDOVER_PHOTO_RETENTION = dt.timedelta(days=90)
+
+
+def purge_due_handover_photos(now: dt.datetime | None = None) -> dict[str, int]:
+    """Delete handover-photo objects whose D-026 retention has elapsed.
+
+    Eligible: hires that are **Completed** (an In-Dispute hire freezes its
+    evidence) whose *confirmed* off-hire handover is ≥90 days old. All of the
+    hire's handover records purge together (on-hire evidence ages out with the
+    off-hire one). Idempotent: purged records carry ``photos_purged_at`` and
+    leave the candidate set; a storage failure leaves the record unpurged for
+    the next run.
+    """
+    from core import media
+
+    now = now or timezone.now()
+    cutoff = now - HANDOVER_PHOTO_RETENTION
+    due_hires = Hire.objects.filter(
+        status=HireStatus.COMPLETED,
+        handovers__kind=HandoverKind.OFF_HIRE,
+        handovers__confirmed_at__lte=cutoff,
+    ).values_list("id", flat=True)
+    records = HandoverRecord.objects.filter(
+        hire_id__in=due_hires, photos_purged_at__isnull=True
+    ).exclude(photos=[])
+
+    purged = objects_deleted = errors = 0
+    for record in records:
+        try:
+            for key in record.photos:
+                media.delete_private_file(key)  # missing key = no-op (idempotent)
+                objects_deleted += 1
+            record.photos = []
+            record.photos_purged_at = now
+            record.save(update_fields=["photos", "photos_purged_at", "updated_at"])
+            purged += 1
+        except Exception:  # one bad object never stalls the sweep
+            logger.exception("hires.handover_purge_failed", record=str(record.id))
+            errors += 1
+    result = {"purged": purged, "objects_deleted": objects_deleted, "errors": errors}
+    logger.info("hires.handover_purge", **result)
+    return result
+
+
+@task()
+def purge_handover_photos() -> dict[str, int]:
+    return purge_due_handover_photos()

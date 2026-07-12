@@ -175,6 +175,10 @@ class HandoverRecord(BaseModel):
         related_name="handovers_confirmed",
     )
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    # D-026: photo objects are purged from storage 90 days after the off-hire
+    # handover is confirmed; the record row (kind, reading, timestamps, roles)
+    # is the transaction history and is retained forever.
+    photos_purged_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [models.Index(fields=["hire", "kind"])]

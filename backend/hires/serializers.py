@@ -204,6 +204,7 @@ class HandoverSerializer(serializers.ModelSerializer):
             "reading",
             "submitted_by_role",
             "confirmed_at",
+            "photos_purged_at",
             "created_at",
         )
 

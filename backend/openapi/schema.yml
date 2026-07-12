@@ -2207,6 +2207,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        photos_purged_at:
+          type: string
+          format: date-time
+          nullable: true
         created_at:
           type: string
           format: date-time
