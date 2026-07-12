@@ -4,6 +4,7 @@ import { Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { HandoverQueueDrainer } from "../components/shell/handover-queue-drainer";
@@ -50,18 +51,22 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <QueryProvider>
-        <ThemeRoot>
-          <StatusBar style="auto" />
-          <SessionHydrator />
-          <SessionExpiredGate />
-          <SuspendedGate />
-          <HandoverQueueDrainer />
-          <RealtimeInvalidator />
-          <Stack screenOptions={{ headerShown: false }} />
-          <UpdateGate />
-        </ThemeRoot>
-      </QueryProvider>
+      {/* IME-inset tracking for every KeyboardAvoidingView below (edge-to-edge
+          Android ignores adjustResize; RN's own KAV is unreliable there). */}
+      <KeyboardProvider>
+        <QueryProvider>
+          <ThemeRoot>
+            <StatusBar style="auto" />
+            <SessionHydrator />
+            <SessionExpiredGate />
+            <SuspendedGate />
+            <HandoverQueueDrainer />
+            <RealtimeInvalidator />
+            <Stack screenOptions={{ headerShown: false }} />
+            <UpdateGate />
+          </ThemeRoot>
+        </QueryProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

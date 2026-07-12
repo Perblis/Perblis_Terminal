@@ -13,7 +13,8 @@ test — run it, on a physical device, before calling any release done.
 channels. `eas init` / `eas update:configure` are already done — running them again is a
 no-op. `Updates.isEnabled` is true in any binary built from this config.
 
-`runtimeVersion` is the **static string `"0.1.1"`** (the fingerprint policy was dropped to
+`runtimeVersion` is a **static string** (currently `"0.1.2"` — bumped from `"0.1.1"` when
+`react-native-keyboard-controller` was added; the fingerprint policy was dropped to
 unblock EAS builds on the pnpm monorepo). Consequences:
 
 - `fingerprint.config.js` is dead config under the static policy; a `criticalIndex` bump
