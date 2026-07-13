@@ -11,7 +11,7 @@
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/a8a1d8db-013a-4ab5-b4b8-5cff2490043f"
+      "url": "https://u.expo.dev/a2177bd7-0417-4823-9c4a-fe70ab11d07e"
     },
     "extra": {
       "updates": {
@@ -19,7 +19,7 @@
       },
       "router": {},
       "eas": {
-        "projectId": "a8a1d8db-013a-4ab5-b4b8-5cff2490043f"
+        "projectId": "a2177bd7-0417-4823-9c4a-fe70ab11d07e"
       }
     },
     "ios": {
@@ -85,6 +85,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "perblis-organization"
+    "owner": "perble"
   }
 }
