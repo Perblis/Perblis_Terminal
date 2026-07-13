@@ -25,9 +25,11 @@ const RADII = [5, 10, 25, 50, 100] as const;
 export default function Search() {
   const tk = useThemeTokens();
   const insets = useSafeAreaInsets();
-  const { region, classFilter, dateRange, setClassFilter, setDateRange } = useMapState();
+  // q is shared with the S4 map (map-state store) so a query typed here
+  // still applies when the user returns to the map view.
+  const { region, classFilter, dateRange, q, setClassFilter, setDateRange, setQ } =
+    useMapState();
 
-  const [q, setQ] = useState("");
   const [radiusKm, setRadiusKm] = useState<number>(25);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
