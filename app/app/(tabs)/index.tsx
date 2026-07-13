@@ -1,4 +1,5 @@
 import NetInfo from "@react-native-community/netinfo";
+import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -103,14 +104,17 @@ export default function MapTab() {
   };
 
   // Swiping the carousel selects the card's pin and pans to it (zoom kept).
+  // The pan is silent — a refetch would re-sort results by distance from the
+  // new centre and jump the carousel under the user's finger.
   const onCarouselActive = (item: CarouselItem) => {
     const next =
       item.kind === "yard"
         ? ({ kind: "yard", yard: item.yard } as const)
         : ({ kind: "listing", listing: item.listing } as const);
     setSelection(next);
+    void Haptics.selectionAsync().catch(() => {});
     const point = item.kind === "yard" ? item.yard.point : item.listing.point;
-    mapRef.current?.flyTo(point.coordinates[0], point.coordinates[1]);
+    mapRef.current?.flyTo(point.coordinates[0], point.coordinates[1], undefined, { silent: true });
   };
 
   return (

@@ -17,6 +17,7 @@ import { useReducedMotion } from "react-native-reanimated";
 
 import { getSoloFeatures, buildSoloIndex, type SoloFeature } from "../../lib/cluster";
 import { findPressedPin, type PressablePin } from "../../lib/map-press";
+import { makeSettleGate } from "../../lib/map-settle";
 import { LIBERTY_URL, getTerminalChartStyle, type TerminalChartStyle } from "../../lib/map-style";
 import type { Bbox } from "../../lib/search-params";
 import type { MapSoloListing, MapYard } from "../../lib/types";
@@ -28,7 +29,9 @@ export type MapSelection =
   | null;
 
 export type TerminalMapHandle = {
-  flyTo: (lng: number, lat: number, zoom?: number) => void;
+  /** `silent: true` pans without refetching the viewport (carousel swipes —
+   *  a distance-re-sorted payload would jump the carousel under the finger). */
+  flyTo: (lng: number, lat: number, zoom?: number, opts?: { silent?: boolean }) => void;
 };
 
 type Props = {
@@ -78,8 +81,16 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
     };
   }, [theme]);
 
+  // Mutes the settle of a silent flyTo so it never reaches the fetch debounce.
+  const settleGate = useRef(makeSettleGate());
+  useEffect(() => {
+    const gate = settleGate.current;
+    return () => gate.dispose();
+  }, []);
+
   useImperativeHandle(ref, () => ({
-    flyTo: (lng, lat, zoom) => {
+    flyTo: (lng, lat, zoom, opts) => {
+      if (opts?.silent) settleGate.current.markSilent();
       cameraRef.current?.flyTo({
         center: [lng, lat],
         zoom,
@@ -94,11 +105,13 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
   };
 
   const handleRegionChange = (e: NativeSyntheticEvent<ViewStateChangeEvent>) => {
-    const { bounds, zoom, center } = e.nativeEvent;
+    const { bounds, zoom, center, animated } = e.nativeEvent;
     const [west, south, east, north] = bounds;
     const bbox: Bbox = { minLng: west, minLat: south, maxLng: east, maxLat: north };
-    setViewport({ bbox, zoom });
-    onRegionChanged(bbox, zoom, center);
+    setViewport({ bbox, zoom }); // always — clustering follows the camera
+    if (settleGate.current.shouldPropagate(animated ?? false)) {
+      onRegionChanged(bbox, zoom, center);
+    }
   };
 
   const soloFeatures: SoloFeature[] =

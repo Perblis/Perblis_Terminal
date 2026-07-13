@@ -2,12 +2,12 @@
   "expo": {
     "name": "Terminal",
     "slug": "terminal",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "scheme": "terminal",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "runtimeVersion": "0.1.1",
+    "runtimeVersion": "0.1.2",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,

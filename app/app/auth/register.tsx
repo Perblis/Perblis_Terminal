@@ -2,11 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, View } from "react-native";
+import { Pressable, ScrollView, Switch, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { VerifyOtp } from "../../components/auth/verify-otp";
-import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import { Button } from "../../components/ui/button";
 import { PasswordStrengthMeter } from "../../components/ui/password-strength";
 import { BodyText, DisplayText } from "../../components/ui/text";
@@ -80,10 +80,7 @@ export default function Register() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-surface-page"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView className="flex-1 bg-surface-page" behavior="padding">
       <ScrollView
         contentContainerStyle={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }}
         keyboardShouldPersistTaps="handled"
@@ -204,7 +201,6 @@ export default function Register() {
             </>
           )}
         </View>
-        <KeyboardSpacer />
       </ScrollView>
     </KeyboardAvoidingView>
   );

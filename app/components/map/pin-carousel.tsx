@@ -41,19 +41,54 @@ function selectionKey(selection: MapSelection): string | null {
   return selection.kind === "yard" ? `y-${selection.yard.yard_id}` : `l-${selection.listing.id}`;
 }
 
+/** Guards shared between the viewability handler and the snap effect. */
+export type SyncGuards = {
+  /** A programmatic scroll is in flight — its viewability echo must not re-select. */
+  snapInFlight: { current: boolean };
+  /** The currently selected card's key (mirror of the `selection` prop). */
+  activeKey: { current: string | null };
+  /** One-shot token: the key this carousel just reported via onActive (swipe
+   *  origin), so the snap effect knows the selection change is its own echo. */
+  lastReportedKey: { current: string | null };
+};
+
 /** The swipe→select half of the sync, factored pure for tests: activates the
- *  focused card unless a programmatic pin→card snap is in flight. */
+ *  focused card unless it is already selected or a programmatic snap's echo. */
 export function makeViewabilityHandler(
-  syncSource: { current: "pin" | "swipe" | null },
+  guards: SyncGuards,
   onActive: { current: (item: CarouselItem) => void },
 ) {
   return ({ viewableItems }: { viewableItems: ViewToken<CarouselItem>[] }) => {
-    if (syncSource.current === "pin") return;
+    if (guards.snapInFlight.current) return;
     const focused = viewableItems.find((v) => v.isViewable);
-    if (focused?.item) {
-      syncSource.current = "swipe";
-      onActive.current(focused.item);
+    if (!focused?.item) return;
+    const key = itemKey(focused.item);
+    if (key === guards.activeKey.current) return;
+    guards.lastReportedKey.current = key;
+    onActive.current(focused.item);
+  };
+}
+
+/** The selection→carousel half, factored pure for tests. Decides, per
+ *  selection change, whether to snap (animated — a pin tap or external
+ *  selection), realign (instant — the data reordered under the same
+ *  selection, e.g. a distance re-sort after a user pan), or hold still (the
+ *  change is the echo of this carousel's own swipe, or the item vanished). */
+export function makeSnapPlanner(guards: Pick<SyncGuards, "lastReportedKey">) {
+  let prevKey: string | null = null;
+  let prevIndex = -1;
+  return (activeKey: string | null, activeIndex: number): "snap" | "realign" | "hold" => {
+    const keyChanged = activeKey !== prevKey;
+    const lastIndex = prevIndex;
+    prevKey = activeKey;
+    prevIndex = activeIndex;
+    if (!activeKey || activeIndex < 0) return "hold";
+    if (keyChanged) {
+      const fromOwnSwipe = activeKey === guards.lastReportedKey.current;
+      guards.lastReportedKey.current = null; // one-shot, consumed either way
+      return fromOwnSwipe ? "hold" : "snap";
     }
+    return activeIndex !== lastIndex ? "realign" : "hold";
   };
 }
 
@@ -73,9 +108,6 @@ export function PinCarousel({
   bottomInset: number;
 }) {
   const listRef = useRef<FlatList<CarouselItem>>(null);
-  // "pin": a programmatic snap is in flight — viewability callbacks must not
-  // re-select (the feedback-loop guard). Cleared when the scroll settles.
-  const syncSource = useRef<"pin" | "swipe" | null>(null);
   const cardWidth = Dimensions.get("window").width - H_PADDING * 2 - 24;
   const interval = cardWidth + GAP;
 
@@ -85,31 +117,69 @@ export function PinCarousel({
     [items, activeKey],
   );
 
-  // Pin tap (or external selection): snap the carousel to the matching card.
-  useEffect(() => {
-    if (activeIndex < 0 || syncSource.current === "swipe") return;
-    syncSource.current = "pin";
-    listRef.current?.scrollToIndex({ index: activeIndex, animated: true, viewPosition: 0.5 });
-  }, [activeIndex]);
-
-  // The viewability callback must be referentially stable (FlatList mandate);
-  // route the latest onActive through a ref instead.
+  // Sync guards (see SyncGuards). The old single "syncSource" mode was
+  // sticky: it relied on onMomentumScrollEnd, which non-animated scrolls
+  // never fire and late viewability events could out-race, wedging the sync.
+  // These are one-shot and time-bounded instead. Refs are only touched inside
+  // effects and event handlers (never during render).
+  const snapInFlight = useRef(false);
+  const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeKeyRef = useRef<string | null>(null);
+  const lastReportedKey = useRef<string | null>(null);
   const onActiveRef = useRef(onActive);
+  const planSnap = useRef<ReturnType<typeof makeSnapPlanner> | null>(null);
+
+  useEffect(() => {
+    activeKeyRef.current = activeKey;
+  }, [activeKey]);
+
   useEffect(() => {
     onActiveRef.current = onActive;
   }, [onActive]);
 
-  // The factory only stores the ref boxes; .current is read at event time,
-  // never during render — safe despite the react-hooks/refs heuristic.
-  const onViewableItemsChanged = useMemo(
-    // eslint-disable-next-line react-hooks/refs
-    () => makeViewabilityHandler(syncSource, onActiveRef),
+  const endSnap = useCallback(() => {
+    if (snapTimer.current) clearTimeout(snapTimer.current);
+    snapTimer.current = null;
+    snapInFlight.current = false;
+  }, []);
+
+  // The timeout is a fallback: animated snaps normally end via
+  // onMomentumScrollEnd, but non-animated realigns fire no momentum events.
+  const beginSnap = useCallback(
+    (ms: number) => {
+      if (snapTimer.current) clearTimeout(snapTimer.current);
+      snapInFlight.current = true;
+      snapTimer.current = setTimeout(endSnap, ms);
+    },
+    [endSnap],
+  );
+
+  useEffect(() => endSnap, [endSnap]);
+
+  // Referentially stable (FlatList mandate); the guard refs are read at event
+  // time, never during render.
+  const onViewableItemsChanged = useCallback(
+    (info: { viewableItems: ViewToken<CarouselItem>[] }) => {
+      makeViewabilityHandler(
+        { snapInFlight, activeKey: activeKeyRef, lastReportedKey },
+        onActiveRef,
+      )(info);
+    },
     [],
   );
 
-  const onMomentumScrollEnd = useCallback(() => {
-    syncSource.current = null;
-  }, []);
+  // Selection→carousel: snap only when the selected *item* changes (pin tap /
+  // external selection). An index shift for the same item means the data
+  // reordered under a refetch — realign without animation so the carousel
+  // never visibly scrolls on its own. Decision logic lives in makeSnapPlanner.
+  useEffect(() => {
+    planSnap.current ??= makeSnapPlanner({ lastReportedKey });
+    const action = planSnap.current(activeKey, activeIndex);
+    if (action === "hold") return;
+    const animated = action === "snap";
+    beginSnap(animated ? 700 : 120);
+    listRef.current?.scrollToOffset({ offset: activeIndex * interval, animated });
+  }, [activeKey, activeIndex, interval, beginSnap]);
 
   if (items.length === 0) return null;
 
@@ -126,10 +196,12 @@ export function PinCarousel({
         decelerationRate="fast"
         contentContainerStyle={{ paddingHorizontal: H_PADDING, gap: GAP }}
         getItemLayout={(_, index) => ({ length: interval, offset: interval * index, index })}
-        onScrollToIndexFailed={() => {}}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         onViewableItemsChanged={onViewableItemsChanged}
-        onMomentumScrollEnd={onMomentumScrollEnd}
+        onMomentumScrollEnd={endSnap}
+        initialNumToRender={4}
+        windowSize={5}
+        removeClippedSubviews
         renderItem={({ item }) => (
           <CarouselCard
             item={item}

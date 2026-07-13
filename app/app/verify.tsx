@@ -4,10 +4,10 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "../components/ui/button";
-import { KeyboardSpacer } from "../components/ui/keyboard-spacer";
 import { TextField } from "../components/ui/text-field";
 import { BodyText, DisplayText } from "../components/ui/text";
 import { ApiError } from "../lib/api";
@@ -61,7 +61,11 @@ export default function Verify() {
   }
 
   return (
-    <View className="flex-1 bg-surface-page" style={{ paddingTop: insets.top }}>
+    <KeyboardAvoidingView
+      className="flex-1 bg-surface-page"
+      style={{ paddingTop: insets.top }}
+      behavior="padding"
+    >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24, gap: 18 }}>
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
           <DisplayText className="text-h3">←</DisplayText>
@@ -119,8 +123,7 @@ export default function Verify() {
           </BodyText>
         ) : null}
         <Button label="Submit for review" busy={submit.isPending} disabled={!canSubmit} onPress={onSubmit} />
-        <KeyboardSpacer />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

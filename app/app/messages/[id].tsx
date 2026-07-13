@@ -4,11 +4,11 @@
 // deep-links to the listing (enquiry) or the hire (S10).
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Composer } from "../../components/messaging/composer";
-import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import { MessageBubble } from "../../components/messaging/message-bubble";
 import { BodyText, DisplayText } from "../../components/ui/text";
 import { useConversations, useMarkRead, useMessages, useSendMessage } from "../../lib/queries";
@@ -119,7 +119,7 @@ export default function Conversation() {
     <KeyboardAvoidingView
       className="flex-1 bg-surface-page"
       style={{ paddingTop: insets.top }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding"
     >
       <View className="flex-row items-center gap-3 border-b border-border-default px-4 py-3">
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
@@ -193,7 +193,6 @@ export default function Conversation() {
       <View style={{ paddingBottom: insets.bottom }}>
         <Composer onSend={submit} />
       </View>
-      <KeyboardSpacer />
     </KeyboardAvoidingView>
   );
 }

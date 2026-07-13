@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ReadingPad, readingKindFor } from "../../components/hires/reading-pad";
@@ -95,7 +96,11 @@ export default function HandoverCapture() {
   }
 
   return (
-    <View className="flex-1 bg-surface-page" style={{ paddingTop: insets.top }}>
+    <KeyboardAvoidingView
+      className="flex-1 bg-surface-page"
+      style={{ paddingTop: insets.top }}
+      behavior="padding"
+    >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24, gap: 20 }}>
         <View className="flex-row items-center justify-between">
           <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
@@ -177,6 +182,6 @@ export default function HandoverCapture() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

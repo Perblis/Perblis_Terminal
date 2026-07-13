@@ -3,6 +3,7 @@
 // never sees downstream state (anti-gaming). Throttle is server-side (5/day).
 import { useState } from "react";
 import { Modal, Pressable, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReportListing } from "../../lib/queries";
@@ -49,6 +50,7 @@ export function ReportSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
       <View className="flex-1 justify-end bg-black/50">
+        <KeyboardAvoidingView behavior="padding">
         <View className="gap-4 rounded-t-2xl bg-surface-page p-6" style={{ paddingBottom: insets.bottom + 24 }}>
           {done ? (
             <>
@@ -95,6 +97,7 @@ export function ReportSheet({
             </>
           )}
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
