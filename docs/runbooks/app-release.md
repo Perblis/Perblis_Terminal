@@ -5,7 +5,7 @@ local Android builds → founder device, iOS via the EAS free tier, `expo-update
 JS-only changes). The manual E2E checklist at the bottom is the wave's mandatory release
 test — run it, on a physical device, before calling any release done.
 
-## 1. OTA state (no one-time setup left)
+## 1. OTA state + the runtimeVersion rule (READ THIS)
 
 **OTA is ARMED in the committed config**: `app.json` carries `updates.url`
 (`https://u.expo.dev/<projectId>`), `extra.eas.projectId`, `owner`, and
@@ -13,20 +13,33 @@ test — run it, on a physical device, before calling any release done.
 channels. `eas init` / `eas update:configure` are already done — running them again is a
 no-op. `Updates.isEnabled` is true in any binary built from this config.
 
-`runtimeVersion` is a **static string** (currently `"0.1.2"` — bumped from `"0.1.1"` when
-`react-native-keyboard-controller` was added; the fingerprint policy was dropped to
-unblock EAS builds on the pnpm monorepo). Consequences:
+### `runtimeVersion` is decoupled from `version` — do NOT tie them together (2026-07-12)
 
-- `fingerprint.config.js` is dead config under the static policy; a `criticalIndex` bump
-  can never shift the runtime version by construction (no sanity check needed).
-- **Whenever native dependencies or `app.json` plugins change, bump `runtimeVersion` by
-  hand and rebuild/reinstall** — OTA only reaches binaries whose runtimeVersion matches
-  exactly. A forgotten bump ships JS referencing natives the binary doesn't have (crash)
-  instead of being safely refused; a bumped version without a rebuilt binary shows up as
-  "update never arrives".
+`runtimeVersion` is a **static native-ABI generation string**, currently `"1"`. It is
+**not** the marketing `version` (`0.1.3`) and must not track it. This is the load-bearing
+OTA rule, and getting it wrong is why OTA never reached a device before:
 
-**Binaries built before `updates.url` landed (pre-`b7b405e`) can never receive OTA** —
-rebuild + reinstall those once.
+- `expo-updates` delivers an update to a binary **only when their `runtimeVersion` strings
+  match exactly.** An update published at runtimeVersion `X` is invisible to every binary
+  built at any other runtimeVersion — silently, forever.
+- Historically `runtimeVersion` was set equal to `version` and bumped with it
+  (`0.1.1` → `0.1.3`). So every marketing bump minted a *new* runtimeVersion island and
+  orphaned the installed APK from all future OTA — defeating the entire point of OTA.
+- **The rule now:** bump `version` / `android.versionCode` freely on every release
+  (marketing/store metadata). Leave `runtimeVersion` **alone**. Only bump `runtimeVersion`
+  (e.g. `"1"` → `"2"`) when **native code changes** — a new/updated native dependency, an
+  `app.json` plugin change, or an Expo SDK upgrade — and rebuild+reinstall the binary when
+  you do. JS-only slices never touch it, so OTAs keep landing on the installed build.
+- `fingerprint.config.js` is dead config under the static policy (fingerprint was dropped
+  to unblock EAS builds on the pnpm monorepo); a `criticalIndex` bump can never shift the
+  runtime version by construction.
+
+**Consequence of the 2026-07-12 change:** the new baseline binary must be built at
+runtimeVersion `"1"` and installed once; every binary built before this (runtimeVersion
+`0.1.1`/`0.1.2`/`0.1.3` on any Expo account, or any local `--variant release` build with
+no channel header) can never receive OTA and must be replaced by this build. The
+`react-native-keyboard-controller` native module (PR #53) is baked into the `"1"` baseline —
+do not bump `runtimeVersion` again for JS-only fixes.
 
 ## 2. Builds
 
