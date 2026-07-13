@@ -1,7 +1,9 @@
-// Pin state matrix per 06 §3 anatomy under the D-023 plate revision and the
-// 2026-07-11 glance revision: plates carry compact prices and real class
-// glyphs; badge/dim/tick/count behaviours are unchanged; the frame is a
-// fixed ink equipment tag.
+// Pin state matrix per 06 §3 anatomy under the D-023 plate revision, the
+// 2026-07-11 glance revision, and the 2026-07-13 price-first revision:
+// every plate leads with the from-price; compact yard plates are
+// price | count (initials only when priceless); the verification seal is
+// circular and detailed-plate-only; dim/count semantics are unchanged; the
+// frame is a fixed ink equipment tag.
 import { render } from "@testing-library/react-native";
 import { tokens } from "@terminal/tokens";
 
@@ -82,7 +84,9 @@ test("zero-match yard dims to 40% but still renders (never removed)", async () =
   const { getByLabelText } = await render(
     <YardPin yard={{ ...YARD, matching_count: 0 }} filtered />,
   );
-  const pin = getByLabelText("Yard: Apapa Yard, 0 listings, from ₦250,000 a day");
+  const pin = getByLabelText(
+    "Yard: Apapa Yard, 0 listings, from ₦250,000 a day, verified supplier",
+  );
   expect(pin.props.style).toMatchObject({ opacity: 0.4 });
 });
 
@@ -122,21 +126,42 @@ test("selected plates switch to the amber frame (no ring, no motion)", async () 
   expect(pin.props.style).toMatchObject({ borderColor: tokens.color.colorAmber500, borderWidth: 2 });
 });
 
-test("compact solo plate is glyph-only (the carousel card carries the price)", async () => {
-  const { queryByText, getByLabelText } = await render(<AssetPin listing={SOLO} compact />);
-  expect(queryByText("₦250k")).toBeNull();
-  // The accessibility label keeps the full story even when the plate shrinks.
+test("compact solo plate keeps the price (price-first: pins answer cost at a glance)", async () => {
+  const { getByText, getByLabelText } = await render(<AssetPin listing={SOLO} compact />);
+  expect(getByText("₦250k")).toBeTruthy();
   expect(
     getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day"),
   ).toBeTruthy();
 });
 
-test("compact yard plate drops the price row + glyph strip; selected restores them", async () => {
+test("compact yard plate is price | count; selected restores initials, glyphs and the price row", async () => {
   const compact = await render(<YardPin yard={YARD} compact />);
+  expect(compact.getByText(compactNaira(YARD.price_from))).toBeTruthy();
+  expect(compact.getByText("8")).toBeTruthy();
+  expect(compact.queryByText("KH")).toBeNull();
   expect(compact.queryByText(`from ${compactNaira(YARD.price_from)}`)).toBeNull();
   expect(compact.queryByTestId("yard-class-glyphs")).toBeNull();
 
   const selected = await render(<YardPin yard={YARD} compact selected />);
+  expect(selected.getByText("KH")).toBeTruthy();
   expect(selected.getByText(`from ${compactNaira(YARD.price_from)}`)).toBeTruthy();
   expect(selected.getByTestId("yard-class-glyphs")).toBeTruthy();
+});
+
+test("priceless compact yard plate falls back to initials | count", async () => {
+  const { getByText } = await render(<YardPin yard={{ ...YARD, price_from: 0 }} compact />);
+  expect(getByText("KH")).toBeTruthy();
+  expect(getByText("8")).toBeTruthy();
+});
+
+test("verification seal renders on the detailed plate only (compact pins stay clean)", async () => {
+  const detailed = await render(<YardPin yard={YARD} />);
+  expect(detailed.getByTestId("yard-verified-seal")).toBeTruthy();
+
+  const compact = await render(<YardPin yard={YARD} compact />);
+  expect(compact.queryByTestId("yard-verified-seal")).toBeNull();
+  // The semantic survives on compact pins via the accessibility label.
+  expect(
+    compact.getByLabelText("Yard: Apapa Yard, 8 listings, from ₦250,000 a day, verified supplier"),
+  ).toBeTruthy();
 });

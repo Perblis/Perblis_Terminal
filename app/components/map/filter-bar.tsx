@@ -6,7 +6,13 @@ import type { AssetClass } from "../../lib/types";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import { BodyText, MonoText } from "../ui/text";
 
-/** S4 class FilterBar: one-active-class chips + trailing result-count chip. */
+/**
+ * S4 class FilterBar. The result count lives on its own row BELOW the chips —
+ * a trailing overlay chopped scrolling chip labels mid-word and its inverse
+ * fill made a passive readout the brightest element on screen (and it read
+ * as tappable). Down here it's a drab mono telemetry plate, ClusterPin
+ * philosophy (06 §3): ambient information, not a control.
+ */
 export function FilterBar({
   active,
   onChange,
@@ -18,7 +24,7 @@ export function FilterBar({
 }) {
   const t = useThemeTokens();
   return (
-    <View className="flex-row items-center">
+    <View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View className="flex-row gap-2 px-4">
           {ASSET_CLASSES.map((meta) => {
@@ -48,8 +54,8 @@ export function FilterBar({
         </View>
       </ScrollView>
       {resultCount !== null ? (
-        <View className="mr-4 rounded-full bg-surface-inverse px-3 py-1.5">
-          <MonoText className="text-body-sm text-text-inverse">{resultCount} assets</MonoText>
+        <View className="mr-4 mt-2 self-end rounded border border-border bg-surface-card px-2.5 py-1">
+          <MonoText className="text-caption text-text-secondary">{resultCount} assets</MonoText>
         </View>
       ) : null}
     </View>
