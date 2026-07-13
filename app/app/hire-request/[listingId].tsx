@@ -1,11 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, View } from "react-native";
+import { Pressable, ScrollView, Switch, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PriceHero } from "../../components/hires/price-hero";
-import { KeyboardSpacer } from "../../components/ui/keyboard-spacer";
 import {
   RangeCalendar,
   type AvailabilityByDay,
@@ -140,10 +140,7 @@ export default function HireRequest() {
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-surface-page"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView className="flex-1 bg-surface-page" behavior="padding">
       {/* Step header */}
       <View
         className="flex-row items-center gap-3 border-b border-border bg-surface-card px-4 pb-3"
@@ -272,7 +269,6 @@ export default function HireRequest() {
             <Button label="Send request" busy={createHire.isPending} onPress={() => void submit()} />
           </View>
         ) : null}
-        <KeyboardSpacer />
       </ScrollView>
 
       {/* F3 409 race sheet */}

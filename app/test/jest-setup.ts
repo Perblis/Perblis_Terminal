@@ -76,6 +76,10 @@ jest.mock("react-native-reanimated", () => {
   return { ...mock, useReducedMotion: () => true };
 });
 
+jest.mock("react-native-keyboard-controller", () =>
+  jest.requireActual("react-native-keyboard-controller/jest"),
+);
+
 jest.mock("expo-audio", () => ({
   createAudioPlayer: jest.fn(() => ({ play: jest.fn(), remove: jest.fn() })),
 }));

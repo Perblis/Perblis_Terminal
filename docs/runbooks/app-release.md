@@ -36,8 +36,10 @@ OTA rule, and getting it wrong is why OTA never reached a device before:
 
 **Consequence of the 2026-07-12 change:** the new baseline binary must be built at
 runtimeVersion `"1"` and installed once; every binary built before this (runtimeVersion
-`0.1.1`/`0.1.3`, or any local `--variant release` build with no channel header) can never
-receive OTA and must be replaced by this build.
+`0.1.1`/`0.1.2`/`0.1.3` on any Expo account, or any local `--variant release` build with
+no channel header) can never receive OTA and must be replaced by this build. The
+`react-native-keyboard-controller` native module (PR #53) is baked into the `"1"` baseline —
+do not bump `runtimeVersion` again for JS-only fixes.
 
 ## 2. Builds
 

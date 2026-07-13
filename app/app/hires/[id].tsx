@@ -5,6 +5,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EventTimeline } from "../../components/hires/event-timeline";
@@ -152,6 +153,7 @@ export default function HireDetail() {
       {/* Cancel — refund preview (Confirmed) + reason (F5). */}
       <Modal visible={cancelOpen} transparent animationType="slide" onRequestClose={() => setCancelOpen(false)}>
         <View className="flex-1 justify-end bg-black/50">
+          <KeyboardAvoidingView behavior="padding">
           <View className="gap-4 rounded-t-2xl bg-surface-page p-6" style={{ paddingBottom: insets.bottom + 24 }}>
             <DisplayText className="text-h2">Cancel this hire?</DisplayText>
             {hire.status === "confirmed" ? (
@@ -187,12 +189,14 @@ export default function HireDetail() {
             />
             <Button variant="ghost" label="Keep the hire" onPress={() => setCancelOpen(false)} />
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
       {/* Raise issue → In Dispute (server enforces the ≤72h window). */}
       <Modal visible={disputeOpen} transparent animationType="slide" onRequestClose={() => setDisputeOpen(false)}>
         <View className="flex-1 justify-end bg-black/50">
+          <KeyboardAvoidingView behavior="padding">
           <View className="gap-4 rounded-t-2xl bg-surface-page p-6" style={{ paddingBottom: insets.bottom + 24 }}>
             <DisplayText className="text-h2">Raise an issue</DisplayText>
             <BodyText className="text-text-secondary">
@@ -221,6 +225,7 @@ export default function HireDetail() {
             />
             <Button variant="ghost" label="Never mind" onPress={() => setDisputeOpen(false)} />
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
