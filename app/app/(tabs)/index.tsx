@@ -31,8 +31,17 @@ export default function MapTab() {
   const insets = useSafeAreaInsets();
   const tk = useThemeTokens();
   const mapRef = useRef<TerminalMapHandle>(null);
-  const { region, classFilter, dateRange, setRegion, setClassFilter, pendingFocus, clearFocus } =
-    useMapState();
+  const {
+    region,
+    classFilter,
+    dateRange,
+    q,
+    setRegion,
+    setClassFilter,
+    setQ,
+    pendingFocus,
+    clearFocus,
+  } = useMapState();
 
   // One-shot focus handed over from another screen (S13 yard card).
   useEffect(() => {
@@ -69,7 +78,7 @@ export default function MapTab() {
 
   const search = useMapSearch(
     bbox ?? { minLng: Number.NaN, minLat: Number.NaN, maxLng: Number.NaN, maxLat: Number.NaN },
-    { assetClass: classFilter, dateFrom: dateRange?.from, dateTo: dateRange?.to },
+    { assetClass: classFilter, q, dateFrom: dateRange?.from, dateTo: dateRange?.to },
   );
 
   const yards = search.data?.yards ?? [];
@@ -143,7 +152,25 @@ export default function MapTab() {
             <Circle cx={10.5} cy={10.5} r={7} stroke={tk["--text-secondary"]} strokeWidth={2} fill="none" />
             <Path d="M16 16l5.5 5.5" stroke={tk["--text-secondary"]} strokeWidth={2} />
           </Svg>
-          <BodyText className="text-text-tertiary">Search assets, e.g. “30t excavator”</BodyText>
+          {q.trim() ? (
+            <>
+              {/* Active shared search — the map results are filtered by it. */}
+              <BodyText className="flex-1 text-text-primary" numberOfLines={1}>
+                {q}
+              </BodyText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+                hitSlop={8}
+                onPress={() => setQ("")}
+                className="h-6 w-6 items-center justify-center rounded-full bg-surface-sunken"
+              >
+                <BodyText className="text-caption text-text-secondary">✕</BodyText>
+              </Pressable>
+            </>
+          ) : (
+            <BodyText className="text-text-tertiary">Search assets, e.g. “30t excavator”</BodyText>
+          )}
         </Pressable>
         <View className="mt-2">
           <FilterBar active={classFilter} onChange={setClassFilter} resultCount={total} />
