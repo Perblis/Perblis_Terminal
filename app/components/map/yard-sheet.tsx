@@ -8,7 +8,7 @@ import Svg, { Path } from "react-native-svg";
 
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "../../lib/asset-classes";
 import { resolveMediaUrl } from "../../lib/media";
-import type { AssetClass, MapYard, MapYardListing } from "../../lib/types";
+import type { AssetClass, MapYard } from "../../lib/types";
 import { availabilityCaption } from "./pins";
 import { Sheet } from "../ui/sheet";
 import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
@@ -23,18 +23,43 @@ function VerifiedTick() {
   );
 }
 
+/** Row thumbnail: sunken field behind the image so a slow/failed load never
+ *  renders as a black hole; broken images fall back like S12's placeholder. */
+function RowThumb({ photo, title }: { photo: string; title: string }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <View
+      className="items-center justify-center overflow-hidden rounded-md bg-surface-sunken"
+      style={{ width: 64, height: 48 }}
+    >
+      {photo && !broken ? (
+        <Image
+          source={{ uri: resolveMediaUrl(photo) }}
+          style={{ width: 64, height: 48 }}
+          accessibilityLabel={`Photo of ${title}`}
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <MonoText className="text-caption text-text-tertiary">—</MonoText>
+      )}
+    </View>
+  );
+}
+
 export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () => void }) {
   const [classFilter, setClassFilter] = useState<AssetClass | null>(null);
 
-  const grouped = useMemo(() => {
-    const byClass = new Map<AssetClass, MapYardListing[]>();
-    for (const listing of yard.listings) {
-      if (classFilter && listing.asset_class !== classFilter) continue;
-      const list = byClass.get(listing.asset_class) ?? [];
-      list.push(listing);
-      byClass.set(listing.asset_class, list);
-    }
-    return byClass;
+  // Flat rows, ordered by class (each row names its class in the caption —
+  // one taxonomy layer; the chips already carry class + count, so the
+  // ALL-CAPS section headers were saying everything twice).
+  const rows = useMemo(() => {
+    const order = new Map(ASSET_CLASSES.map((m, i) => [m.value, i]));
+    return yard.listings
+      .filter((l) => !classFilter || l.asset_class === classFilter)
+      .slice()
+      .sort(
+        (a, b) => (order.get(a.asset_class) ?? 0) - (order.get(b.asset_class) ?? 0),
+      );
   }, [yard.listings, classFilter]);
 
   const counts = useMemo(() => {
@@ -73,77 +98,63 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
         </View>
       </View>
 
-      {/* Class chips with counts */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="max-h-14 border-b border-border">
-        <View className="flex-row items-center gap-2 px-4 py-2.5">
-          {ASSET_CLASSES.filter((m) => (counts.get(m.value) ?? 0) > 0).map((meta) => {
-            const selected = classFilter === meta.value;
-            return (
-              <Pressable
-                key={meta.value}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setClassFilter(selected ? null : meta.value)}
-                className={`flex-row items-center gap-1 rounded-full border px-3 py-1.5 ${
-                  selected ? "border-surface-inverse bg-surface-inverse" : "border-border-strong bg-surface-card"
-                }`}
-              >
-                <BodyText className={`text-body-sm ${selected ? "text-text-inverse" : "text-text-primary"}`}>
-                  {meta.label}
-                </BodyText>
-                <MonoText className={`text-caption ${selected ? "text-text-inverse" : "text-text-tertiary"}`}>
-                  {counts.get(meta.value)}
-                </MonoText>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-
-      {/* Rows grouped by class */}
-      <ScrollView className="flex-1">
-        {[...grouped.entries()].map(([assetClass, listings]) => (
-          <View key={assetClass}>
-            <View className="bg-surface-sunken px-4 py-1.5">
-              <BodyText className="text-overline text-text-tertiary">
-                {CLASS_BY_VALUE[assetClass].label.toUpperCase()}
-              </BodyText>
-            </View>
-            {listings.map((listing) => (
-              <Pressable
-                key={listing.id}
-                accessibilityRole="button"
-                onPress={() => {
-                  onDismiss();
-                  router.push(`/listing/${listing.id}` as never);
-                }}
-                className="flex-row items-center gap-3 border-b border-border px-4 py-3 active:bg-surface-sunken"
-              >
-                {listing.photo ? (
-                  <Image source={{ uri: resolveMediaUrl(listing.photo) }} style={{ width: 64, height: 48, borderRadius: 6 }} />
-                ) : (
-                  <View
-                    className="items-center justify-center rounded-md bg-surface-sunken"
-                    style={{ width: 64, height: 48 }}
-                  >
-                    <MonoText className="text-caption text-text-tertiary">—</MonoText>
-                  </View>
-                )}
-                <View className="flex-1">
-                  <BodyText className="font-sans-medium" numberOfLines={1}>
-                    {listing.title}
+      {/* Class chips with counts — only when there's a mix to filter */}
+      {counts.size > 1 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="max-h-14 border-b border-border">
+          <View className="flex-row items-center gap-2 px-4 py-2.5">
+              {ASSET_CLASSES.filter((m) => (counts.get(m.value) ?? 0) > 0).map((meta) => {
+              const selected = classFilter === meta.value;
+              return (
+                <Pressable
+                  key={meta.value}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setClassFilter(selected ? null : meta.value)}
+                  className={`flex-row items-center gap-1 rounded-full border px-3 py-1.5 ${
+                    selected ? "border-surface-inverse bg-surface-inverse" : "border-border-strong bg-surface-card"
+                  }`}
+                >
+                  <BodyText className={`text-body-sm ${selected ? "text-text-inverse" : "text-text-primary"}`}>
+                    {meta.label}
                   </BodyText>
-                  <BodyText className="text-caption text-text-tertiary">
-                    {availabilityCaption(listing)}
-                  </BodyText>
-                </View>
-                <View className="items-end">
-                  <Money display={listing.price_from_display} />
-                  <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
-                </View>
-              </Pressable>
-            ))}
+                  <MonoText className={`text-caption ${selected ? "text-text-inverse" : "text-text-tertiary"}`}>
+                    {counts.get(meta.value)}
+                  </MonoText>
+                </Pressable>
+              );
+            })}
           </View>
+        </ScrollView>
+      ) : null}
+
+      {/* Rows — S12 ListingRow anatomy: title, class · availability caption,
+          price under the title. A right-aligned money column truncated titles
+          mid-word while the price claimed half the row. */}
+      <ScrollView className="flex-1">
+        {rows.map((listing) => (
+          <Pressable
+            key={listing.id}
+            accessibilityRole="button"
+            onPress={() => {
+              onDismiss();
+              router.push(`/listing/${listing.id}` as never);
+            }}
+            className="flex-row gap-3 border-b border-border px-4 py-3 active:bg-surface-sunken"
+          >
+            <RowThumb photo={listing.photo} title={listing.title} />
+            <View className="flex-1">
+              <BodyText className="font-sans-medium" numberOfLines={1}>
+                {listing.title}
+              </BodyText>
+              <BodyText className="text-caption text-text-tertiary" numberOfLines={1}>
+                {CLASS_BY_VALUE[listing.asset_class].label} · {availabilityCaption(listing)}
+              </BodyText>
+              <View className="mt-0.5 flex-row items-baseline gap-1">
+                <Money display={listing.price_from_display} />
+                <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
+              </View>
+            </View>
+          </Pressable>
         ))}
 
         {/* Footer */}

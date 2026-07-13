@@ -181,48 +181,75 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
         initialViewState={{ center: initialCenter, zoom: initialZoom }}
       />
 
-      {/* Yard pins — never clustered, never dissolve (FSD §6). */}
-      {yards.map((yard) => {
-        const [lng, lat] = yard.point.coordinates;
-        const isSelected = selection?.kind === "yard" && selection.yard.yard_id === yard.yard_id;
-        return (
+      {/* Yard pins — never clustered, never dissolve (FSD §6). The selected
+          pin renders LAST (after solos too) so its detailed plate is never
+          occluded by a neighbour — markers stack in render order. */}
+      {yards
+        .filter((y) => !(selection?.kind === "yard" && selection.yard.yard_id === y.yard_id))
+        .map((yard) => (
           <Marker
             key={yard.yard_id}
-            lngLat={[lng, lat]}
+            lngLat={[yard.point.coordinates[0], yard.point.coordinates[1]]}
             anchor="center"
             onPress={() => select({ kind: "yard", yard })}
           >
-            <YardPin yard={yard} filtered={filtered} selected={isSelected} compact={!isSelected} />
+            <YardPin yard={yard} filtered={filtered} compact />
           </Marker>
-        );
-      })}
+        ))}
 
       {/* Solo pins + drab spatial clusters (dissolve on zoom). */}
-      {shown.map((f) => {
-        if (f.kind === "cluster") {
+      {shown
+        .filter(
+          (f) =>
+            f.kind === "cluster" ||
+            !(selection?.kind === "listing" && selection.listing.id === f.listing.id),
+        )
+        .map((f) => {
+          if (f.kind === "cluster") {
+            return (
+              <Marker
+                key={`c-${f.id}`}
+                lngLat={[f.lng, f.lat]}
+                anchor="center"
+                onPress={() => expandCluster(f.lng, f.lat, f.expansionZoom)}
+              >
+                <ClusterPin count={f.count} />
+              </Marker>
+            );
+          }
           return (
             <Marker
-              key={`c-${f.id}`}
+              key={f.listing.id}
               lngLat={[f.lng, f.lat]}
               anchor="center"
-              onPress={() => expandCluster(f.lng, f.lat, f.expansionZoom)}
+              onPress={() => select({ kind: "listing", listing: f.listing })}
             >
-              <ClusterPin count={f.count} />
+              <AssetPin listing={f.listing} compact />
             </Marker>
           );
-        }
-        const isSelected = selection?.kind === "listing" && selection.listing.id === f.listing.id;
-        return (
-          <Marker
-            key={f.listing.id}
-            lngLat={[f.lng, f.lat]}
-            anchor="center"
-            onPress={() => select({ kind: "listing", listing: f.listing })}
-          >
-            <AssetPin listing={f.listing} selected={isSelected} compact={!isSelected} />
-          </Marker>
-        );
-      })}
+        })}
+
+      {/* Selected pin — always on top. */}
+      {selection?.kind === "yard" ? (
+        <Marker
+          key={`sel-${selection.yard.yard_id}`}
+          lngLat={[selection.yard.point.coordinates[0], selection.yard.point.coordinates[1]]}
+          anchor="center"
+          onPress={() => select({ kind: "yard", yard: selection.yard })}
+        >
+          <YardPin yard={selection.yard} filtered={filtered} selected compact />
+        </Marker>
+      ) : null}
+      {selection?.kind === "listing" ? (
+        <Marker
+          key={`sel-${selection.listing.id}`}
+          lngLat={[selection.listing.point.coordinates[0], selection.listing.point.coordinates[1]]}
+          anchor="center"
+          onPress={() => select({ kind: "listing", listing: selection.listing })}
+        >
+          <AssetPin listing={selection.listing} selected compact />
+        </Marker>
+      ) : null}
     </MapLibreMap>
   );
 });
