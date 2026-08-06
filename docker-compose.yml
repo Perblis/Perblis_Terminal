@@ -1,28 +1,38 @@
 # Local dev dependencies: PostGIS + Mailpit. No Redis (D-010).
 # `docker compose up -d` then run the backend with settings.dev.
+#
+# SECURITY: DB and Mailpit bind to 127.0.0.1 only (Docker bypasses UFW for
+# published ports). Never use 0.0.0.0 for databases on a public VPS.
+# Set POSTGRES_PASSWORD in .env (see .env.example) — no default password.
 
 services:
   db:
     image: postgis/postgis:17-3.5
+    mem_limit: 384m
+    mem_reservation: 64m
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: terminal
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-terminal}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - terminal_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d terminal"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-terminal}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   mailpit:
     image: axllent/mailpit:latest
+    mem_limit: 128m
+    mem_reservation: 16m
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI -> http://localhost:8025
+      - "127.0.0.1:1025:1025"   # SMTP
+      - "127.0.0.1:8025:8025"   # Web UI -> http://127.0.0.1:8025
     environment:
       MP_MAX_MESSAGES: "500"
 
