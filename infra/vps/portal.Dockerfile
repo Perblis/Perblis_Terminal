@@ -7,6 +7,9 @@ WORKDIR /repo
 
 # ── deps: portal + its workspace deps from the frozen lockfile ──────────
 FROM base AS deps
+# Pin pnpm before any manifest exists: corepack would otherwise resolve the
+# "packageManager" field at RUN time (network) or fall back to latest.
+RUN corepack prepare pnpm@10.33.0 --activate
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/tokens/package.json packages/tokens/
 COPY portal/package.json portal/
@@ -22,9 +25,11 @@ FROM base AS build
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/portal/node_modules ./portal/node_modules
 COPY --from=deps /repo/packages/tokens/node_module[s] ./packages/tokens/node_modules/
+# Manifests come from the deps stage unchanged; --offline stops pnpm's
+# pre-run deps-status check from reaching for the registry.
 COPY packages/tokens ./packages/tokens
 COPY portal ./portal
-RUN pnpm --filter @terminal/tokens build && pnpm --filter @terminal/portal build
+RUN pnpm --offline --filter @terminal/tokens build && pnpm --offline --filter @terminal/portal build
 
 # ── runner: the standalone server only (no pnpm store, no sources) ──────
 FROM node:22-alpine AS runner
