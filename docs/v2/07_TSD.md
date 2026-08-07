@@ -40,7 +40,7 @@ terminal/
 │   └── tests/                 # cross-app integration tests
 ├── portal/                    # Next.js 15 App Router (@opennextjs/cloudflare)
 │   └── src/app  src/components  src/lib(bff, api-client)  wrangler.toml
-├── app/                       # Expo RN, TypeScript, expo-router
+├── mobile/                    # Expo RN, TypeScript, expo-router
 │   └── app/  components/  lib/  assets/
 ├── packages/tokens/           # design tokens JSON → tailwind.tokens.js, tokens.ts, glyphs/
 ├── docker-compose.yml         # postgis:17-3.5 + mailpit (dev)

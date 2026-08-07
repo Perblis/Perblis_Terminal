@@ -1,7 +1,7 @@
 packages:
   - "packages/*"
   - "portal"
-  - "app"
+  - "mobile"
 
 # Expo SDK 54+ supports isolated installs, but Metro/Babel still fail to resolve
 # transitive babel plugins under pnpm's default isolated linker on EAS

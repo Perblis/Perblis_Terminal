@@ -12,7 +12,7 @@ verified counterparties, locked terms, documented handovers.
 ```
 backend/          Django + DRF API (PostGIS, django-tasks)         — building
 portal/           Supplier Portal · Next.js 15 on Cloudflare Workers — building
-app/              Hirer app · Expo React Native                     — scaffolds in Wave 8
+mobile/           Hirer app · Expo React Native                     — scaffolds in Wave 8
 packages/tokens/  Shared design tokens → Tailwind/NativeWind/CSS    — building
 docs/             Specifications and decisions
   v2/             Canonical specs (FSD v2.1, TSD v2.1, Design System, UX)

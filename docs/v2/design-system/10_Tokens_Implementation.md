@@ -12,7 +12,7 @@ packages/tokens/
   map/terminal-chart.json # MapLibre style
   build.ts                # emits all platform outputs
 ```
-Outputs: `tailwind.tokens.cjs` (portal preset) · `tokens.ts` typed constants + NativeWind theme (app) · `tokens.css` custom properties (emails/receipt print) · `admin.css` thin Ops layer. **Rule: no hex literal outside `primitives.json` — CI greps for `#[0-9A-Fa-f]{6}` in app/portal code.**
+Outputs: `tailwind.tokens.cjs` (portal preset) · `tokens.ts` typed constants + NativeWind theme (app) · `tokens.css` custom properties (emails/receipt print) · `admin.css` thin Ops layer. **Rule: no hex literal outside `primitives.json` — CI greps for `#[0-9A-Fa-f]{6}` in mobile/portal code.**
 
 ## 2. Naming
 `{tier}/{category}/{name}[-{state}]` → exported flat: `colorActionPrimaryHover`, `spaceS4`, `durQuick`. Semantic names never reference hue ("brand" not "amber") so dark mode and future rebrands are remaps, not rewrites. Class/status names use domain words (`classPlant`, `statusOnHire`) — these ARE allowed to be stable forever.

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -12,9 +13,9 @@ import urllib.request
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-BASE = "https://api-production-101c8.up.railway.app"
+BASE = os.environ.get("API_BASE", "https://terminal-api.lab.perblis.com")
 API = f"{BASE}/api/v1"
-PORTAL = "https://terminal-portal.nwabueze.workers.dev"
+PORTAL = os.environ.get("PORTAL_BASE", "https://terminal.lab.perblis.com")
 
 SUPPLIER = {"email": "nwabueze@perblis.com", "password": "Qweruiop@1"}
 HIRER = {"email": "nwabueze+hirer-w4-1781881704@perblis.com", "password": "LiveTest!Wave4#2026"}

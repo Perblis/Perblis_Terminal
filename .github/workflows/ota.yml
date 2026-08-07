@@ -19,7 +19,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "app/**"
+      - "mobile/**"
       - "packages/tokens/**"
       - ".github/workflows/ota.yml"
 
@@ -55,5 +55,5 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA update (preview channel)
-        working-directory: app
+        working-directory: mobile
         run: eas update --branch preview --non-interactive --message "$(git log -1 --pretty=%s)"
