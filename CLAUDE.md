@@ -1,3 +1,22 @@
+<!-- vps-governance-stub -->
+## VPS agent entry point
+
+Canonical VPS-wide policy: `/root/projects/_governance/` (git repo — commit policy changes).
+Core rules load automatically in Claude Code and Cursor; this stub only points home.
+
+Before non-trivial work in this repo:
+
+```bash
+/root/projects/_governance/vps-preflight.sh
+```
+
+- Secrets: never hardcode, never print values. See `_governance/secrets-policy.md`.
+  Infisical is already running and linked — run `_governance/infisical-check.sh`, never reinstall.
+- Host facts (ports, containers, gotchas): `_governance/vps-vital-facts.md`
+
+This repository may add **stricter** requirements below, but may not weaken the VPS baseline.
+<!-- /vps-governance-stub -->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
