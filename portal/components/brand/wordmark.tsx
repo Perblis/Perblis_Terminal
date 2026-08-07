@@ -28,7 +28,7 @@ export function WordmarkPlate({ compact = false, className }: { compact?: boolea
   return (
     <span
       className={cn(
-        "inline-flex select-none items-center gap-s2 rounded-sm bg-surface-inverse text-amber-500",
+        "inline-flex select-none items-center gap-s2 rounded-sm bg-surface-chrome text-action-primary",
         compact ? "p-s2" : "px-s3 py-s2",
         className,
       )}
@@ -47,7 +47,7 @@ export function WordmarkPlate({ compact = false, className }: { compact?: boolea
 export function WordmarkInline({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex select-none items-center gap-s2", className)}>
-      <span aria-hidden className="h-[18px] w-s1 bg-amber-500" />
+      <span aria-hidden className="h-[18px] w-s1 bg-action-primary" />
       <span className="font-display text-body font-semibold uppercase tracking-[0.08em] text-text-primary">
         Terminal
       </span>

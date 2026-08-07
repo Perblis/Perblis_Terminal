@@ -12,12 +12,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16181D",
+  themeColor: "#19191C",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // data-theme="dark" is stamped, not toggled: the portal ships dark-only
+  // (Infisical port). The light token map still exists for email, print
+  // receipts and the Ops admin layer — it is simply never selected here.
   return (
-    <html lang="en-GB" className={fontVariables} suppressHydrationWarning>
+    <html
+      lang="en-GB"
+      data-theme="dark"
+      className={fontVariables}
+      style={{ colorScheme: "dark" }}
+      suppressHydrationWarning
+    >
       <head>
         {/* Stamps the persisted density before first paint — no preference flash. */}
         <script dangerouslySetInnerHTML={{ __html: PREFERENCES_BOOT_SCRIPT }} />

@@ -39,7 +39,7 @@ export function CountdownPill({ deadlineIso }: { deadlineIso: string }) {
       : band === "critical"
         ? "bg-surface-brand"
         : band === "amber"
-          ? "bg-amber-100"
+          ? "bg-amber-500/12"
           : "bg-surface-sunken";
   // amber band: fixed amber-100 chip needs fixed amber-900 text — the
   // theme-flipping primary/tertiary colours go near-white on it in dark.
@@ -49,10 +49,10 @@ export function CountdownPill({ deadlineIso }: { deadlineIso: string }) {
       : band === "expired"
         ? "text-text-tertiary"
         : band === "amber"
-          ? "text-amber-900"
+          ? "text-amber-300"
           : "text-text-primary";
   const caption =
-    band === "critical" ? "text-text-on-brand" : band === "amber" ? "text-amber-900" : "text-text-tertiary";
+    band === "critical" ? "text-text-on-brand" : band === "amber" ? "text-amber-300" : "text-text-tertiary";
 
   return (
     <View className={`items-center gap-0.5 self-center rounded-full px-6 py-3 ${frame}`}>

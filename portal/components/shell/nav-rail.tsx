@@ -61,8 +61,8 @@ function RailIconButton({
       title={label}
       aria-label={label}
       className={cn(
-        "flex h-9 items-center gap-s2 rounded-sm px-s2 text-ink-400",
-        "transition-colors duration-quick hover:bg-ink-800 hover:text-text-inverse",
+        "flex h-9 items-center gap-s2 rounded-sm px-s2 text-text-tertiary",
+        "transition-colors duration-quick hover:bg-ink-800 hover:text-text-on-chrome",
         collapsed ? "w-9 justify-center" : "w-full",
       )}
     >
@@ -107,7 +107,7 @@ export function NavRail() {
       aria-label="Primary"
       data-collapsed={collapsed || undefined}
       className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col bg-surface-inverse",
+        "sticky top-0 flex h-screen shrink-0 flex-col bg-surface-chrome",
         "transition-[width] duration-standard ease-in-out",
         collapsed ? "w-16" : "w-60",
       )}
@@ -123,7 +123,7 @@ export function NavRail() {
             setCollapsed(!collapsed);
           }}
           aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-          className="rounded-sm p-s1 text-ink-400 hover:bg-ink-800 hover:text-text-inverse"
+          className="rounded-sm p-s1 text-text-tertiary hover:bg-ink-800 hover:text-text-on-chrome"
         >
           {collapsed ? <PanelLeftOpen size={16} aria-hidden /> : <PanelLeftClose size={16} aria-hidden />}
         </button>
@@ -135,7 +135,7 @@ export function NavRail() {
           return (
             <li key={href} className="relative">
               {active ? (
-                <span aria-hidden className="absolute -left-s2 top-1/2 h-s5 w-[3px] -translate-y-1/2 bg-amber-500" />
+                <span aria-hidden className="absolute -left-s2 top-1/2 h-s5 w-[3px] -translate-y-1/2 bg-action-primary" />
               ) : null}
               <Link
                 href={href}
@@ -144,7 +144,7 @@ export function NavRail() {
                 className={cn(
                   "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium",
                   "transition-colors duration-quick",
-                  active ? "text-text-inverse" : "text-ink-300 hover:bg-ink-800 hover:text-text-inverse",
+                  active ? "text-text-on-chrome" : "text-text-tertiary hover:bg-ink-800 hover:text-text-on-chrome",
                   collapsed && "justify-center px-0",
                 )}
               >
@@ -175,8 +175,8 @@ export function NavRail() {
             "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium",
             "transition-colors duration-quick",
             pathname.startsWith("/settings")
-              ? "text-text-inverse"
-              : "text-ink-300 hover:bg-ink-800 hover:text-text-inverse",
+              ? "text-text-on-chrome"
+              : "text-text-tertiary hover:bg-ink-800 hover:text-text-on-chrome",
             collapsed && "justify-center px-0",
           )}
         >
@@ -189,8 +189,8 @@ export function NavRail() {
           disabled={signingOut}
           title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium text-ink-300",
-            "transition-colors duration-quick hover:bg-ink-800 hover:text-text-inverse",
+            "flex h-10 items-center gap-s3 rounded-sm px-s3 text-body-sm font-medium text-text-tertiary",
+            "transition-colors duration-quick hover:bg-ink-800 hover:text-text-on-chrome",
             collapsed && "justify-center px-0",
           )}
         >

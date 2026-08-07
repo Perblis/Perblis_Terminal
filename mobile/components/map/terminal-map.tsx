@@ -12,7 +12,7 @@ import {
 } from "@maplibre/maplibre-react-native";
 import * as Haptics from "expo-haptics";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { View, useColorScheme, type NativeSyntheticEvent } from "react-native";
+import { View, type NativeSyntheticEvent } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
 import { getSoloFeatures, buildSoloIndex, type SoloFeature } from "../../lib/cluster";
@@ -64,13 +64,13 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
   },
   ref,
 ) {
-  const scheme = useColorScheme();
   const reducedMotion = useReducedMotion();
   const cameraRef = useRef<CameraRef>(null);
   const [style, setStyle] = useState<TerminalChartStyle | null>(null);
   const [viewport, setViewport] = useState<{ bbox: Bbox; zoom: number } | null>(null);
 
-  const theme = scheme === "dark" ? "dark" : "light";
+  // Dark-only app (D-028) — the chart grade follows the app, not the OS.
+  const theme = "dark" as const;
   useEffect(() => {
     let live = true;
     void getTerminalChartStyle(theme).then((s) => {
@@ -260,9 +260,9 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
  * to keep this file the sole maplibre importer.
  */
 export function StaticMiniMap({ lng, lat, height = 160 }: { lng: number; lat: number; height?: number }) {
-  const scheme = useColorScheme();
   const [style, setStyle] = useState<TerminalChartStyle | null>(null);
-  const theme = scheme === "dark" ? "dark" : "light";
+  // Dark-only app (D-028) — the chart grade follows the app, not the OS.
+  const theme = "dark" as const;
 
   useEffect(() => {
     let live = true;
@@ -291,7 +291,7 @@ export function StaticMiniMap({ lng, lat, height = 160 }: { lng: number; lat: nu
               borderRadius: 36,
               backgroundColor: "rgba(245,158,11,0.25)",
               borderWidth: 1.5,
-              borderColor: "#F59E0B",
+              borderColor: "#E0ED34",
             }}
           />
         </Marker>

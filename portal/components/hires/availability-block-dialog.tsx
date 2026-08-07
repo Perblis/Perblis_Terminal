@@ -54,7 +54,7 @@ export function AvailabilityBlockDialog({
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-card p-s5 shadow-e2">
           <Dialog.Title className="font-display text-h3 text-text-primary">Block dates</Dialog.Title>
           <Dialog.Description className="mt-s2 text-body-sm text-text-secondary">
@@ -151,7 +151,7 @@ export function RemoveBlockDialog({
   return (
     <Dialog.Root open={block !== null} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-card p-s5 shadow-e2">
           <Dialog.Title className="font-display text-h3 text-text-primary">Blocked dates</Dialog.Title>
           {block ? (

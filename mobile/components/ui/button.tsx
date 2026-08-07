@@ -12,14 +12,14 @@ const FRAME: Record<NonNullable<Props["variant"]>, string> = {
   primary: "bg-surface-brand active:opacity-90",
   secondary: "border border-border-strong bg-surface-card active:bg-surface-sunken",
   ghost: "active:opacity-70",
-  inverse: "bg-surface-inverse active:opacity-90",
+  inverse: "border border-border-strong bg-surface-chrome active:opacity-90",
 };
 
 const LABEL: Record<NonNullable<Props["variant"]>, string> = {
   primary: "font-sans-semibold text-text-on-brand",
   secondary: "font-sans-semibold text-text-primary",
   ghost: "text-text-secondary",
-  inverse: "font-sans-semibold text-text-inverse",
+  inverse: "font-sans-semibold text-text-on-chrome",
 };
 
 /** ≥48dp touch target (experience bar). */

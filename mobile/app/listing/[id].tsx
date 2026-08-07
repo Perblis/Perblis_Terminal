@@ -150,7 +150,7 @@ export default function ListingDetail() {
             onPress={() => router.push(`/supplier/${listing.supplier_id}` as never)}
             className="flex-row items-center gap-3 rounded-lg border border-border bg-surface-card p-3 active:bg-surface-sunken"
           >
-            <View className="h-10 w-10 items-center justify-center rounded-xl bg-surface-inverse">
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-surface-chrome">
               <MonoText className="text-text-brand-on-inverse">{listing.title.slice(0, 1).toUpperCase()}</MonoText>
             </View>
             <View className="flex-1">

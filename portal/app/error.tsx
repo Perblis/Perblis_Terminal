@@ -27,7 +27,7 @@ export default function ErrorPage({
         happening, send us the reference below.
       </p>
       {error.digest ? (
-        <p className="font-mono text-mono-sm text-ink-500">Ref {error.digest}</p>
+        <p className="font-mono text-mono-sm text-text-tertiary">Ref {error.digest}</p>
       ) : null}
       <div className="flex gap-s3">
         <Button onClick={reset}>Try again</Button>
@@ -35,7 +35,7 @@ export default function ErrorPage({
           Back to dashboard
         </Button>
       </div>
-      <p className="text-caption text-ink-500">
+      <p className="text-caption text-text-tertiary">
         <a className="underline" href="mailto:support@terminal.africa">
           support@terminal.africa
         </a>

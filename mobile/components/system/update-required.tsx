@@ -18,8 +18,8 @@ export function UpdateRequired({ ready, onRestart }: { ready: boolean; onRestart
     <View className="flex-1 bg-ink-900" style={{ paddingTop: insets.top }}>
       <View className="flex-1 items-center justify-center gap-3 px-8">
         <TCrane size={56} />
-        <DisplayText className="text-h1 text-center text-paper-0">Update required</DisplayText>
-        <BodyText className="text-center text-ink-300">
+        <DisplayText className="text-h1 text-center text-text-primary">Update required</DisplayText>
+        <BodyText className="text-center text-text-tertiary">
           This version of Terminal is out of date and needs an update before it can continue.
           {ready ? " The update is ready — restart to apply it." : " Downloading the update…"}
         </BodyText>

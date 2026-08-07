@@ -52,7 +52,7 @@ export function SessionExpiredProvider({ children }: { children: ReactNode }) {
       {children}
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
           <Dialog.Content
             className="fixed left-1/2 top-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-card p-s5 shadow-e2"
             onPointerDownOutside={(e) => e.preventDefault()}

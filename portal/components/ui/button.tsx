@@ -15,12 +15,12 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "bg-action-primary text-text-on-brand hover:bg-amber-400 active:bg-amber-600 disabled:bg-ink-100 disabled:text-ink-400",
+    "bg-action-primary text-text-on-brand hover:bg-action-primary-hover active:bg-action-primary-active disabled:bg-ink-700 disabled:text-ink-400",
   secondary:
-    "border border-border-strong bg-transparent text-text-primary hover:bg-ink-50 active:bg-ink-100 disabled:border-border-default disabled:text-ink-400",
+    "border border-border-strong bg-transparent text-text-primary hover:bg-ink-800 active:bg-ink-700 disabled:border-border-default disabled:text-ink-400",
   destructive:
-    "bg-action-destructive text-text-inverse hover:bg-red-500 active:bg-red-700 disabled:bg-ink-100 disabled:text-ink-400",
-  ghost: "bg-transparent text-text-secondary hover:bg-ink-100 active:bg-ink-200 disabled:text-ink-400",
+    "bg-action-destructive text-text-inverse hover:bg-red-400 active:bg-red-600 disabled:bg-ink-700 disabled:text-ink-400",
+  ghost: "bg-transparent text-text-secondary hover:bg-ink-800 active:bg-ink-700 disabled:text-ink-400",
 };
 
 const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {

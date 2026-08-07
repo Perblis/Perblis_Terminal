@@ -51,7 +51,7 @@ export default function StyleguidePage() {
             <WordmarkInline />
           </div>
           <div className="hazard-stripe max-w-md" />
-          <p className="text-caption text-ink-500">
+          <p className="text-caption text-text-tertiary">
             Wordmark: the founder&apos;s rounded-square excavator mark is workshopped together at
             this direction check — the 01 §1 plate stands until then.
           </p>
@@ -59,7 +59,7 @@ export default function StyleguidePage() {
 
         <Section title="Money — the visual signature">
           <CornerBracketPanel className="max-w-sm bg-surface-card p-s5">
-            <p className="text-overline font-display uppercase tracking-[0.1em] text-ink-500">
+            <p className="text-overline font-display uppercase tracking-[0.1em] text-text-tertiary">
               You receive
             </p>
             <Money kobo={425_000_000} className="mt-s2 block text-display-xl" />
@@ -78,7 +78,7 @@ export default function StyleguidePage() {
               </div>
             </div>
           </CornerBracketPanel>
-          <p className="max-w-md text-caption text-ink-500">
+          <p className="max-w-md text-caption text-text-tertiary">
             Full value always (₦4,250,000 — never ₦4.25M). Plex Mono 500, true minus, amounts
             appear set like print (no count-up, 08 §2). Corner brackets per D-021.
           </p>
@@ -131,7 +131,7 @@ export default function StyleguidePage() {
           <div className="flex items-center gap-s3">
             <CountBadge count={3} />
             <CountBadge count={12} urgent />
-            <span className="text-caption text-ink-500">unread · urgent</span>
+            <span className="text-caption text-text-tertiary">unread · urgent</span>
           </div>
         </Section>
 

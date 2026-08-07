@@ -7,7 +7,7 @@
         {
           "_": "paper-tinted land (paper-50)",
           "match": { "type": "background" },
-          "paint": { "background-color": "#F7F7F5" }
+          "paint": { "background-color": "#F5F5F5" }
         },
         {
           "_": "desaturated chart water",
@@ -22,7 +22,7 @@
         {
           "_": "greenspace flattened toward paper (paper-100)",
           "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood"] },
-          "paint": { "fill-color": "#F1F0EC" }
+          "paint": { "fill-color": "#EBEBEB" }
         }
       ]
     },
@@ -31,12 +31,12 @@
         {
           "_": "ink-900 land",
           "match": { "type": "background" },
-          "paint": { "background-color": "#16181D" }
+          "paint": { "background-color": "#19191C" }
         },
         {
           "_": "deep water one step up from land (ink-800)",
           "match": { "type": "fill", "idIncludes": ["water"] },
-          "paint": { "fill-color": "#23262E" }
+          "paint": { "fill-color": "#1A1C1E" }
         },
         {
           "_": "POI noise off",
@@ -46,17 +46,17 @@
         {
           "_": "greenspace/buildings sink into ink-800",
           "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood", "building"] },
-          "paint": { "fill-color": "#23262E" }
+          "paint": { "fill-color": "#1A1C1E" }
         },
         {
           "_": "roads as ink-700 linework",
           "match": { "type": "line", "idIncludes": ["road", "highway", "motorway", "bridge", "tunnel"] },
-          "paint": { "line-color": "#3A3F4A" }
+          "paint": { "line-color": "#26272B" }
         },
         {
           "_": "labels read paper on ink",
           "match": { "type": "symbol" },
-          "paint": { "text-color": "#B3B8C2", "text-halo-color": "#16181D" }
+          "paint": { "text-color": "#ADAEB0", "text-halo-color": "#19191C" }
         }
       ]
     }

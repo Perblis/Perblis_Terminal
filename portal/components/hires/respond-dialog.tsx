@@ -42,7 +42,7 @@ export function RespondDialog({
   return (
     <Dialog.Root open={mode !== null} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface-card p-s5 shadow-e2">
           {mode === "accept" ? (
             <>
@@ -59,7 +59,7 @@ export function RespondDialog({
               </Dialog.Description>
               {needsAck ? (
                 <label className="mt-s3 flex items-start gap-s2 text-body-sm text-text-secondary">
-                  <input type="checkbox" className="mt-s1 size-s4 accent-amber-500" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+                  <input type="checkbox" className="mt-s1 size-s4 accent-action-primary" checked={ack} onChange={(e) => setAck(e.target.checked)} />
                   <span>
                     I confirm the {hire.asset_class === "plant_machinery" ? "operator" : "driver"} arrangement listed will be
                     honoured for these dates.

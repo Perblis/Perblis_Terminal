@@ -20,7 +20,7 @@ export default function SuspendedPage() {
       </p>
       <a
         href="mailto:support@terminal.africa"
-        className="rounded-sm bg-action-primary px-s5 py-s3 text-body-sm font-medium text-text-on-brand hover:bg-amber-400"
+        className="rounded-sm bg-action-primary px-s5 py-s3 text-body-sm font-medium text-text-on-brand hover:bg-action-primary-hover"
       >
         Contact support
       </a>

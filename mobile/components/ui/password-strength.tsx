@@ -28,7 +28,7 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
         {([1, 2, 3] as const).map((step) => (
           <View
             key={step}
-            className={`h-1 flex-1 rounded-full ${score >= step ? BAR[score as 1 | 2 | 3] : "bg-ink-200"}`}
+            className={`h-1 flex-1 rounded-full ${score >= step ? BAR[score as 1 | 2 | 3] : "bg-ink-700"}`}
           />
         ))}
       </View>

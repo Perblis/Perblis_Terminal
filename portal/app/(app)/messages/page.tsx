@@ -169,7 +169,7 @@ function MessagesInner() {
                 aria-pressed={filter === f}
                 className={cn(
                   "rounded-pill px-s3 py-s1 text-caption font-medium",
-                  filter === f ? "bg-ink-900 text-paper-0" : "text-text-secondary hover:bg-ink-100",
+                  filter === f ? "bg-ink-700 text-text-primary" : "text-text-secondary hover:bg-surface-sunken",
                 )}
               >
                 {f === "all" ? "All" : f === "enquiry" ? "Enquiries" : "Hires"}
@@ -192,24 +192,24 @@ function MessagesInner() {
                   aria-selected={c.id === activeId}
                   onClick={() => setActiveId(c.id)}
                   className={cn(
-                    "flex w-full items-start gap-s2 border-b border-border-default px-s3 py-s2 text-left hover:bg-ink-50",
-                    c.id === activeId && "bg-ink-50",
+                    "flex w-full items-start gap-s2 border-b border-border-default px-s3 py-s2 text-left hover:bg-surface-sunken",
+                    c.id === activeId && "bg-surface-sunken",
                   )}
                 >
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-s1 text-body-sm font-medium text-text-primary">
                       <span className="truncate">{c.counterparty.name}</span>
-                      {c.counterparty.verified ? <Check size={12} className="shrink-0 text-blue-600" aria-label="Verified" /> : null}
+                      {c.counterparty.verified ? <Check size={12} className="shrink-0 text-blue-300" aria-label="Verified" /> : null}
                     </p>
-                    <p className="truncate text-caption text-ink-500">
+                    <p className="truncate text-caption text-text-tertiary">
                       {c.listing ? c.listing.title : "General enquiry"}
                     </p>
                     <p className="truncate text-caption text-text-secondary">{c.last_message_preview}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-s1">
-                    <span className="font-mono text-mono-sm text-ink-500">{relTime(c.last_message_at)}</span>
+                    <span className="font-mono text-mono-sm text-text-tertiary">{relTime(c.last_message_at)}</span>
                     {c.unread_count > 0 ? (
-                      <span className="rounded-pill bg-amber-500 px-s2 text-caption font-semibold text-ink-900">{c.unread_count}</span>
+                      <span className="rounded-pill bg-action-primary px-s2 text-caption font-semibold text-text-primary">{c.unread_count}</span>
                     ) : null}
                   </div>
                 </button>
@@ -227,7 +227,7 @@ function MessagesInner() {
               <div className="flex items-center justify-between border-b border-border-default px-s4 py-s2">
                 <div>
                   <p className="text-body-sm font-medium text-text-primary">{active.counterparty.name}</p>
-                  <p className="text-caption text-ink-500">
+                  <p className="text-caption text-text-tertiary">
                     {active.kind === "hire" ? "Hire conversation" : active.listing ? `Enquiry · ${active.listing.title}` : "General enquiry"}
                     {active.yard_name ? ` · ${active.yard_name}` : ""}
                   </p>
@@ -252,17 +252,17 @@ function MessagesInner() {
                           <div
                             className={cn(
                               "max-w-[75%] rounded-md border px-s3 py-s2 text-body",
-                              mine ? "border-border-default bg-surface-card" : "border-transparent bg-ink-100",
+                              mine ? "border-border-default bg-surface-card" : "border-transparent bg-surface-sunken",
                             )}
                           >
                             <p className="whitespace-pre-wrap break-words">{m.body}</p>
                             {m.masked ? (
-                              <p className="mt-s1 flex items-center gap-s1 rounded-pill bg-amber-100 px-s2 py-px text-caption text-amber-900">
+                              <p className="mt-s1 flex items-center gap-s1 rounded-pill bg-amber-500/12 px-s2 py-px text-caption text-amber-300">
                                 <Lock size={11} aria-hidden /> contact hidden until paid
                               </p>
                             ) : null}
                           </div>
-                          <p className="mt-px flex items-center gap-s1 font-mono text-mono-sm text-ink-500">
+                          <p className="mt-px flex items-center gap-s1 font-mono text-mono-sm text-text-tertiary">
                             {new Date(m.sent_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                             {mine ? <Check size={11} aria-label="Sent" /> : null}
                           </p>
@@ -274,8 +274,8 @@ function MessagesInner() {
                         <div className="max-w-[75%] rounded-md border border-border-default bg-surface-card px-s3 py-s2 text-body opacity-60">
                           <p className="whitespace-pre-wrap break-words">{p.body}</p>
                         </div>
-                        <p className="mt-px font-mono text-mono-sm text-ink-500">
-                          <Check size={11} className="inline text-ink-300" aria-label="Sending" />
+                        <p className="mt-px font-mono text-mono-sm text-text-tertiary">
+                          <Check size={11} className="inline text-text-tertiary" aria-label="Sending" />
                         </p>
                       </li>
                     ))}
@@ -303,14 +303,14 @@ function MessagesInner() {
                     }
                   }}
                   placeholder="Write a message…"
-                  className="max-h-32 min-h-12 flex-1 resize-y rounded-sm border border-border-default p-s3 text-body outline-none placeholder:text-ink-500"
+                  className="max-h-32 min-h-12 flex-1 resize-y rounded-sm border border-border-default p-s3 text-body outline-none placeholder:text-text-tertiary"
                 />
                 <button
                   type="button"
                   onClick={submitDraft}
                   disabled={!draft.trim()}
                   aria-label="Send message"
-                  className="grid size-12 shrink-0 place-items-center rounded-sm bg-action-primary text-text-on-brand disabled:bg-ink-100 disabled:text-ink-400"
+                  className="grid size-12 shrink-0 place-items-center rounded-sm bg-action-primary text-text-on-brand disabled:bg-surface-sunken disabled:text-text-tertiary"
                 >
                   <Send size={18} />
                 </button>

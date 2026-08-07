@@ -35,7 +35,7 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
           // eslint-disable-next-line @next/next/no-img-element -- R2 URLs are runtime-dynamic
           <img src={mediaUrl(data.logo_url) ?? ""} alt="" className="size-s8 rounded-md object-cover" />
         ) : (
-          <span className="grid size-s8 place-items-center rounded-md bg-surface-inverse font-display text-h3 text-amber-500">
+          <span className="grid size-s8 place-items-center rounded-md bg-surface-chrome font-display text-h3 text-action-primary">
             {name.slice(0, 1).toUpperCase()}
           </span>
         )}
@@ -43,12 +43,12 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
           <h2 className="flex items-center gap-s2 font-display text-h2 text-text-primary">
             {name}
             {data.verification_badge === "business_verified" ? (
-              <ShieldCheck size={20} className="text-blue-600" aria-label="Business verified" />
+              <ShieldCheck size={20} className="text-blue-300" aria-label="Business verified" />
             ) : data.verification_badge === "verified" ? (
-              <BadgeCheck size={20} className="text-blue-600" aria-label="Verified" />
+              <BadgeCheck size={20} className="text-blue-300" aria-label="Verified" />
             ) : null}
           </h2>
-          <p className="text-caption text-ink-500">
+          <p className="text-caption text-text-tertiary">
             On Terminal since{" "}
             {new Date(data.member_since).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
             {data.yards.length > 0 ? ` · ${data.yards.length} yard${data.yards.length > 1 ? "s" : ""}` : ""}
@@ -91,10 +91,10 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
               </div>
               <div className="p-s3">
                 <p className="line-clamp-2 text-body font-medium text-text-primary">{l.title}</p>
-                <p className="text-caption text-ink-500">{l.asset_type}</p>
+                <p className="text-caption text-text-tertiary">{l.asset_type}</p>
                 <p className="pt-s1 font-mono text-mono-lg font-medium">
                   {l.daily_price_display}
-                  <span className="font-sans text-caption font-normal text-ink-500"> /day</span>
+                  <span className="font-sans text-caption font-normal text-text-tertiary"> /day</span>
                 </p>
               </div>
             </div>

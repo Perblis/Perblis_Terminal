@@ -150,19 +150,19 @@ export function RangeCalendar({
             >
               <View
                 className={`h-9 w-9 items-center justify-center rounded-full ${
-                  isEdge ? "bg-surface-brand" : isBetween ? "bg-amber-100" : ""
+                  isEdge ? "bg-surface-brand" : isBetween ? "bg-amber-500/12" : ""
                 }`}
               >
                 <MonoText
                   className={`text-body-sm ${
                     held
-                      ? "text-ink-300 line-through"
+                      ? "text-text-tertiary line-through"
                       : disabled
-                        ? "text-ink-300"
+                        ? "text-text-tertiary"
                         : isEdge
                           ? "text-text-on-brand"
                           : isBetween
-                            ? "text-amber-900"
+                            ? "text-amber-300"
                             : "text-text-primary"
                   }`}
                 >

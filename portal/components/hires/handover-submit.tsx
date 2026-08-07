@@ -103,7 +103,7 @@ export function SubmitHandoverDialog({
         <Button variant="secondary">Submit {kindLabel} handover</Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface-card p-s5 shadow-e2">
           <Dialog.Title className="font-display text-h3 text-text-primary">
             Submit the {kindLabel} handover
@@ -122,13 +122,13 @@ export function SubmitHandoverDialog({
                   type="button"
                   onClick={() => removeAt(i)}
                   aria-label="Remove photo"
-                  className="absolute -right-s1 -top-s1 grid size-s4 place-items-center rounded-full bg-ink-900 text-mono-sm text-paper-0"
+                  className="absolute -right-s1 -top-s1 grid size-s4 place-items-center rounded-full bg-ink-900 text-mono-sm text-text-primary"
                 >
                   ×
                 </button>
               </div>
             ))}
-            <label className="grid size-20 cursor-pointer place-items-center rounded-sm border border-dashed border-border-default text-h3 text-ink-500 hover:border-amber-500">
+            <label className="grid size-20 cursor-pointer place-items-center rounded-sm border border-dashed border-border-default text-h3 text-text-tertiary hover:border-border-focus">
               +
               <input
                 type="file"

@@ -7,14 +7,83 @@
 @tailwind utilities;
 
 @layer base {
-  /* border/focus (02 §2): amber 2px outer ring with a 1px paper gap, on
-     keyboard focus only. Components never draw their own outlines. */
+  /* border/focus (02 §2): brand 2px outer ring with a 1px gap, on keyboard
+     focus only. Components never draw their own outlines. */
   :focus-visible {
     outline: 2px solid var(--border-focus);
     outline-offset: 1px;
   }
   :focus:not(:focus-visible) {
     outline: none;
+  }
+
+  /* Dark-only portal: tell the UA so form controls, scrollbars and the
+     canvas behind rubber-band scrolling render dark too. */
+  :root {
+    color-scheme: dark;
+  }
+
+  /* Password managers repaint inputs white on a dark form (Infisical
+     index.css carries the same two overrides). */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    caret-color: var(--text-primary);
+    transition: background-color 5000s ease-in-out 0s;
+  }
+  input[data-np-input-autofilled],
+  input[data-np-input-autofilled]:hover,
+  input[data-np-input-autofilled]:focus,
+  input[data-np-input-autofilled]:active {
+    background-color: transparent !important;
+    transition: none !important;
+  }
+
+  /* Checkboxes/radios: the UA control reads as a pale blob on a near-black
+     ground, so we draw them. Sizing still comes from the utility class on the
+     element (size-s4); only the skin is defined here. */
+  input[type="checkbox"],
+  input[type="radio"] {
+    appearance: none;
+    flex-shrink: 0;
+    border: 1px solid var(--border-strong);
+    background-color: var(--surface-sunken);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    transition:
+      background-color var(--dur-micro) var(--ease-out),
+      border-color var(--dur-micro) var(--ease-out);
+  }
+  input[type="checkbox"] {
+    border-radius: 3px;
+  }
+  input[type="radio"] {
+    border-radius: 999px;
+  }
+  input[type="checkbox"]:hover:not(:disabled),
+  input[type="radio"]:hover:not(:disabled) {
+    border-color: var(--action-primary);
+  }
+  input[type="checkbox"]:checked,
+  input[type="radio"]:checked {
+    background-color: var(--action-primary);
+    border-color: var(--action-primary);
+  }
+  /* Tick drawn in text/on-brand (#19191C) so it reads on the lime fill. */
+  input[type="checkbox"]:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8.5l2.75 2.75L12 6' stroke='%2319191C' stroke-width='2' stroke-linecap='square'/%3E%3C/svg%3E");
+  }
+  input[type="radio"]:checked {
+    background-image: radial-gradient(circle, var(--text-on-brand) 0 33%, transparent 36%);
+  }
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   ::selection {
@@ -55,14 +124,40 @@
 }
 
 @layer utilities {
-  /* M1 hazard stripe (01 §2): 4px section punctuation line, never a border. */
+  /* M1 hazard stripe (01 §2): 4px section punctuation line, never a border.
+     On the dark ground the second band is the sunken surface, not the
+     inverse one — brand-on-white would strobe. */
   .hazard-stripe {
     height: 4px;
     background: repeating-linear-gradient(
       45deg,
       var(--surface-brand) 0 8px,
-      var(--surface-inverse) 8px 16px
+      var(--surface-sunken) 8px 16px
     );
+  }
+
+  /* Infisical's thin scrollbar — the single most recognisable piece of their
+     chrome after the lime accent. */
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 0.25rem;
+    height: 0.25rem;
+    background-color: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+    border-radius: 999px;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
   /* Skeleton shimmer (05 §4): ink-100 → paper-50, 1.2s. Static under

@@ -15,7 +15,7 @@ import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
 
 function VerifiedTick() {
   return (
-    <View className="h-4 w-4 items-center justify-center rounded-full" style={{ backgroundColor: "#1D4ED8" }}>
+    <View className="h-4 w-4 items-center justify-center rounded-full" style={{ backgroundColor: "#4D9AFF" }}>
       <Svg width={10} height={10} viewBox="0 0 24 24">
         <Path d="M4 12l6 6 10-12" stroke="#FFFFFF" strokeWidth={3.5} fill="none" />
       </Svg>
@@ -78,7 +78,7 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
     <Sheet onDismiss={onDismiss}>
       {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-border px-4 pb-3">
-        <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-surface-inverse">
+        <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
           {yard.supplier.logo ? (
             <Image source={{ uri: resolveMediaUrl(yard.supplier.logo) }} style={{ width: 44, height: 44 }} />
           ) : (
@@ -111,13 +111,13 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
                   accessibilityState={{ selected }}
                   onPress={() => setClassFilter(selected ? null : meta.value)}
                   className={`flex-row items-center gap-1 rounded-full border px-3 py-1.5 ${
-                    selected ? "border-surface-inverse bg-surface-inverse" : "border-border-strong bg-surface-card"
+                    selected ? "border-ink-600 bg-ink-700" : "border-border-strong bg-surface-card"
                   }`}
                 >
-                  <BodyText className={`text-body-sm ${selected ? "text-text-inverse" : "text-text-primary"}`}>
+                  <BodyText className={`text-body-sm ${selected ? "text-text-primary" : "text-text-secondary"}`}>
                     {meta.label}
                   </BodyText>
-                  <MonoText className={`text-caption ${selected ? "text-text-inverse" : "text-text-tertiary"}`}>
+                  <MonoText className={`text-caption ${selected ? "text-text-primary" : "text-text-tertiary"}`}>
                     {counts.get(meta.value)}
                   </MonoText>
                 </Pressable>

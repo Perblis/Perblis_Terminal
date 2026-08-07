@@ -13,7 +13,7 @@ export function LockedTerms({ hire, lockedAt }: { hire: Hire; lockedAt?: string 
   const locked = !["requested"].includes(hire.status);
   return (
     <CornerBracketPanel className="bg-surface-card p-s5">
-      <p className="font-display text-overline uppercase tracking-[0.1em] text-ink-500">
+      <p className="font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">
         {locked ? "You receive" : "Estimated — final at acceptance"}
       </p>
       <p className="mt-s2 font-mono text-display-xl font-medium text-text-primary">
@@ -27,7 +27,7 @@ export function LockedTerms({ hire, lockedAt }: { hire: Hire; lockedAt?: string 
         </div>
         <div className="flex justify-between py-s1">
           <span className="text-text-secondary">
-            Service fee{hire.fee_basis ? <span className="text-ink-500"> · {hire.fee_basis}</span> : null}
+            Service fee{hire.fee_basis ? <span className="text-text-tertiary"> · {hire.fee_basis}</span> : null}
           </span>
           <span className="font-mono">−{hire.service_fee_display ?? "—"}</span>
         </div>
@@ -38,7 +38,7 @@ export function LockedTerms({ hire, lockedAt }: { hire: Hire; lockedAt?: string 
       </div>
 
       {locked && lockedAt ? (
-        <p className="mt-s3 flex items-center gap-s1 text-caption text-ink-500">
+        <p className="mt-s3 flex items-center gap-s1 text-caption text-text-tertiary">
           <Lock size={12} aria-hidden />
           Terms locked{" "}
           {new Date(lockedAt).toLocaleString("en-GB", {

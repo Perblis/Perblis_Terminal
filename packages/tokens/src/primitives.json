@@ -1,91 +1,188 @@
 {
+  "_doc": "Primitive scales. Palette, type scale, radius, motion and density are derived from Infisical's frontend design system (github.com/Infisical/infisical, frontend/src/index.css — MIT, Copyright (c) 2022 Infisical Inc.). Ramp NAMES stay Terminal's (semantic.json never references a hue), so the port is a value swap, not a vocabulary change. Two deliberate deviations from upstream: the display face is Inter Tight (Infisical ships the commercially-licensed Alliance No. 2, which we may not redistribute), and ink.350 is an added stop so text/tertiary clears WCAG AA — Infisical's #707174 muted does not.",
   "color": {
     "ink": {
-      "50": "#F4F4F6",
-      "100": "#EDEEF1",
-      "200": "#D7DAE0",
-      "300": "#B3B8C2",
-      "400": "#8D93A0",
-      "500": "#6B7280",
-      "600": "#4B5563",
-      "700": "#3A3F4A",
-      "800": "#23262E",
-      "900": "#16181D"
+      "_doc": "Infisical `mineshaft` — the primary neutral ramp. 350 and 850/950 are Terminal additions (AA-safe muted text; card/popover surfaces).",
+      "50": "#F5F5F5",
+      "100": "#EBEBEB",
+      "200": "#CCCCCE",
+      "300": "#ADAEB0",
+      "350": "#8C8D90",
+      "400": "#707174",
+      "500": "#323439",
+      "600": "#2D2F33",
+      "700": "#26272B",
+      "800": "#1E1F22",
+      "850": "#1A1C1E",
+      "900": "#19191C",
+      "950": "#141617"
+    },
+    "bunker": {
+      "_doc": "Infisical `bunker` — deeper, bluer neutrals for sunken/overlay surfaces.",
+      "50": "#F3F4F4",
+      "100": "#E8E8E9",
+      "200": "#C5C6C8",
+      "300": "#A2A4A6",
+      "400": "#5D5F64",
+      "500": "#171B21",
+      "600": "#15181E",
+      "700": "#111419",
+      "800": "#0E1014",
+      "900": "#0B0D10"
+    },
+    "chicago": {
+      "_doc": "Infisical `chicago` — mid-grey ramp for disabled/secondary chrome.",
+      "50": "#F7F7F7",
+      "100": "#EFEFEF",
+      "200": "#D6D6D7",
+      "300": "#BDBEBF",
+      "400": "#8C8D8E",
+      "500": "#5B5C5E",
+      "600": "#525355",
+      "700": "#444547",
+      "800": "#373738",
+      "900": "#2D2D2E"
     },
     "paper": {
       "0": "#FFFFFF",
-      "50": "#F7F7F5",
-      "100": "#F1F0EC",
-      "150": "#E9E7E1"
+      "50": "#F5F5F5",
+      "100": "#EBEBEB",
+      "150": "#E8E8E9"
+    },
+    "primary": {
+      "_doc": "Infisical brand — acid lime. The single accent; carries every primary action, focus ring and selection.",
+      "50": "#FFFFF5",
+      "100": "#FCFCE8",
+      "200": "#F8FACA",
+      "300": "#F4F7AB",
+      "400": "#ECF26D",
+      "500": "#E0ED34",
+      "600": "#C2D62B",
+      "700": "#97B31D",
+      "800": "#708F13",
+      "900": "#4D6B0B"
     },
     "amber": {
-      "50": "#FFFBEB",
-      "100": "#FEF3C7",
-      "200": "#FDE68A",
-      "300": "#FCD34D",
-      "400": "#FBBF24",
-      "500": "#F59E0B",
-      "600": "#D97706",
-      "700": "#B45309",
-      "800": "#92400E",
-      "900": "#78350F"
+      "_doc": "Infisical `yellow` (#F1C40F) — demoted from brand to the warning hue.",
+      "50": "#FEFCF3",
+      "100": "#FEF9E7",
+      "200": "#FCF0C3",
+      "300": "#F9E79F",
+      "400": "#F5D657",
+      "500": "#F1C40F",
+      "600": "#D9B00E",
+      "700": "#B5930B",
+      "800": "#917609",
+      "900": "#766007"
     },
     "blue": {
-      "50": "#EFF6FF",
-      "400": "#60A5FA",
-      "500": "#3B82F6",
-      "600": "#2563EB",
-      "700": "#1D4ED8",
-      "900": "#1E3A8A"
+      "_doc": "Infisical `blue`; 300/400 double as the org accent (#30B3FF territory).",
+      "50": "#F2F8FF",
+      "100": "#E6F1FF",
+      "200": "#BFDBFF",
+      "300": "#99C5FF",
+      "400": "#4D9AFF",
+      "500": "#006EFF",
+      "600": "#0063E6",
+      "700": "#0053BF",
+      "800": "#004299",
+      "900": "#00367D"
     },
     "green": {
-      "50": "#ECFDF5",
-      "500": "#10B981",
-      "600": "#059669",
-      "700": "#047857",
-      "900": "#064E3B"
+      "_doc": "Infisical `green` (#2ECC71) — success, On Hire.",
+      "50": "#F5FCF8",
+      "100": "#EAFAF1",
+      "200": "#CBF2DC",
+      "300": "#ABEBC6",
+      "400": "#6DDB9C",
+      "500": "#2ECC71",
+      "600": "#29B866",
+      "700": "#239955",
+      "800": "#1C7A44",
+      "900": "#176437"
     },
     "red": {
-      "50": "#FEF2F2",
-      "400": "#F87171",
-      "500": "#EF4444",
-      "600": "#DC2626",
-      "700": "#B91C1C",
-      "900": "#7F1D1D"
+      "_doc": "Infisical `red` (#E74C3C) — danger, cancelled.",
+      "50": "#FEF6F5",
+      "100": "#FDEDEC",
+      "200": "#F9D2CE",
+      "300": "#F5B7B1",
+      "400": "#EE8277",
+      "500": "#E74C3C",
+      "600": "#D04436",
+      "700": "#AD392D",
+      "800": "#8B2E24",
+      "900": "#71251D"
     },
     "teal": {
-      "50": "#ECFEFF",
-      "500": "#06B6D4",
-      "600": "#0891B2",
-      "900": "#164E63"
+      "_doc": "Built around Infisical's KMS accent #34EDBF and info #63B0BD.",
+      "50": "#F0FDF9",
+      "100": "#D9FBEF",
+      "200": "#A8F5DA",
+      "300": "#6FF0C6",
+      "400": "#34EDBF",
+      "500": "#1FD3A6",
+      "600": "#17AD89",
+      "700": "#14876C",
+      "800": "#106A55",
+      "900": "#0D5544"
     },
     "violet": {
-      "50": "#F5F3FF",
-      "500": "#8B5CF6",
-      "600": "#7C3AED",
-      "900": "#4C1D95"
+      "_doc": "Built around Infisical's Secret-Sharing accent #B056F0.",
+      "50": "#F8F2FE",
+      "100": "#F0E4FD",
+      "200": "#DDC2FA",
+      "300": "#CA9FF7",
+      "400": "#B056F0",
+      "500": "#9C3AE0",
+      "600": "#832FBD",
+      "700": "#69269A",
+      "800": "#501D75",
+      "900": "#3A1555"
     },
     "earth": {
-      "50": "#FDF1E7",
-      "600": "#B45309",
-      "700": "#92400E",
-      "900": "#78350F"
+      "_doc": "Built around Infisical's PKI accent #ED8C34.",
+      "50": "#FDF3E9",
+      "100": "#FBE6D1",
+      "200": "#F7C9A0",
+      "300": "#F2AB6C",
+      "400": "#ED8C34",
+      "500": "#D97620",
+      "600": "#B45F19",
+      "700": "#8F4B14",
+      "800": "#6B380F",
+      "900": "#4D280B"
+    },
+    "pink": {
+      "_doc": "Built around Infisical's PAM accent #FF3568.",
+      "50": "#FFF1F5",
+      "100": "#FFE0E9",
+      "200": "#FFB8CA",
+      "300": "#FF8BA8",
+      "400": "#FF3568",
+      "500": "#E51E51",
+      "600": "#C01342",
+      "700": "#970E34",
+      "800": "#700A26",
+      "900": "#4F071B"
     }
   },
   "type": {
+    "_doc": "Infisical's scale is markedly denser than Terminal's original: 14px body, 12px meta, headings that top out around 20px. `display` substitutes Inter Tight for Alliance No. 2 (commercial, non-redistributable); `mono` is JetBrains Mono, as upstream.",
     "family": {
-      "display": "Archivo, \"Helvetica Neue\", Arial, sans-serif",
+      "display": "\"Inter Tight\", \"Helvetica Neue\", Arial, sans-serif",
       "sans": "Inter, system-ui, sans-serif",
-      "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      "mono": "\"JetBrains Mono\", ui-monospace, monospace"
     },
     "size": {
-      "xs": "13px",
-      "sm": "14px",
-      "base": "16px",
-      "lg": "18px",
-      "xl": "22px",
-      "2xl": "28px",
-      "3xl": "36px"
+      "2xs": "11px",
+      "xs": "12px",
+      "sm": "13px",
+      "base": "14px",
+      "lg": "16px",
+      "xl": "20px",
+      "2xl": "26px",
+      "3xl": "32px"
     },
     "weight": {
       "regular": "400",
@@ -95,19 +192,19 @@
     },
     "_role_doc": "Named type roles (ch.03 §2). size/line/weight feed Tailwind fontSize tuples; `family` is a hint applied via font-display|font-sans|font-mono on the element.",
     "role": {
-      "display-xl": { "size": "40px", "line": "44px", "weight": "500", "family": "mono" },
-      "display-lg": { "size": "32px", "line": "38px", "weight": "700", "family": "display" },
-      "h1": { "size": "28px", "line": "34px", "weight": "600", "family": "display" },
-      "h2": { "size": "22px", "line": "28px", "weight": "600", "family": "display" },
-      "h3": { "size": "18px", "line": "24px", "weight": "600", "family": "display" },
-      "body-lg": { "size": "17px", "line": "26px", "weight": "400", "family": "sans" },
-      "body": { "size": "16px", "line": "24px", "weight": "400", "family": "sans" },
-      "body-sm": { "size": "14px", "line": "20px", "weight": "400", "family": "sans" },
-      "caption": { "size": "13px", "line": "18px", "weight": "500", "family": "sans" },
-      "mono-lg": { "size": "20px", "line": "26px", "weight": "500", "family": "mono" },
-      "mono": { "size": "15px", "line": "22px", "weight": "400", "family": "mono" },
-      "mono-sm": { "size": "13px", "line": "18px", "weight": "400", "family": "mono" },
-      "overline": { "size": "12px", "line": "16px", "weight": "600", "tracking": "0.1em", "family": "display" }
+      "display-xl": { "size": "32px", "line": "36px", "weight": "500", "family": "mono" },
+      "display-lg": { "size": "26px", "line": "32px", "weight": "600", "family": "display" },
+      "h1": { "size": "20px", "line": "28px", "weight": "600", "family": "display" },
+      "h2": { "size": "17px", "line": "24px", "weight": "600", "family": "display" },
+      "h3": { "size": "15px", "line": "22px", "weight": "600", "family": "display" },
+      "body-lg": { "size": "15px", "line": "22px", "weight": "400", "family": "sans" },
+      "body": { "size": "14px", "line": "20px", "weight": "400", "family": "sans" },
+      "body-sm": { "size": "13px", "line": "18px", "weight": "400", "family": "sans" },
+      "caption": { "size": "12px", "line": "16px", "weight": "400", "family": "sans" },
+      "mono-lg": { "size": "18px", "line": "24px", "weight": "500", "family": "mono" },
+      "mono": { "size": "13px", "line": "18px", "weight": "400", "family": "mono" },
+      "mono-sm": { "size": "12px", "line": "16px", "weight": "400", "family": "mono" },
+      "overline": { "size": "11px", "line": "14px", "weight": "600", "tracking": "0.08em", "family": "display" }
     }
   },
   "space": {
@@ -116,38 +213,40 @@
     "s2": "8px",
     "s3": "12px",
     "s4": "16px",
-    "s5": "24px",
-    "s6": "32px",
-    "s7": "48px",
-    "s8": "64px"
+    "s5": "20px",
+    "s6": "28px",
+    "s7": "40px",
+    "s8": "56px"
   },
   "radius": {
+    "_doc": "Infisical is tight-cornered — 2/4/6px, never the 12px pill-ish cards of the original Heavy Duty spec.",
     "none": "0px",
-    "sm": "4px",
-    "md": "8px",
-    "lg": "12px",
+    "sm": "2px",
+    "md": "4px",
+    "lg": "6px",
     "pill": "999px"
   },
   "motion": {
-    "durMicro": "120ms",
-    "durQuick": "200ms",
-    "durStandard": "280ms",
-    "durDeliberate": "400ms",
-    "easeOut": "cubic-bezier(0.2, 0, 0, 1)",
+    "_doc": "Infisical's timings: 100ms fades, 150ms pop-ins, cubic-bezier(0.16, 1, 0.3, 1) throughout.",
+    "durMicro": "80ms",
+    "durQuick": "120ms",
+    "durStandard": "180ms",
+    "durDeliberate": "260ms",
+    "easeOut": "cubic-bezier(0.16, 1, 0.3, 1)",
     "easeInOut": "cubic-bezier(0.4, 0, 0.2, 1)",
     "easeExit": "cubic-bezier(0.4, 0, 1, 1)"
   },
   "elevation": {
-    "_doc": "ch.04 elevation. e0 is flat + 1px border (no shadow); e1 dropdowns/popovers/callouts; e2 modals/sheets. ink-900 = rgb(22,24,29).",
+    "_doc": "ch.04 elevation, re-tuned for a dark ground: shadows read as depth only when they are near-black. e0 is flat + 1px border; e1 dropdowns/popovers; e2 modals/sheets.",
     "e0": "none",
-    "e1": "0 2px 8px rgba(22, 24, 29, 0.10)",
-    "e2": "0 8px 24px rgba(22, 24, 29, 0.16)"
+    "e1": "0 2px 8px rgba(0, 0, 0, 0.40)",
+    "e2": "0 12px 32px rgba(0, 0, 0, 0.55)"
   },
   "density": {
-    "_doc": "ch.04 portal density modes. comfortable = default; compact = persisted user toggle.",
-    "rowComfortable": "52px",
-    "rowCompact": "40px",
-    "cellPadComfortable": "12px",
-    "cellPadCompact": "8px"
+    "_doc": "ch.04 portal density modes, tightened to Infisical's table rhythm. comfortable = default; compact = persisted user toggle.",
+    "rowComfortable": "44px",
+    "rowCompact": "32px",
+    "cellPadComfortable": "10px",
+    "cellPadCompact": "6px"
   }
 }

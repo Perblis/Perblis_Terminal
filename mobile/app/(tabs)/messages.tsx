@@ -48,10 +48,10 @@ export default function MessagesTab() {
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
               onPress={() => setFilter(f.key)}
-              className={`rounded-full px-3 py-1.5 ${active ? "bg-surface-inverse" : "bg-surface-sunken"}`}
+              className={`rounded-full px-3 py-1.5 ${active ? "bg-ink-700" : "bg-surface-sunken"}`}
             >
               <BodyText
-                className={`text-body-sm ${active ? "font-sans-semibold text-text-inverse" : "text-text-secondary"}`}
+                className={`text-body-sm ${active ? "font-sans-semibold text-text-primary" : "text-text-secondary"}`}
               >
                 {f.label}
               </BodyText>

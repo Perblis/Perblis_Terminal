@@ -72,14 +72,14 @@ function StatCard({
     <Link href={href} className="block min-w-0">
       <CornerBracketPanel
         className={`h-full p-s4 transition-colors duration-quick ${
-          tone === "amber" ? "bg-amber-50 hover:bg-amber-100" : "bg-surface-card hover:bg-ink-50"
+          tone === "amber" ? "bg-amber-500/10 hover:bg-amber-500/12" : "bg-surface-card hover:bg-surface-sunken"
         }`}
       >
-        <p className="font-display text-overline uppercase tracking-[0.1em] text-ink-500">{label}</p>
+        <p className="font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">{label}</p>
         <p className={`mt-s2 truncate ${mono ? "font-mono text-display-xl font-medium" : "font-display text-display-xl"} text-text-primary`}>
           {value}
         </p>
-        {caption ? <p className="mt-s1 truncate text-caption text-ink-500">{caption}</p> : null}
+        {caption ? <p className="mt-s1 truncate text-caption text-text-tertiary">{caption}</p> : null}
       </CornerBracketPanel>
     </Link>
   );
@@ -151,14 +151,14 @@ function Checklist() {
       >
         <div className="text-left">
           <h2 className="font-display text-h3 text-text-primary">Get set up</h2>
-          <p className="text-caption text-ink-500">
+          <p className="text-caption text-text-tertiary">
             {doneCount} of {items.length} done — a complete setup is what turns visits into requests
           </p>
         </div>
         {collapsed ? <ChevronDown size={18} aria-hidden /> : <ChevronUp size={18} aria-hidden />}
       </button>
-      <div className="mt-s3 h-s1 overflow-hidden rounded-pill bg-ink-100">
-        <div className="h-full bg-amber-500 transition-[width] duration-standard" style={{ width: `${(doneCount / items.length) * 100}%` }} />
+      <div className="mt-s3 h-s1 overflow-hidden rounded-pill bg-surface-sunken">
+        <div className="h-full bg-action-primary transition-[width] duration-standard" style={{ width: `${(doneCount / items.length) * 100}%` }} />
       </div>
       {!collapsed ? (
         <ul className="mt-s4 flex flex-col gap-s2">
@@ -166,13 +166,13 @@ function Checklist() {
             <li key={item.label} className="flex items-center gap-s3 rounded-sm border border-border-default px-s3 py-s2">
               <span
                 className={`grid size-s5 shrink-0 place-items-center rounded-pill ${
-                  item.done ? "bg-green-700 text-paper-0" : "border border-ink-300 text-transparent"
+                  item.done ? "bg-green-500 text-text-primary" : "border border-border-default text-transparent"
                 }`}
                 aria-hidden
               >
                 <Check size={13} />
               </span>
-              <span className={`flex-1 text-body-sm ${item.done ? "text-ink-500 line-through" : "font-medium text-text-primary"}`}>
+              <span className={`flex-1 text-body-sm ${item.done ? "text-text-tertiary line-through" : "font-medium text-text-primary"}`}>
                 {item.label}
               </span>
               {!item.done ? (
@@ -313,10 +313,10 @@ export default function DashboardPage() {
                   "Nothing queued — payouts run weekly after each completed hire"
                 )}
                 {summary.frozen_total > 0 ? (
-                  <span className="text-violet-900"> · {summary.frozen_total_display} on hold — dispute</span>
+                  <span className="text-violet-300"> · {summary.frozen_total_display} on hold — dispute</span>
                 ) : null}
               </p>
-              <p className="ml-auto flex items-center gap-s3 text-caption text-ink-500">
+              <p className="ml-auto flex items-center gap-s3 text-caption text-text-tertiary">
                 {summary.last_paid ? (
                   <span>
                     last payout <span className="font-mono">{summary.last_paid.amount_display}</span>
@@ -345,20 +345,20 @@ export default function DashboardPage() {
               <Card className="p-0">
                 {dayGroups.map(([day, dayEvents]) => (
                   <div key={day}>
-                    <p className="border-b border-border-default bg-surface-sunken px-s4 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
+                    <p className="border-b border-border-default bg-surface-sunken px-s4 py-s1 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">
                       {day}
                     </p>
                     <ul>
                       {dayEvents.map((event) => (
                         <li key={event.id} className="border-b border-border-default last:border-0">
-                          <Link href={`/hires/${event.hire_id}`} className="flex items-center gap-s3 px-s4 py-s3 hover:bg-ink-50">
-                            <span className="size-s2 shrink-0 rounded-pill bg-amber-500" aria-hidden />
+                          <Link href={`/hires/${event.hire_id}`} className="flex items-center gap-s3 px-s4 py-s3 hover:bg-surface-sunken">
+                            <span className="size-s2 shrink-0 rounded-pill bg-action-primary" aria-hidden />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-body-sm text-text-primary">
                                 {event.listing_title ?? "Hire"} — {event.to_status.replace(/_/g, " ")}
                               </span>
                             </span>
-                            <span className="shrink-0 font-mono text-mono-sm text-ink-500">
+                            <span className="shrink-0 font-mono text-mono-sm text-text-tertiary">
                               {new Date(event.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           </Link>

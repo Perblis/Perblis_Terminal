@@ -38,13 +38,13 @@ export function FilterBar({
                 onPress={() => onChange(selected ? null : meta.value)}
                 className={`min-h-12 flex-row items-center gap-1.5 rounded-full border px-3.5 py-2 ${
                   selected
-                    ? "border-surface-inverse bg-surface-inverse"
+                    ? "border-ink-600 bg-ink-700"
                     : "border-border-strong bg-surface-card"
                 }`}
               >
                 <Glyph size={15} color={selected ? t["--text-brand-on-inverse"] : t["--text-secondary"]} />
                 <BodyText
-                  className={`text-body-sm ${selected ? "font-sans-semibold text-text-inverse" : "text-text-primary"}`}
+                  className={`text-body-sm ${selected ? "font-sans-semibold text-text-primary" : "text-text-secondary"}`}
                 >
                   {meta.label}
                 </BodyText>

@@ -15,7 +15,7 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-s2 pb-s5">
       {crumbs.length > 0 ? (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-s1 text-caption text-ink-500">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-s1 text-caption text-text-tertiary">
           {crumbs.map((crumb, i) => (
             <Fragment key={`${crumb.label}-${i}`}>
               {i > 0 ? <ChevronRight size={12} aria-hidden /> : null}

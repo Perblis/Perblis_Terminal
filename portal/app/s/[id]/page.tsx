@@ -37,13 +37,13 @@ export default async function PublicStorefrontPage({ params }: { params: Promise
     <main className="mx-auto max-w-4xl px-s5 py-s6">
       <div className="mb-s5 flex items-center justify-between">
         <WordmarkInline />
-        <a href="/register" className="rounded-sm bg-action-primary px-s4 py-s2 text-body-sm font-medium text-text-on-brand hover:bg-amber-400">
+        <a href="/register" className="rounded-sm bg-action-primary px-s4 py-s2 text-body-sm font-medium text-text-on-brand hover:bg-action-primary-hover">
           Hire on Terminal
         </a>
       </div>
       <div className="hazard-stripe mb-s5" />
       <StorefrontView data={data} />
-      <p className="mt-s7 text-caption text-ink-500">Terminal Ltd · Lagos · terminal.africa/privacy</p>
+      <p className="mt-s7 text-caption text-text-tertiary">Terminal Ltd · Lagos · terminal.africa/privacy</p>
     </main>
   );
 }

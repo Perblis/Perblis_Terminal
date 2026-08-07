@@ -15,9 +15,9 @@ const config: Config = {
       // next/font self-hosts the token faces and exposes them as CSS vars;
       // the preset's literal family names remain the fallback stack.
       fontFamily: {
-        display: ["var(--font-display)", "Archivo", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "'Inter Tight'", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "'IBM Plex Mono'", "ui-monospace", "monospace"],
+        mono: ["var(--font-mono)", "'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       // P1's barely-perceptible pan (wave-7-vision.md) — the one decorative
       // motion, killed by prefers-reduced-motion via motion-safe.

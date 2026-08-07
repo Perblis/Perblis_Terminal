@@ -33,14 +33,14 @@ function ExpiryCell({ iso }: { iso: string | null }) {
     const t = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(t);
   }, []);
-  if (!iso) return <span className="text-ink-400">—</span>;
+  if (!iso) return <span className="text-text-tertiary">—</span>;
   const ms = new Date(iso).getTime() - now;
-  if (ms <= 0) return <span className="font-mono text-mono-sm text-ink-500">expired</span>;
+  if (ms <= 0) return <span className="font-mono text-mono-sm text-text-tertiary">expired</span>;
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
   const s = Math.floor((ms % 60_000) / 1_000);
   return (
-    <span className={`font-mono text-mono-sm ${ms < 30 * 60_000 ? "text-red-700" : "text-blue-700"}`}>
+    <span className={`font-mono text-mono-sm ${ms < 30 * 60_000 ? "text-red-300" : "text-blue-300"}`}>
       {h}:{String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
     </span>
   );
@@ -106,7 +106,7 @@ export default function HiresPage() {
             {counts[key] > 0 ? (
               <span
                 className={`rounded-pill px-s2 text-caption ${
-                  key === "needs_response" ? "bg-amber-100 text-amber-900" : "bg-ink-100 text-ink-600"
+                  key === "needs_response" ? "bg-amber-500/12 text-amber-300" : "bg-surface-sunken text-text-secondary"
                 }`}
               >
                 {counts[key]}
@@ -178,7 +178,7 @@ export default function HiresPage() {
                   (h, i) => (
                     <th
                       key={h}
-                      className={`border-b border-border-default px-s3 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-500 ${i >= 3 ? "text-right" : "text-left"}`}
+                      className={`border-b border-border-default px-s3 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-tertiary ${i >= 3 ? "text-right" : "text-left"}`}
                     >
                       {h}
                     </th>
@@ -191,7 +191,7 @@ export default function HiresPage() {
                 const meta = CLASS_BY_VALUE[hire.asset_class];
                 const Glyph = CLASS_GLYPHS[hire.asset_class];
                 return (
-                  <tr key={hire.id} className="h-[var(--density-row-height)] border-b border-border-default last:border-0 hover:bg-ink-50">
+                  <tr key={hire.id} className="h-[var(--density-row-height)] border-b border-border-default last:border-0 hover:bg-surface-sunken">
                     <td className="px-s3 py-[var(--density-cell-pad)]">
                       <Link href={`/hires/${hire.id}`} className="flex items-center gap-s3 hover:underline">
                         {hire.listing_photo ? (
@@ -204,7 +204,7 @@ export default function HiresPage() {
                         )}
                         <span>
                           <span className="block max-w-[24ch] truncate font-medium text-text-primary">{hire.listing_title}</span>
-                          <span className="block text-caption text-ink-500">{yardName(hire.yard_id)}</span>
+                          <span className="block text-caption text-text-tertiary">{yardName(hire.yard_id)}</span>
                         </span>
                       </Link>
                     </td>

@@ -84,6 +84,7 @@ const REQUIRED_PAIRS: Array<[string, string, number]> = [
   ["text/secondary", "surface/card", 4.5],
   ["text/tertiary", "surface/card", 4.5],
   ["text/inverse", "surface/inverse", 4.5],
+  ["text/on-chrome", "surface/chrome", 4.5],
   ["text/on-brand", "action/primary", 4.5],
   ["text/on-brand", "surface/brand", 4.5],
   ["text/brand-on-inverse", "surface/inverse", 4.5],
@@ -140,11 +141,22 @@ function camel(...parts: string[]): string {
     .join("");
 }
 
+/** Drop `_doc`-style annotation keys — they document a scale, they aren't stops. */
+function stripDocs(obj: Json): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.startsWith("_")) continue;
+    out[k] = v as string;
+  }
+  return out;
+}
+
 function flattenPrimitiveScale(prefix: string, scale: Json): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [ramp, stops] of Object.entries(scale)) {
-    for (const [stop, value] of Object.entries(stops as Json)) {
-      out[camel(prefix, ramp, stop)] = value as string;
+    if (ramp.startsWith("_")) continue;
+    for (const [stop, value] of Object.entries(stripDocs(stops as Json))) {
+      out[camel(prefix, ramp, stop)] = value;
     }
   }
   return out;
@@ -152,21 +164,13 @@ function flattenPrimitiveScale(prefix: string, scale: Json): Record<string, stri
 
 const flatColors = flattenPrimitiveScale("color", primitives.color);
 const flatSpace: Record<string, string> = {};
-for (const [k, v] of Object.entries(primitives.space)) flatSpace[camel("space", k)] = v as string;
+for (const [k, v] of Object.entries(stripDocs(primitives.space))) flatSpace[camel("space", k)] = v;
 const flatRadius: Record<string, string> = {};
-for (const [k, v] of Object.entries(primitives.radius)) flatRadius[camel("radius", k)] = v as string;
-const flatMotion: Record<string, string> = {};
-for (const [k, v] of Object.entries(primitives.motion)) flatMotion[k] = v as string;
-const flatElevation: Record<string, string> = {};
-for (const [k, v] of Object.entries(primitives.elevation)) {
-  if (k.startsWith("_")) continue;
-  flatElevation[k] = v as string;
-}
-const flatDensity: Record<string, string> = {};
-for (const [k, v] of Object.entries(primitives.density)) {
-  if (k.startsWith("_")) continue;
-  flatDensity[k] = v as string;
-}
+for (const [k, v] of Object.entries(stripDocs(primitives.radius)))
+  flatRadius[camel("radius", k)] = v;
+const flatMotion = stripDocs(primitives.motion);
+const flatElevation = stripDocs(primitives.elevation);
+const flatDensity = stripDocs(primitives.density);
 
 /** Named type roles (ch.03) -> Tailwind fontSize tuples [size, {lineHeight,...}]. */
 const roleFontSize: Record<string, [string, Record<string, string>]> = {};
@@ -226,7 +230,8 @@ function emitCss(): void {
 function emitTailwindPreset(): void {
   const colors: Json = {};
   for (const [ramp, stops] of Object.entries(primitives.color)) {
-    colors[ramp] = stops;
+    if (ramp.startsWith("_")) continue;
+    colors[ramp] = stripDocs(stops as Json);
   }
   // Semantic tokens are wired to CSS vars so dark mode is a remap.
   const semanticColors: Json = {};
@@ -241,8 +246,8 @@ function emitTailwindPreset(): void {
     theme: {
       extend: {
         colors: { ...colors, ...semanticColors },
-        spacing: primitives.space,
-        borderRadius: primitives.radius,
+        spacing: stripDocs(primitives.space),
+        borderRadius: stripDocs(primitives.radius),
         boxShadow: flatElevation,
         fontFamily: {
           display: primitives.type.family.display.split(", "),

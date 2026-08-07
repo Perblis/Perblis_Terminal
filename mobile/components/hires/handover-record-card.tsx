@@ -44,7 +44,7 @@ export function HandoverRecordCard({
       <View className="flex-row items-center justify-between">
         <BodyText className="font-sans-semibold text-text-primary">{KIND_LABEL[record.kind]}</BodyText>
         {confirmed ? (
-          <BodyText className="text-caption font-sans-semibold text-green-900">Confirmed ✓✓</BodyText>
+          <BodyText className="text-caption font-sans-semibold text-green-300">Confirmed ✓✓</BodyText>
         ) : (
           <BodyText className="text-caption text-text-tertiary">Awaiting confirmation</BodyText>
         )}

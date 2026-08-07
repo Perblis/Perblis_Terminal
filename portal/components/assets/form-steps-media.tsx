@@ -211,8 +211,8 @@ export function PhotosStep({
               aria-label={photo.is_cover ? "Cover photo" : "Make cover photo"}
               className={`absolute left-s1 top-s1 grid size-s5 place-items-center rounded-pill ${
                 photo.is_cover
-                  ? "bg-amber-500 text-ink-900"
-                  : "bg-ink-900/60 text-paper-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  ? "bg-action-primary text-text-primary"
+                  : "bg-ink-900/60 text-text-primary opacity-0 transition-opacity group-hover:opacity-100"
               }`}
             >
               <Star size={13} fill={photo.is_cover ? "currentColor" : "none"} />
@@ -221,7 +221,7 @@ export function PhotosStep({
               type="button"
               onClick={() => void removePhoto(photo.id)}
               aria-label="Remove photo"
-              className="absolute right-s1 top-s1 grid size-s5 place-items-center rounded-pill bg-ink-900/60 text-paper-0 opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute right-s1 top-s1 grid size-s5 place-items-center rounded-pill bg-ink-900/60 text-text-primary opacity-0 transition-opacity group-hover:opacity-100"
             >
               <X size={13} aria-hidden />
             </button>
@@ -256,13 +256,13 @@ export function PhotosStep({
               </>
             ) : (
               <>
-                <div className="h-s1 w-4/5 overflow-hidden rounded-pill bg-ink-200">
+                <div className="h-s1 w-4/5 overflow-hidden rounded-pill bg-ink-700">
                   <div
-                    className="h-full bg-amber-500 transition-[width] duration-quick"
+                    className="h-full bg-action-primary transition-[width] duration-quick"
                     style={{ width: `${Math.round(u.progress * 100)}%` }}
                   />
                 </div>
-                <p className="max-w-full truncate text-caption text-ink-500">{u.name}</p>
+                <p className="max-w-full truncate text-caption text-text-tertiary">{u.name}</p>
               </>
             )}
           </div>
@@ -271,7 +271,7 @@ export function PhotosStep({
           <button
             type="button"
             onClick={() => fileInput.current?.click()}
-            className="flex aspect-[4/3] flex-col items-center justify-center gap-s2 rounded-sm border border-dashed border-border-strong text-ink-500 hover:border-border-structural hover:text-text-primary"
+            className="flex aspect-[4/3] flex-col items-center justify-center gap-s2 rounded-sm border border-dashed border-border-strong text-text-tertiary hover:border-border-structural hover:text-text-primary"
           >
             <Camera size={22} aria-hidden />
             <span className="text-caption font-medium">Add photos</span>
@@ -289,7 +289,7 @@ export function PhotosStep({
           e.target.value = "";
         }}
       />
-      <p className="text-caption text-ink-500">Drag to reorder · star sets the cover · X removes.</p>
+      <p className="text-caption text-text-tertiary">Drag to reorder · star sets the cover · X removes.</p>
     </div>
   );
 }
@@ -345,7 +345,7 @@ export function LocationStep({
         <h2 className="font-display text-h3 text-text-primary">Where does it live?</h2>
         <Link
           href="/assets?yards=1"
-          className="text-body-sm font-medium text-amber-800 underline-offset-2 hover:underline"
+          className="text-body-sm font-medium text-amber-300 underline-offset-2 hover:underline"
         >
           Manage yards
         </Link>
@@ -371,8 +371,8 @@ export function LocationStep({
                   }}
                   className={`flex items-center gap-s1 rounded-pill border px-s3 py-s2 text-body-sm ${
                     active
-                      ? "border-amber-500 bg-amber-100 text-amber-900"
-                      : "border-border-strong text-text-secondary hover:bg-ink-50"
+                      ? "border-border-focus bg-amber-500/12 text-amber-300"
+                      : "border-border-strong text-text-secondary hover:bg-surface-sunken"
                   }`}
                 >
                   <MapPin size={14} aria-hidden />
@@ -385,7 +385,7 @@ export function LocationStep({
       ) : (
         <p className="text-body-sm text-text-secondary">
           No yards yet.{" "}
-          <Link href="/assets?yards=1" className="font-medium text-amber-800 underline-offset-2 hover:underline">
+          <Link href="/assets?yards=1" className="font-medium text-amber-300 underline-offset-2 hover:underline">
             Create your first yard
           </Link>{" "}
           to group assets at the same depot, or pin this asset directly below.
@@ -399,13 +399,13 @@ export function LocationStep({
           </span>
           <div className="flex gap-s2">
             <div className="flex h-10 flex-1 items-center rounded-sm border border-border-default bg-surface-card px-s3">
-              <Search size={16} className="mr-s2 shrink-0 text-ink-400" aria-hidden />
+              <Search size={16} className="mr-s2 shrink-0 text-text-tertiary" aria-hidden />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void runSearch())}
                 placeholder="Search an address or area"
-                className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-500"
+                className="w-full bg-transparent text-body-sm outline-none placeholder:text-text-tertiary"
               />
             </div>
             <Button variant="secondary" onClick={() => void runSearch()} loading={searching}>
@@ -423,7 +423,7 @@ export function LocationStep({
                 <li key={`${r.lat}-${r.lng}`}>
                   <button
                     type="button"
-                    className="w-full px-s3 py-s2 text-left text-body-sm hover:bg-ink-50"
+                    className="w-full px-s3 py-s2 text-left text-body-sm hover:bg-surface-sunken"
                     onClick={() => pickResult(r)}
                   >
                     {r.display_name}
@@ -441,7 +441,7 @@ export function LocationStep({
               setSearchError(null);
             }}
           />
-          <p className="text-caption text-ink-500">
+          <p className="text-caption text-text-tertiary">
             Search an address or click the map and drag the pin to exactly where the asset sits.
             If several assets share this spot,{" "}
             <Link href="/assets?yards=1" className="underline-offset-2 hover:underline">
@@ -532,10 +532,10 @@ export function ReviewStep({
       </div>
       <div className="flex flex-col gap-s1 p-s3">
         <p className="line-clamp-2 text-body font-medium text-text-primary">{draft.title || "Untitled"}</p>
-        <p className="text-caption text-ink-500">{draft.asset_type}</p>
+        <p className="text-caption text-text-tertiary">{draft.asset_type}</p>
         <p className="pt-s1">
           <Money kobo={draft.daily_price ?? undefined} className="text-mono-lg" />
-          <span className="text-caption text-ink-500"> /day</span>
+          <span className="text-caption text-text-tertiary"> /day</span>
         </p>
       </div>
     </div>
@@ -550,7 +550,7 @@ export function ReviewStep({
             type="button"
             aria-pressed={frame === "phone"}
             onClick={() => setFrame("phone")}
-            className={`rounded-sm p-s2 ${frame === "phone" ? "bg-ink-900 text-paper-0" : "text-ink-500 hover:bg-ink-100"}`}
+            className={`rounded-sm p-s2 ${frame === "phone" ? "bg-ink-700 text-text-primary" : "text-text-tertiary hover:bg-surface-sunken"}`}
           >
             <Smartphone size={16} aria-hidden />
           </button>
@@ -558,7 +558,7 @@ export function ReviewStep({
             type="button"
             aria-pressed={frame === "web"}
             onClick={() => setFrame("web")}
-            className={`rounded-sm p-s2 ${frame === "web" ? "bg-ink-900 text-paper-0" : "text-ink-500 hover:bg-ink-100"}`}
+            className={`rounded-sm p-s2 ${frame === "web" ? "bg-ink-700 text-text-primary" : "text-text-tertiary hover:bg-surface-sunken"}`}
           >
             <Monitor size={16} aria-hidden />
           </button>
@@ -566,7 +566,7 @@ export function ReviewStep({
       </div>
 
       {frame === "phone" ? (
-        <div className="mx-auto w-64 rounded-lg border-4 border-ink-900 bg-surface-page p-s2">{previewCard}</div>
+        <div className="mx-auto w-64 rounded-lg border-4 border-border-structural bg-surface-page p-s2">{previewCard}</div>
       ) : (
         <div className="mx-auto w-full max-w-sm">{previewCard}</div>
       )}
@@ -579,9 +579,9 @@ export function ReviewStep({
           {gates.map((gate) => (
             <li key={gate.label} className="flex items-center gap-s2 text-body-sm">
               {gate.ok ? (
-                <Check size={16} className="text-green-600" aria-hidden />
+                <Check size={16} className="text-green-300" aria-hidden />
               ) : (
-                <X size={16} className="text-amber-900" aria-hidden />
+                <X size={16} className="text-amber-300" aria-hidden />
               )}
               <span className={gate.ok ? "text-text-secondary" : "text-text-primary"}>{gate.label}</span>
               {!gate.ok && gate.verify ? (
@@ -597,12 +597,12 @@ export function ReviewStep({
       {publishError ? <Banner tone="danger">{publishError}</Banner> : null}
 
       {live ? (
-        <div className="flex items-center gap-s3 rounded-sm border border-green-600 bg-green-50 p-s4">
+        <div className="flex items-center gap-s3 rounded-sm border border-green-500/40 bg-green-500/12 p-s4">
           <span className="relative flex size-s3">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-green-600 opacity-60 motion-reduce:hidden" />
-            <span className="relative inline-flex size-s3 rounded-pill bg-green-600" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-green-500 opacity-60 motion-reduce:hidden" />
+            <span className="relative inline-flex size-s3 rounded-pill bg-green-500" />
           </span>
-          <p className="text-body font-medium text-green-900">Live. Your asset is now on the map.</p>
+          <p className="text-body font-medium text-green-300">Live. Your asset is now on the map.</p>
         </div>
       ) : (
         <Button size="lg" onClick={publish} disabled={blocked.length > 0 || !listing} loading={publishing}>

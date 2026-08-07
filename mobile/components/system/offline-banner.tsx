@@ -12,8 +12,8 @@ export function OfflineBanner() {
   const offline = useOffline();
   if (!offline) return null;
   return (
-    <View className="mx-4 my-2 rounded-md bg-surface-inverse px-4 py-2.5">
-      <BodyText className="text-body-sm text-text-inverse">Offline — showing saved data</BodyText>
+    <View className="mx-4 my-2 rounded-md bg-surface-chrome px-4 py-2.5">
+      <BodyText className="text-body-sm text-text-on-chrome">Offline — showing saved data</BodyText>
     </View>
   );
 }

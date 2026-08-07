@@ -56,7 +56,7 @@ export function YardsPanel({ open, onClose }: { open: boolean; onClose: () => vo
   return (
     <>
       <div
-        className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 p-s4"
+        className="fixed inset-0 z-50 grid place-items-center bg-ink-950/75 p-s4"
         role="dialog"
         aria-modal="true"
         aria-label="Manage yards"
@@ -69,7 +69,7 @@ export function YardsPanel({ open, onClose }: { open: boolean; onClose: () => vo
           <div className="flex items-center justify-between border-b border-border-default px-s5 py-s4">
             <div>
               <h2 className="font-display text-h3 text-text-primary">Yards</h2>
-              <p className="text-caption text-ink-500">Group assets at a depot — one map pin per yard.</p>
+              <p className="text-caption text-text-tertiary">Group assets at a depot — one map pin per yard.</p>
             </div>
             <div className="flex items-center gap-s2">
               <Button size="sm" onClick={() => setModal({ open: true, yard: null })}>
@@ -79,7 +79,7 @@ export function YardsPanel({ open, onClose }: { open: boolean; onClose: () => vo
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="rounded-sm p-s1 text-ink-500 hover:bg-ink-100"
+                className="rounded-sm p-s1 text-text-tertiary hover:bg-surface-sunken"
               >
                 <X size={18} />
               </button>
@@ -118,18 +118,18 @@ export function YardsPanel({ open, onClose }: { open: boolean; onClose: () => vo
                       {pin ? (
                         <MapView className="h-24 w-28 shrink-0" center={pin} marker={pin} interactive={false} zoom={13} />
                       ) : (
-                        <div className="flex h-24 w-28 shrink-0 items-center justify-center bg-surface-sunken text-caption text-ink-600">
+                        <div className="flex h-24 w-28 shrink-0 items-center justify-center bg-surface-sunken text-caption text-text-secondary">
                           No pin
                         </div>
                       )}
                       <div className="flex min-w-0 flex-1 flex-col justify-center gap-s1 py-s3 pr-s3">
                         <div className="flex items-start justify-between gap-s2">
                           <h3 className="font-medium text-text-primary">{yard.name}</h3>
-                          <span className="shrink-0 font-mono text-mono-sm text-ink-500">
+                          <span className="shrink-0 font-mono text-mono-sm text-text-tertiary">
                             {count} {count === 1 ? "asset" : "assets"}
                           </span>
                         </div>
-                        <p className="flex items-center gap-s1 text-caption text-ink-500">
+                        <p className="flex items-center gap-s1 text-caption text-text-tertiary">
                           <MapPin size={13} aria-hidden />
                           {yard.address_text || yard.city || "Pin only"}
                         </p>

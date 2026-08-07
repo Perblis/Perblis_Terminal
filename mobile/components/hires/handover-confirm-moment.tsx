@@ -21,7 +21,7 @@ import { BodyText, DisplayText } from "../ui/text";
 function Tick() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24">
-      <Path d="M4 12 l5 5 L20 6" stroke="#059669" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M4 12 l5 5 L20 6" stroke="#2ECC71" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -35,7 +35,7 @@ function AnimatedTick({ delay }: { delay: number }) {
   }, [delay, reducedMotion, opacity]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
   return (
-    <Animated.View style={style} className="h-11 w-11 items-center justify-center rounded-full bg-green-50">
+    <Animated.View style={style} className="h-11 w-11 items-center justify-center rounded-full bg-green-500/12">
       <Tick />
     </Animated.View>
   );
@@ -59,8 +59,8 @@ export function HandoverConfirmMoment({ visible, onDone }: { visible: boolean; o
             <AnimatedTick delay={0} />
             <AnimatedTick delay={220} />
           </View>
-          <DisplayText className="text-h2 text-paper-0">Handover confirmed</DisplayText>
-          <BodyText className="text-center text-ink-300">Both parties have signed off.</BodyText>
+          <DisplayText className="text-h2 text-text-primary">Handover confirmed</DisplayText>
+          <BodyText className="text-center text-text-tertiary">Both parties have signed off.</BodyText>
         </View>
       </View>
     </Modal>

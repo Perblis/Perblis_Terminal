@@ -158,29 +158,29 @@ export default function SettingsPage() {
               <Card className="flex items-center justify-between gap-s3">
                 <div>
                   <p className="text-body font-medium text-text-primary">{profile.data?.business_name || "No business name yet"}</p>
-                  <p className="text-caption text-ink-500">Name, about, and logo are edited on the Storefront page — what hirers see is what you edit.</p>
+                  <p className="text-caption text-text-tertiary">Name, about, and logo are edited on the Storefront page — what hirers see is what you edit.</p>
                 </div>
                 <Button variant="secondary" onClick={() => (window.location.href = "/storefront")}>Edit storefront</Button>
               </Card>
             </Section>
 
             <Section title="Bank details">
-              <CornerBracketPanel inverse className="bg-surface-inverse p-s5 text-text-inverse">
-                <p className="flex items-center gap-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-300">
+              <CornerBracketPanel inverse className="bg-surface-chrome p-s5 text-text-on-chrome">
+                <p className="flex items-center gap-s2 font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">
                   <Lock size={12} aria-hidden /> Payout account
                 </p>
                 <p className="mt-s2 font-mono text-mono-lg">
                   {profile.data?.bank_account_number_masked || "•••• not set"}
                 </p>
-                <p className="text-body-sm text-ink-300">
+                <p className="text-body-sm text-text-tertiary">
                   {profile.data?.bank_name || "—"}
                   {profile.data && "bank_account_name" in profile.data
                     ? ` · ${(profile.data as { bank_account_name?: string }).bank_account_name ?? ""}`
                     : ""}
                 </p>
                 <div className="mt-s4 flex items-center justify-between gap-s3">
-                  <p className="text-caption text-ink-400">Encrypted at rest — only the payout desk ever sees the full number.</p>
-                  <Button variant="secondary" className="border-ink-600 text-text-inverse hover:bg-ink-800" onClick={() => setVaultOpen(true)}>
+                  <p className="text-caption text-text-tertiary">Encrypted at rest — only the payout desk ever sees the full number.</p>
+                  <Button variant="secondary" className="border-border-strong text-text-on-chrome hover:bg-ink-800" onClick={() => setVaultOpen(true)}>
                     {profile.data?.bank_account_number_masked ? "Change" : "Add details"}
                   </Button>
                 </div>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                       {label}
                       <input
                         type="checkbox"
-                        className="size-s4 accent-amber-500"
+                        className="size-s4 accent-action-primary"
                         checked={checked}
                         onChange={(e) => void toggleNotif(key, e.target.checked)}
                       />
@@ -240,7 +240,7 @@ export default function SettingsPage() {
           <Card className="flex items-center justify-between gap-s3">
             <div>
               <p className="flex items-center gap-s2 text-body font-medium text-text-primary">
-                {me.data?.is_verified ? <ShieldCheck size={18} className="text-blue-600" aria-hidden /> : null}
+                {me.data?.is_verified ? <ShieldCheck size={18} className="text-blue-300" aria-hidden /> : null}
                 {me.data?.account_level === "business_verified"
                   ? "Business verified"
                   : me.data?.account_level === "verified"
@@ -249,7 +249,7 @@ export default function SettingsPage() {
                       ? "Documents under review"
                       : "Not verified"}
               </p>
-              <p className="text-caption text-ink-500">
+              <p className="text-caption text-text-tertiary">
                 {latestRequest?.state === "pending"
                   ? "We review within 12 hours — you can keep working meanwhile."
                   : latestRequest?.state === "rejected"
@@ -292,7 +292,7 @@ export default function SettingsPage() {
       </div>
 
       {deleteOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 p-s4" role="dialog" aria-modal="true" aria-label="Confirm deletion">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-ink-950/75 p-s4" role="dialog" aria-modal="true" aria-label="Confirm deletion">
           <Card className="w-full max-w-md p-s5">
             <h2 className="font-display text-h3 text-text-primary">Delete your account?</h2>
             <p className="mt-s2 text-body-sm text-text-secondary">

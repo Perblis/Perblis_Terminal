@@ -104,7 +104,7 @@ export default function Storefront() {
     <View className="flex-1 bg-surface-page">
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 92 }}>
         {/* Cover */}
-        <View className="h-52 bg-surface-inverse">
+        <View className="h-52 bg-surface-chrome">
           {cover ? (
             <Image source={{ uri: resolveMediaUrl(cover) }} style={{ width: "100%", height: 208 }} resizeMode="cover" />
           ) : (
@@ -127,7 +127,7 @@ export default function Storefront() {
         {/* Identity plate — overlaps the cover so the page breathes */}
         <View className="-mt-8 mx-4 rounded-xl border border-border bg-surface-card p-4 shadow-sm">
           <View className="flex-row items-center gap-3.5">
-            <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-surface-inverse">
+            <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
               {data.logo_url ? (
                 <Image source={{ uri: resolveMediaUrl(data.logo_url) }} style={{ width: 64, height: 64 }} />
               ) : (
@@ -142,7 +142,7 @@ export default function Storefront() {
               </DisplayText>
               <View className="flex-row flex-wrap items-center gap-2">
                 {data.verification_badge ? (
-                  <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: "#1D4ED8" }}>
+                  <View className="flex-row items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: "#4D9AFF" }}>
                     <Svg width={10} height={10} viewBox="0 0 24 24">
                       <Path d="M4 12l6 6 10-12" stroke="#FFFFFF" strokeWidth={3.5} fill="none" />
                     </Svg>

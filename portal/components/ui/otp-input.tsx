@@ -72,7 +72,7 @@ export function OtpInput({
             "h-14 w-12 rounded-sm border bg-surface-card text-center font-mono text-xl text-text-primary",
             "outline-none transition-colors duration-micro",
             error ? "border-border-error" : "border-border-default focus:border-border-strong",
-            disabled && "bg-ink-50 text-ink-400",
+            disabled && "bg-surface-sunken text-text-tertiary",
           )}
         />
       ))}

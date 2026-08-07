@@ -96,16 +96,16 @@ export default function ProfileTab() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {/* Identity */}
         <View className="items-center gap-2 px-6 py-6">
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-surface-inverse">
-            <DisplayText className="text-h2 text-text-inverse">
+          <View className="h-16 w-16 items-center justify-center rounded-full bg-surface-chrome">
+            <DisplayText className="text-h2 text-text-on-chrome">
               {me.full_name.slice(0, 1).toUpperCase()}
             </DisplayText>
           </View>
           <DisplayText className="text-h2">{me.full_name}</DisplayText>
           <BodyText className="text-text-secondary">{me.email}</BodyText>
           {verified ? (
-            <View className="rounded-full bg-teal-50 px-3 py-0.5">
-              <BodyText className="text-caption font-sans-semibold text-teal-900">✓ Verified</BodyText>
+            <View className="rounded-full bg-teal-400/12 px-3 py-0.5">
+              <BodyText className="text-caption font-sans-semibold text-teal-300">✓ Verified</BodyText>
             </View>
           ) : null}
         </View>

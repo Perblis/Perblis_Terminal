@@ -24,18 +24,18 @@ const STATE_LABEL: Record<string, string> = {
 };
 
 const STATE_PILL: Record<string, string> = {
-  pending: "bg-ink-100 text-text-secondary",
-  due: "bg-amber-100 text-amber-900",
-  paid: "bg-green-100 text-green-900",
-  frozen: "bg-violet-100 text-violet-900",
+  pending: "bg-surface-sunken text-text-secondary",
+  due: "bg-amber-500/12 text-amber-300",
+  paid: "bg-green-100 text-green-300",
+  frozen: "bg-violet-100 text-violet-300",
 };
 
 function Stat({ label, value, caption }: { label: string; value: string; caption?: string }) {
   return (
     <CornerBracketPanel className="h-full bg-surface-card p-s4">
-      <p className="font-display text-overline uppercase tracking-[0.1em] text-ink-500">{label}</p>
+      <p className="font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">{label}</p>
       <p className="mt-s2 truncate font-mono text-display-xl font-medium text-text-primary">{value}</p>
-      {caption ? <p className="mt-s1 truncate text-caption text-ink-500">{caption}</p> : null}
+      {caption ? <p className="mt-s1 truncate text-caption text-text-tertiary">{caption}</p> : null}
     </CornerBracketPanel>
   );
 }
@@ -86,7 +86,7 @@ export default function EarningsPage() {
           </div>
 
           {summary?.last_paid ? (
-            <p className="mt-s3 text-caption text-ink-500">
+            <p className="mt-s3 text-caption text-text-tertiary">
               Last payout <span className="font-mono">{summary.last_paid.amount_display}</span>
               {summary.last_paid.paid_ref ? (
                 <>
@@ -111,7 +111,7 @@ export default function EarningsPage() {
                     aria-pressed={filter === f}
                     className={cn(
                       "rounded-pill px-s3 py-s1 text-caption font-medium",
-                      filter === f ? "bg-ink-900 text-paper-0" : "text-text-secondary hover:bg-ink-100",
+                      filter === f ? "bg-ink-700 text-text-primary" : "text-text-secondary hover:bg-surface-sunken",
                     )}
                   >
                     {f === "all" ? "All" : STATE_LABEL[f]}
@@ -131,17 +131,17 @@ export default function EarningsPage() {
                 <table className="w-full min-w-[40rem] border-collapse text-body-sm">
                   <thead>
                     <tr className="border-b border-border-default bg-surface-sunken text-left">
-                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-600">Date</th>
-                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-600">Hire</th>
-                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-600">Kind</th>
-                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-600">State</th>
-                      <th className="px-s4 py-s2 text-right font-display text-overline uppercase tracking-[0.1em] text-ink-600">Amount</th>
-                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-600">Reference</th>
+                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">Date</th>
+                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">Hire</th>
+                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">Kind</th>
+                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">State</th>
+                      <th className="px-s4 py-s2 text-right font-display text-overline uppercase tracking-[0.1em] text-text-secondary">Amount</th>
+                      <th className="px-s4 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">Reference</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((p: Payout) => (
-                      <tr key={p.id} className="border-b border-border-default last:border-0 hover:bg-ink-50">
+                      <tr key={p.id} className="border-b border-border-default last:border-0 hover:bg-surface-sunken">
                         <td className="whitespace-nowrap px-s4 py-s3 font-mono text-mono-sm text-text-secondary">
                           {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                         </td>
@@ -154,17 +154,17 @@ export default function EarningsPage() {
                           {p.kind === "withheld_day" ? "Withheld day" : "Completion"}
                         </td>
                         <td className="whitespace-nowrap px-s4 py-s3">
-                          <span className={cn("rounded-pill px-s2 py-s1 text-caption font-medium", STATE_PILL[p.state] ?? "bg-ink-100 text-text-secondary")}>
+                          <span className={cn("rounded-pill px-s2 py-s1 text-caption font-medium", STATE_PILL[p.state] ?? "bg-surface-sunken text-text-secondary")}>
                             {STATE_LABEL[p.state] ?? p.state}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-s4 py-s3 text-right font-mono font-medium text-text-primary">
                           {p.amount_display}
                         </td>
-                        <td className="whitespace-nowrap px-s4 py-s3 font-mono text-mono-sm text-ink-500">
+                        <td className="whitespace-nowrap px-s4 py-s3 font-mono text-mono-sm text-text-tertiary">
                           {p.paid_ref || "—"}
                           {p.paid_at ? (
-                            <span className="text-ink-400">
+                            <span className="text-text-tertiary">
                               {" · "}
                               {new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </span>

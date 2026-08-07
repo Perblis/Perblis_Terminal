@@ -17,8 +17,8 @@ export const ASSET_CLASSES: AssetClassMeta[] = [
   {
     value: "plant_machinery",
     label: "Plant & Machinery",
-    text: "text-amber-900",
-    bg: "bg-amber-100",
+    text: "text-earth-300",
+    bg: "bg-earth-400/12",
     dot: "bg-class-plant",
     types: [
       "Excavator",
@@ -41,8 +41,8 @@ export const ASSET_CLASSES: AssetClassMeta[] = [
   {
     value: "trucks_haulage",
     label: "Trucks & Haulage",
-    text: "text-blue-900",
-    bg: "bg-blue-50",
+    text: "text-blue-300",
+    bg: "bg-blue-400/12",
     dot: "bg-class-trucks",
     types: [
       "Tipper / Dump Truck",
@@ -59,24 +59,24 @@ export const ASSET_CLASSES: AssetClassMeta[] = [
   {
     value: "warehousing",
     label: "Warehousing & Storage",
-    text: "text-green-900",
-    bg: "bg-green-50",
+    text: "text-teal-300",
+    bg: "bg-teal-400/12",
     dot: "bg-class-warehouse",
     types: ["Dry Warehouse", "Cold Storage", "Bonded Warehouse", "Distribution Centre", "Self-Storage Unit"],
   },
   {
     value: "terminals_yards",
     label: "Terminals & Container Yards",
-    text: "text-violet-900",
-    bg: "bg-violet-50",
+    text: "text-violet-300",
+    bg: "bg-violet-400/12",
     dot: "bg-class-terminals",
     types: ["Port Terminal", "ICD", "Container Yard / Bonded Depot"],
   },
   {
     value: "land_staging",
     label: "Land & Staging",
-    text: "text-amber-900",
-    bg: "bg-paper-150",
+    text: "text-pink-300",
+    bg: "bg-pink-400/12",
     dot: "bg-class-land",
     types: ["Fabrication Yard", "Laydown", "Marshalling", "Industrial Land"],
   },

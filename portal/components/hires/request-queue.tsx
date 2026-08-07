@@ -73,13 +73,13 @@ export function RequestQueue() {
                 <div className="shrink-0 text-right">
                   <p className="font-mono text-body-sm font-medium text-text-primary">{h.hire_value_display}</p>
                   {h.payout_amount_display ? (
-                    <p className="font-mono text-mono-sm text-ink-500">{h.payout_amount_display} to you</p>
+                    <p className="font-mono text-mono-sm text-text-tertiary">{h.payout_amount_display} to you</p>
                   ) : null}
                 </div>
                 {cd ? (
                   <span
                     className={`shrink-0 rounded-pill px-s2 py-s1 font-mono text-mono-sm ${
-                      cd.urgent ? "bg-amber-100 text-amber-900" : "bg-ink-100 text-text-secondary"
+                      cd.urgent ? "bg-amber-500/12 text-amber-300" : "bg-surface-sunken text-text-secondary"
                     }`}
                   >
                     {cd.text}
@@ -133,8 +133,8 @@ export function HandoversDue() {
         <ul>
           {due.map(({ hire, label, overdue }) => (
             <li key={hire.id} className="border-b border-border-default last:border-0">
-              <Link href={`/hires/${hire.id}`} className="flex items-center gap-s3 px-s4 py-s3 hover:bg-ink-50">
-                <span className={`size-s2 shrink-0 rounded-pill ${overdue ? "bg-red-600" : "bg-green-600"}`} aria-hidden />
+              <Link href={`/hires/${hire.id}`} className="flex items-center gap-s3 px-s4 py-s3 hover:bg-surface-sunken">
+                <span className={`size-s2 shrink-0 rounded-pill ${overdue ? "bg-action-destructive" : "bg-green-500"}`} aria-hidden />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-body-sm font-medium text-text-primary">{hire.listing_title}</span>
                   <span className="block font-mono text-mono-sm text-text-secondary">

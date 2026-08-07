@@ -34,11 +34,11 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
         : null;
   const classes = [...new Set((data?.live_listings ?? []).map((l) => l.asset_class))];
   const classColors: Record<string, string> = {
-    plant_machinery: "#D97706",
-    trucks_haulage: "#2563EB",
-    warehousing: "#059669",
-    terminals_yards: "#7C3AED",
-    land_staging: "#92400E",
+    plant_machinery: "#ED8C34",
+    trucks_haulage: "#4D9AFF",
+    warehousing: "#34EDBF",
+    terminals_yards: "#B056F0",
+    land_staging: "#FF3568",
   };
 
   return new ImageResponse(
@@ -50,14 +50,14 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#16181D",
+          background: "#19191C",
           padding: 72,
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 6, height: 40, background: "#F59E0B", display: "flex" }} />
-          <div style={{ color: "#F7F7F5", fontSize: 36, fontWeight: 700, letterSpacing: 4, display: "flex" }}>
+          <div style={{ width: 6, height: 40, background: "#E0ED34", display: "flex" }} />
+          <div style={{ color: "#EBEBEB", fontSize: 36, fontWeight: 700, letterSpacing: 4, display: "flex" }}>
             TERMINAL
           </div>
         </div>
@@ -71,8 +71,8 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               <div
                 style={{
                   display: "flex",
-                  border: "3px solid #3B82F6",
-                  color: "#93C5FD",
+                  border: "3px solid #4D9AFF",
+                  color: "#99C5FF",
                   padding: "8px 20px",
                   fontSize: 26,
                   letterSpacing: 3,
@@ -81,13 +81,13 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
                 {badge}
               </div>
             ) : null}
-            <div style={{ color: "#B3B8C2", fontSize: 30, display: "flex" }}>
+            <div style={{ color: "#ADAEB0", fontSize: 30, display: "flex" }}>
               {(data?.live_listings ?? []).length} assets · {(data?.yards ?? []).length} yards
             </div>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             {classes.slice(0, 5).map((c) => (
-              <div key={c} style={{ width: 28, height: 28, borderRadius: 999, background: classColors[c] ?? "#8D93A0", display: "flex" }} />
+              <div key={c} style={{ width: 28, height: 28, borderRadius: 999, background: classColors[c] ?? "#707174", display: "flex" }} />
             ))}
           </div>
         </div>
@@ -97,7 +97,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
             height: 10,
             width: "100%",
             display: "flex",
-            backgroundImage: "repeating-linear-gradient(45deg, #F59E0B 0 16px, #16181D 16px 32px)",
+            backgroundImage: "repeating-linear-gradient(45deg, #E0ED34 0 16px, #19191C 16px 32px)",
           }}
         />
       </div>

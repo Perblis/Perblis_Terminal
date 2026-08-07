@@ -83,9 +83,9 @@ export default function Verify() {
               accessibilityRole="button"
               accessibilityState={{ selected: kind === k }}
               onPress={() => setKind(k)}
-              className={`flex-1 items-center rounded-md border px-3 py-3 ${kind === k ? "border-surface-brand bg-amber-100" : "border-border-strong bg-surface-card"}`}
+              className={`flex-1 items-center rounded-md border px-3 py-3 ${kind === k ? "border-surface-brand bg-amber-500/12" : "border-border-strong bg-surface-card"}`}
             >
-              <BodyText className={kind === k ? "font-sans-semibold text-amber-900" : "text-text-secondary"}>
+              <BodyText className={kind === k ? "font-sans-semibold text-amber-300" : "text-text-secondary"}>
                 {k === "identity" ? "Personal ID" : "Business (CAC)"}
               </BodyText>
             </Pressable>

@@ -46,13 +46,13 @@ export function VerificationDialog({ open, onClose }: { open: boolean; onClose: 
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-card p-s5 shadow-e2">
           <div className="flex items-start justify-between">
             <Dialog.Title className="font-display text-h3 text-text-primary">
               Verify your identity
             </Dialog.Title>
-            <Dialog.Close aria-label="Close" className="rounded-sm p-s1 text-ink-500 hover:bg-ink-100">
+            <Dialog.Close aria-label="Close" className="rounded-sm p-s1 text-text-tertiary hover:bg-surface-sunken">
               <X size={18} />
             </Dialog.Close>
           </div>
@@ -77,8 +77,8 @@ export function VerificationDialog({ open, onClose }: { open: boolean; onClose: 
                     onClick={() => setKind(k)}
                     className={
                       kind === k
-                        ? "rounded-sm border border-border-structural bg-ink-900 px-s3 py-s2 text-body-sm text-text-inverse"
-                        : "rounded-sm border border-border-default px-s3 py-s2 text-body-sm text-text-secondary hover:bg-ink-50"
+                        ? "rounded-sm border border-border-strong bg-ink-700 px-s3 py-s2 text-body-sm text-text-primary"
+                        : "rounded-sm border border-border-default px-s3 py-s2 text-body-sm text-text-secondary hover:bg-surface-sunken"
                     }
                   >
                     {k === "identity" ? "Identity (NIN / licence)" : "Business (CAC)"}
@@ -105,7 +105,7 @@ export function VerificationDialog({ open, onClose }: { open: boolean; onClose: 
                   className="text-body-sm"
                   onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 5))}
                 />
-                <p className="text-caption text-ink-500">
+                <p className="text-caption text-text-tertiary">
                   Clear photos or scans. Reviewed by a person — 12h turnaround.
                 </p>
               </div>

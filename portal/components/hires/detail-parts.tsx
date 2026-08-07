@@ -38,31 +38,31 @@ export function LifecycleRail({ status }: { status: HireStatus7 }) {
                 className={cn(
                   "grid size-s4 shrink-0 place-items-center rounded-pill border-2 text-caption",
                   done
-                    ? "border-green-600 bg-green-600"
+                    ? "border-green-500/40 bg-green-500"
                     : partial
-                      ? "border-ink-400 bg-ink-400"
-                      : "border-ink-200 bg-surface-card",
+                      ? "border-border-strong bg-ink-400"
+                      : "border-border-default bg-surface-card",
                 )}
                 aria-hidden
               />
               <span
                 className={cn(
                   "hidden whitespace-nowrap text-caption sm:block",
-                  done ? "font-medium text-text-primary" : "text-ink-500",
+                  done ? "font-medium text-text-primary" : "text-text-tertiary",
                 )}
               >
                 {RAIL_LABELS[step]}
               </span>
               {i < LIFECYCLE.length - 1 ? (
-                <span className={cn("h-px flex-1", i < reached && !terminal ? "bg-green-600" : "bg-ink-200")} aria-hidden />
+                <span className={cn("h-px flex-1", i < reached && !terminal ? "bg-green-500" : "bg-ink-700")} aria-hidden />
               ) : null}
             </li>
           );
         })}
       </ol>
       {terminal ? (
-        <p className="text-caption text-ink-500">
-          ↳ ended as <span className={cn("font-medium", status === "in_dispute" ? "text-violet-900" : status === "cancelled" ? "text-red-900" : "text-ink-600")}>{terminal}</span>
+        <p className="text-caption text-text-tertiary">
+          ↳ ended as <span className={cn("font-medium", status === "in_dispute" ? "text-violet-300" : status === "cancelled" ? "text-red-300" : "text-text-secondary")}>{terminal}</span>
         </p>
       ) : null}
     </div>
@@ -89,14 +89,14 @@ export function EventTimeline({ events }: { events: HireDetail["events"] }) {
         {visible.map((event, i) => (
           <li key={event.id} className="relative flex gap-s3 pb-s3">
             {i < visible.length - 1 ? (
-              <span className="absolute left-[4px] top-s3 h-full w-[2px] bg-ink-200" aria-hidden />
+              <span className="absolute left-[4px] top-s3 h-full w-[2px] bg-ink-700" aria-hidden />
             ) : null}
-            <span className="relative mt-s1 size-[10px] shrink-0 rounded-pill bg-amber-500" aria-hidden />
+            <span className="relative mt-s1 size-[10px] shrink-0 rounded-pill bg-action-primary" aria-hidden />
             <div className="min-w-0">
               <p className="text-body-sm text-text-primary">
                 {ACTOR_LABEL[event.actor_kind] ?? event.actor_kind} — {event.to_status.replace(/_/g, " ")}
               </p>
-              <p className="font-mono text-mono-sm text-ink-500">
+              <p className="font-mono text-mono-sm text-text-tertiary">
                 {new Date(event.created_at).toLocaleString("en-GB", {
                   day: "numeric",
                   month: "short",
@@ -180,9 +180,9 @@ export function HoldToConfirm({
           keyActivate();
         }
       }}
-      className="relative h-12 min-w-[12rem] select-none overflow-hidden rounded-sm bg-action-primary px-s5 font-medium text-text-on-brand disabled:bg-ink-100 disabled:text-ink-400"
+      className="relative h-12 min-w-[12rem] select-none overflow-hidden rounded-sm bg-action-primary px-s5 font-medium text-text-on-brand disabled:bg-surface-sunken disabled:text-text-tertiary"
     >
-      <span className="absolute inset-0 bg-amber-600 transition-none" style={{ width: `${progress * 100}%` }} aria-hidden />
+      <span className="absolute inset-0 bg-action-primary-active transition-none" style={{ width: `${progress * 100}%` }} aria-hidden />
       <span className="relative">{armed ? "Press again to confirm" : progress > 0 ? "Keep holding…" : label}</span>
     </button>
   );

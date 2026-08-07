@@ -13,7 +13,7 @@ export function CornerBracketPanel({
   children,
   ...rest
 }: HTMLAttributes<HTMLDivElement> & { inverse?: boolean }) {
-  const stroke = inverse ? "border-ink-600" : "border-ink-200";
+  const stroke = inverse ? "border-border-strong" : "border-border-default";
   const arm = "pointer-events-none absolute size-s3 border-0";
   return (
     <div className={cn("relative", className)} {...rest}>

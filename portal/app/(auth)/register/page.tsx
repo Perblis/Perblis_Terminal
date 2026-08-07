@@ -122,7 +122,7 @@ export default function RegisterPage() {
       <label className="flex items-start gap-s2 text-body-sm text-text-secondary">
         <input
           type="checkbox"
-          className="mt-s1 size-s4 accent-amber-500"
+          className="mt-s1 size-s4 accent-action-primary"
           {...register("accept_tos")}
         />
         <span>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
       <label className="flex items-start gap-s2 text-body-sm text-text-secondary">
         <input
           type="checkbox"
-          className="mt-s1 size-s4 accent-amber-500"
+          className="mt-s1 size-s4 accent-action-primary"
           {...register("accept_privacy")}
         />
         <span>

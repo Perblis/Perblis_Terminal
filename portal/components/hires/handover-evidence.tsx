@@ -41,7 +41,7 @@ export function HandoverEvidence({
           <p className="text-body-sm font-medium text-text-primary">
             {record.kind === "on_hire" ? "On-hire handover" : "Off-hire handover"}
           </p>
-          <p className="font-mono text-mono-sm text-ink-500">
+          <p className="font-mono text-mono-sm text-text-tertiary">
             Submitted by {submittedBy} ·{" "}
             {new Date(record.created_at).toLocaleString("en-GB", {
               day: "numeric",
@@ -78,7 +78,7 @@ export function HandoverEvidence({
               key={record.photos[i] ?? url}
               type="button"
               onClick={() => setLightbox(i)}
-              className="overflow-hidden rounded-sm border border-border-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
+              className="overflow-hidden rounded-sm border border-border-default focus-visible:outline focus-visible:outline-2 focus-visible:outline-border-focus"
               aria-label={`View handover photo ${i + 1} of ${record.photo_urls.length}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- presigned URLs are runtime-dynamic */}
@@ -103,7 +103,7 @@ export function HandoverEvidence({
                   alt={`Handover photo ${lightbox + 1}`}
                   className="max-h-[75vh] w-auto max-w-full rounded-sm object-contain"
                 />
-                <figcaption className="flex items-center gap-s4 font-mono text-mono-sm text-paper-0">
+                <figcaption className="flex items-center gap-s4 font-mono text-mono-sm text-text-primary">
                   <button
                     type="button"
                     className="px-s2 py-s1 disabled:opacity-40"

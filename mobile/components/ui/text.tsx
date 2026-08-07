@@ -5,7 +5,7 @@ type Props = TextProps & { className?: string; children?: ReactNode };
 
 /**
  * A caller-supplied text colour (semantic `text-text-*` or a primitive ramp
- * like `text-amber-900`). When present, the primitive must NOT also emit its
+ * like `text-amber-300`). When present, the primitive must NOT also emit its
  * default colour: NativeWind resolves conflicting colour utilities by
  * stylesheet order, not className order, so `text-text-primary` can silently
  * beat the caller's class — in dark mode that renders near-white text on

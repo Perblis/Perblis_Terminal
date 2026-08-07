@@ -73,9 +73,9 @@ export function ReportSheet({
                       accessibilityRole="radio"
                       accessibilityState={{ selected: active }}
                       onPress={() => setReason(r.value)}
-                      className={`rounded-md border px-4 py-3 ${active ? "border-surface-brand bg-amber-100" : "border-border-strong bg-surface-card"}`}
+                      className={`rounded-md border px-4 py-3 ${active ? "border-surface-brand bg-amber-500/12" : "border-border-strong bg-surface-card"}`}
                     >
-                      <BodyText className={active ? "font-sans-semibold text-amber-900" : "text-text-primary"}>
+                      <BodyText className={active ? "font-sans-semibold text-amber-300" : "text-text-primary"}>
                         {r.label}
                       </BodyText>
                     </Pressable>

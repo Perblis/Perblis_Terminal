@@ -104,13 +104,13 @@ export function YardModal({
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(36rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface-card p-s5 shadow-e2">
           <div className="flex items-start justify-between">
             <Dialog.Title className="font-display text-h3 text-text-primary">
               {yard ? "Edit yard" : "New yard"}
             </Dialog.Title>
-            <Dialog.Close aria-label="Close" className="rounded-sm p-s1 text-ink-500 hover:bg-ink-100">
+            <Dialog.Close aria-label="Close" className="rounded-sm p-s1 text-text-tertiary hover:bg-surface-sunken">
               <X size={18} />
             </Dialog.Close>
           </div>
@@ -127,13 +127,13 @@ export function YardModal({
               <label className="text-caption font-medium text-text-secondary">Location</label>
               <div className="flex gap-s2">
                 <div className="flex h-10 flex-1 items-center rounded-sm border border-border-default bg-surface-card px-s3">
-                  <Search size={16} className="mr-s2 shrink-0 text-ink-400" aria-hidden />
+                  <Search size={16} className="mr-s2 shrink-0 text-text-tertiary" aria-hidden />
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), runSearch())}
                     placeholder="Search an address or area"
-                    className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-500"
+                    className="w-full bg-transparent text-body-sm outline-none placeholder:text-text-tertiary"
                   />
                 </div>
                 <Button variant="secondary" onClick={runSearch} loading={searching}>
@@ -146,7 +146,7 @@ export function YardModal({
                     <li key={`${r.lat}-${r.lng}`}>
                       <button
                         type="button"
-                        className="w-full px-s3 py-s2 text-left text-body-sm hover:bg-ink-50"
+                        className="w-full px-s3 py-s2 text-left text-body-sm hover:bg-surface-sunken"
                         onClick={() => {
                           setPoint([r.lng, r.lat]);
                           setAddressText(r.display_name);
@@ -169,7 +169,7 @@ export function YardModal({
                   setError(null);
                 }}
               />
-              <p className="text-caption text-ink-500">
+              <p className="text-caption text-text-tertiary">
                 Click the map or drag the pin — the pin is what hirers navigate to, not the address
                 text.
               </p>

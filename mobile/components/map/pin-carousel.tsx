@@ -295,7 +295,7 @@ function YardCardBody({ yard }: { yard: MapYard }) {
         />
       ) : (
         <View
-          className="items-center justify-center rounded-md bg-surface-inverse"
+          className="items-center justify-center rounded-md bg-surface-chrome"
           style={{ width: 54, height: 54 }}
         >
           <MonoText className="text-body text-text-brand-on-inverse">{initials}</MonoText>

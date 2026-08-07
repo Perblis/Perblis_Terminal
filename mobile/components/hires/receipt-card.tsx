@@ -25,7 +25,7 @@ function Bracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
   return (
     <View className="absolute" style={{ ...pos, transform: [{ rotate: pos.rotate }] }}>
       <Svg width={14} height={14} viewBox="0 0 14 14">
-        <Path d="M1 13 V1 H13" stroke="#D7DAE0" strokeWidth={1.5} fill="none" />
+        <Path d="M1 13 V1 H13" stroke="#26272B" strokeWidth={1.5} fill="none" />
       </Svg>
     </View>
   );
@@ -33,14 +33,14 @@ function Bracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
 
 // Fixed-plate hairline (ink-700 on the ink-900 artefact — theme-independent).
 function Rule() {
-  return <View className="h-px w-full" style={{ backgroundColor: "#3A3F49" }} />;
+  return <View className="h-px w-full" style={{ backgroundColor: "#26272B" }} />;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-baseline gap-4">
-      <BodyText className="w-24 text-overline tracking-widest text-ink-500">{label}</BodyText>
-      <MonoText className="flex-1 text-right text-body-sm text-paper-0" numberOfLines={1}>
+      <BodyText className="w-24 text-overline tracking-widest text-text-tertiary">{label}</BodyText>
+      <MonoText className="flex-1 text-right text-body-sm text-text-primary" numberOfLines={1}>
         {value}
       </MonoText>
     </View>
@@ -75,7 +75,7 @@ export const ReceiptCard = forwardRef<View, { hire: ReceiptHire }>(function Rece
 
         <View className="items-center gap-1.5">
           <PlateLockup size="sm" />
-          <BodyText className="text-overline tracking-widest text-ink-400">
+          <BodyText className="text-overline tracking-widest text-text-tertiary">
             OFFICIAL RECEIPT
           </BodyText>
         </View>
@@ -93,12 +93,12 @@ export const ReceiptCard = forwardRef<View, { hire: ReceiptHire }>(function Rece
 
         <View className="flex-row items-end justify-between gap-3">
           <View className="gap-0.5">
-            <BodyText className="text-overline tracking-widest text-ink-500">TOTAL PAID</BodyText>
-            <Money display={hire.hire_value_display} hero className="text-paper-0" />
+            <BodyText className="text-overline tracking-widest text-text-tertiary">TOTAL PAID</BodyText>
+            <Money display={hire.hire_value_display} hero className="text-text-primary" />
           </View>
           {/* restrained document status marker — squared, unrotated */}
-          <View className="rounded-sm border px-2.5 py-1" style={{ borderColor: "#F59E0B" }}>
-            <MonoText className="text-caption tracking-widest" style={{ color: "#F59E0B" }}>
+          <View className="rounded-sm border px-2.5 py-1" style={{ borderColor: "#E0ED34" }}>
+            <MonoText className="text-caption tracking-widest" style={{ color: "#E0ED34" }}>
               PAID
             </MonoText>
           </View>
@@ -111,10 +111,10 @@ export const ReceiptCard = forwardRef<View, { hire: ReceiptHire }>(function Rece
             <QRCode value={`https://terminal.ng/l/${hire.listing_id}`} size={56} />
           </View>
           <View className="flex-1">
-            <BodyText className="text-caption text-ink-300">
+            <BodyText className="text-caption text-text-tertiary">
               Hire heavy assets near your site — scan to see this machine on Terminal.
             </BodyText>
-            <MonoText className="text-caption text-ink-500">terminal.ng</MonoText>
+            <MonoText className="text-caption text-text-tertiary">terminal.ng</MonoText>
           </View>
         </View>
       </View>

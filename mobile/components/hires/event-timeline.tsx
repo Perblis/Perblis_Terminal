@@ -35,7 +35,7 @@ export function EventTimeline({ events }: { events: HireDetail["events"] }) {
         {events.map((e, i) => (
           <View key={e.id} className="flex-row gap-3">
             <View className="items-center">
-              <View className={`mt-1 h-2.5 w-2.5 rounded-full ${i === events.length - 1 ? "bg-surface-brand" : "bg-ink-300"}`} />
+              <View className={`mt-1 h-2.5 w-2.5 rounded-full ${i === events.length - 1 ? "bg-surface-brand" : "bg-ink-700"}`} />
               {i < events.length - 1 ? <View className="w-px flex-1 bg-border-default" /> : null}
             </View>
             <View className="flex-1 pb-1">

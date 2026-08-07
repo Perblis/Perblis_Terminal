@@ -23,8 +23,8 @@ export function DensityToggle({ collapsed }: { collapsed: boolean }) {
       title={`Switch to ${next} density`}
       aria-label={`Switch to ${next} density`}
       className={cn(
-        "flex h-10 w-full items-center gap-s3 rounded-sm px-s3 text-body-sm text-ink-300",
-        "transition-colors duration-quick hover:bg-ink-800 hover:text-text-inverse",
+        "flex h-10 w-full items-center gap-s3 rounded-sm px-s3 text-body-sm text-text-tertiary",
+        "transition-colors duration-quick hover:bg-ink-800 hover:text-text-on-chrome",
         collapsed && "justify-center px-0",
       )}
     >

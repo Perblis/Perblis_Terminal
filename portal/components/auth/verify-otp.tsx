@@ -130,12 +130,12 @@ export function VerifyOtp({
         </Button>
       </div>
 
-      <div className="flex items-center gap-s2 text-caption text-ink-500">
+      <div className="flex items-center gap-s2 text-caption text-text-tertiary">
         <span
           className={
             channel === "email" || verifiedPhone.current
-              ? "size-s2 rounded-pill bg-green-600"
-              : "size-s2 rounded-pill bg-amber-500"
+              ? "size-s2 rounded-pill bg-green-500"
+              : "size-s2 rounded-pill bg-action-primary"
           }
           aria-hidden
         />

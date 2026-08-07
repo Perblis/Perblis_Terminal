@@ -133,7 +133,7 @@ export default function HireDetailPage() {
               <p className="font-mono text-mono-sm text-text-secondary">
                 {formatDateRange(h.start_date, h.end_date, h.duration_days)}
               </p>
-              <p className="text-caption text-ink-500">scheme: {h.scheme || "daily"}</p>
+              <p className="text-caption text-text-tertiary">scheme: {h.scheme || "daily"}</p>
             </div>
           </Card>
 
@@ -244,7 +244,7 @@ export default function HireDetailPage() {
       {/* dialogs */}
       <Dialog.Root open={dialog !== null} onOpenChange={(v) => !v && setDialog(null)}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-900/40" />
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-ink-950/75" />
           <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface-card p-s5 shadow-e2">
             {dialog === "accept" ? (
               <>
@@ -255,7 +255,7 @@ export default function HireDetailPage() {
                 </Dialog.Description>
                 {(h.asset_class === "plant_machinery" || h.asset_class === "trucks_haulage") ? (
                   <label className="mt-s3 flex items-start gap-s2 text-body-sm text-text-secondary">
-                    <input type="checkbox" className="mt-s1 size-s4 accent-amber-500" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+                    <input type="checkbox" className="mt-s1 size-s4 accent-action-primary" checked={ack} onChange={(e) => setAck(e.target.checked)} />
                     <span>I confirm the {h.asset_class === "plant_machinery" ? "operator" : "driver"} arrangement listed will be honoured for these dates.</span>
                   </label>
                 ) : null}
@@ -299,7 +299,7 @@ export default function HireDetailPage() {
                     <Skeleton className="mt-s3 h-32 w-full" />
                   ) : refundPreview.data ? (
                     <div className="mt-s3 rounded-sm border border-border-default bg-surface-page p-s4 font-mono text-mono">
-                      <p className="font-display text-overline uppercase tracking-[0.1em] text-ink-500">Refund manifest — §7.6</p>
+                      <p className="font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">Refund manifest — §7.6</p>
                       <div className="mt-s2 flex justify-between py-s1 text-body-sm"><span className="font-sans text-text-secondary">Hire value</span><span>{refundPreview.data.hire_value_display}</span></div>
                       <div className="flex justify-between py-s1 text-body-sm"><span className="font-sans text-text-secondary">Refund to hirer</span><span>{refundPreview.data.amount_display}</span></div>
                       {refundPreview.data.withheld_day > 0 ? (
@@ -316,7 +316,7 @@ export default function HireDetailPage() {
                   </Dialog.Description>
                 )}
                 {refundPreview.data?.strike || h.status !== "requested" ? (
-                  <p className="mt-s3 text-body-sm text-amber-900">
+                  <p className="mt-s3 text-body-sm text-amber-300">
                     Supplier cancellations after acceptance earn a strike — three in 90 days pauses
                     your listings.
                   </p>

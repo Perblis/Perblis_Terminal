@@ -62,8 +62,8 @@ export default function Onboarding() {
           onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
           renderItem={({ item }) => (
             <View style={{ width }} className="justify-end px-6 pb-8">
-              <DisplayText className="text-display-lg text-paper-0">{item.title}</DisplayText>
-              <BodyText className="mt-3 text-body-lg text-ink-300">{item.body}</BodyText>
+              <DisplayText className="text-display-lg text-text-primary">{item.title}</DisplayText>
+              <BodyText className="mt-3 text-body-lg text-text-tertiary">{item.body}</BodyText>
             </View>
           )}
         />
@@ -95,7 +95,7 @@ export default function Onboarding() {
                   className="min-h-12 items-center justify-center py-3"
                   onPress={() => finish("/(tabs)")}
                 >
-                  <BodyText className="text-ink-300">Skip — browse the map</BodyText>
+                  <BodyText className="text-text-tertiary">Skip — browse the map</BodyText>
                 </Pressable>
               )}
             </>
@@ -113,7 +113,7 @@ export default function Onboarding() {
                 className="min-h-12 items-center justify-center py-3"
                 onPress={() => finish("/(tabs)")}
               >
-                <BodyText className="text-ink-300">Browse as a guest</BodyText>
+                <BodyText className="text-text-tertiary">Browse as a guest</BodyText>
               </Pressable>
             </>
           )}

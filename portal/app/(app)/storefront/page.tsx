@@ -115,7 +115,7 @@ export default function StorefrontPage() {
 
       {error ? <Banner tone="danger" className="mb-s4">{error}</Banner> : null}
 
-      <p className="mb-s3 text-caption text-ink-500">Previewing as a hirer sees it — the public page carries no edit controls.</p>
+      <p className="mb-s3 text-caption text-text-tertiary">Previewing as a hirer sees it — the public page carries no edit controls.</p>
 
       <Card className="p-s6">
         {storefront.isPending || !me.data ? (
@@ -132,7 +132,7 @@ export default function StorefrontPage() {
 
       {/* edit drawer (right, per 08 choreography: enters from the cause) */}
       {editing ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-ink-900/40" role="dialog" aria-modal="true" aria-label="Edit storefront">
+        <div className="fixed inset-0 z-50 flex justify-end bg-ink-950/75" role="dialog" aria-modal="true" aria-label="Edit storefront">
           <div className="flex h-full w-[min(26rem,100vw)] flex-col gap-s4 overflow-y-auto bg-surface-card p-s5 shadow-e2">
             <h2 className="font-display text-h3 text-text-primary">Edit storefront</h2>
             <TextField

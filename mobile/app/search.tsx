@@ -97,7 +97,7 @@ export default function Search() {
           className="border-b border-border bg-surface-sunken px-4 py-3 active:opacity-90"
         >
           <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-inverse">
+            <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
               {item.supplier.logo ? (
                 <Image source={{ uri: resolveMediaUrl(item.supplier.logo) }} style={{ width: 40, height: 40 }} />
               ) : (
@@ -153,9 +153,9 @@ export default function Search() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setFiltersOpen((v) => !v)}
-            className={`min-h-12 items-center justify-center rounded-full border px-3.5 ${filtersOpen ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+            className={`min-h-12 items-center justify-center rounded-full border px-3.5 ${filtersOpen ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
           >
-            <BodyText className={filtersOpen ? "text-text-inverse" : "text-text-primary"}>Filters</BodyText>
+            <BodyText className={filtersOpen ? "text-text-primary" : "text-text-secondary"}>Filters</BodyText>
           </Pressable>
         </View>
 
@@ -171,9 +171,9 @@ export default function Search() {
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     onPress={() => setClassFilter(selected ? null : meta.value)}
-                    className={`rounded-full border px-3 py-1.5 ${selected ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+                    className={`rounded-full border px-3 py-1.5 ${selected ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
                   >
-                    <BodyText className={`text-body-sm ${selected ? "text-text-inverse" : "text-text-primary"}`}>
+                    <BodyText className={`text-body-sm ${selected ? "text-text-primary" : "text-text-secondary"}`}>
                       {meta.label}
                     </BodyText>
                   </Pressable>
@@ -189,9 +189,9 @@ export default function Search() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: radiusKm === r }}
                   onPress={() => setRadiusKm(r)}
-                  className={`rounded-full border px-3 py-1.5 ${radiusKm === r ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+                  className={`rounded-full border px-3 py-1.5 ${radiusKm === r ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
                 >
-                  <MonoText className={`text-body-sm ${radiusKm === r ? "text-text-inverse" : "text-text-primary"}`}>
+                  <MonoText className={`text-body-sm ${radiusKm === r ? "text-text-primary" : "text-text-secondary"}`}>
                     {r}km
                   </MonoText>
                 </Pressable>
@@ -209,9 +209,9 @@ export default function Search() {
                   );
                   setDatesOpen(true);
                 }}
-                className={`rounded-full border px-3 py-1.5 ${dateRange ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+                className={`rounded-full border px-3 py-1.5 ${dateRange ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
               >
-                <MonoText className={`text-body-sm ${dateRange ? "text-text-inverse" : "text-text-primary"}`}>
+                <MonoText className={`text-body-sm ${dateRange ? "text-text-primary" : "text-text-secondary"}`}>
                   {dateRange ? `${dateRange.from} → ${dateRange.to}` : "Any dates"}
                 </MonoText>
               </Pressable>
@@ -270,9 +270,9 @@ export default function Search() {
             accessibilityRole="button"
             accessibilityState={{ selected: groupBy === "asset" }}
             onPress={() => setGroupBy("asset")}
-            className={`rounded-full border px-3 py-1.5 ${groupBy === "asset" ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+            className={`rounded-full border px-3 py-1.5 ${groupBy === "asset" ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
           >
-            <BodyText className={`text-body-sm ${groupBy === "asset" ? "text-text-inverse" : "text-text-primary"}`}>
+            <BodyText className={`text-body-sm ${groupBy === "asset" ? "text-text-primary" : "text-text-secondary"}`}>
               By asset
             </BodyText>
           </Pressable>
@@ -280,9 +280,9 @@ export default function Search() {
             accessibilityRole="button"
             accessibilityState={{ selected: groupBy === "location" }}
             onPress={() => setGroupBy("location")}
-            className={`rounded-full border px-3 py-1.5 ${groupBy === "location" ? "border-surface-inverse bg-surface-inverse" : "border-border-strong"}`}
+            className={`rounded-full border px-3 py-1.5 ${groupBy === "location" ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
           >
-            <BodyText className={`text-body-sm ${groupBy === "location" ? "text-text-inverse" : "text-text-primary"}`}>
+            <BodyText className={`text-body-sm ${groupBy === "location" ? "text-text-primary" : "text-text-secondary"}`}>
               By location
             </BodyText>
           </Pressable>

@@ -29,9 +29,9 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
       </label>
       <div
         className={cn(
-          "flex h-10 items-center overflow-hidden rounded-sm border bg-surface-card",
+          "flex h-10 items-center overflow-hidden rounded-sm border bg-surface-sunken",
           error ? "border-border-error" : "border-border-default",
-          rest.disabled && "bg-ink-50",
+          rest.disabled && "bg-ink-800 text-text-tertiary",
         )}
       >
         {prefix ? (
@@ -44,7 +44,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className="h-full w-full bg-transparent px-s3 text-body-sm text-text-primary outline-none placeholder:text-ink-500 disabled:cursor-not-allowed"
+          className="h-full w-full bg-transparent px-s3 text-body-sm text-text-primary outline-none placeholder:text-ink-400 disabled:cursor-not-allowed"
           {...rest}
         />
       </div>
@@ -72,7 +72,7 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "
           type="button"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? "Hide password" : "Show password"}
-          className="absolute right-s2 top-[26px] grid size-s6 place-items-center rounded-sm text-ink-500 hover:text-text-primary"
+          className="absolute right-s2 top-[26px] grid size-s6 place-items-center rounded-sm text-text-tertiary hover:text-text-primary"
         >
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>

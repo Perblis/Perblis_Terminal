@@ -40,11 +40,11 @@ const STATUS_EXPLAINER: Record<ListingStatus, string> = {
 };
 
 const STATUS_STYLE: Record<ListingStatus, string> = {
-  draft: "bg-ink-100 text-ink-600",
-  live: "bg-green-700 text-paper-0",
-  paused: "bg-amber-100 text-amber-900",
-  archived: "border border-ink-300 text-ink-500",
-  removed: "bg-red-50 text-red-900",
+  draft: "bg-surface-sunken text-text-secondary",
+  live: "bg-green-500 text-text-primary",
+  paused: "bg-amber-500/12 text-amber-300",
+  archived: "border border-border-default text-text-tertiary",
+  removed: "bg-red-500/12 text-red-300",
 };
 
 function ListingStatusBadge({ status }: { status: ListingStatus }) {
@@ -132,7 +132,7 @@ export default function AssetsPage() {
           <input
             type="checkbox"
             aria-label="Select all"
-            className="size-s4 accent-amber-500"
+            className="size-s4 accent-action-primary"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
           />
@@ -141,7 +141,7 @@ export default function AssetsPage() {
           <input
             type="checkbox"
             aria-label={`Select ${row.original.title}`}
-            className="size-s4 accent-amber-500"
+            className="size-s4 accent-action-primary"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
           />
@@ -166,7 +166,7 @@ export default function AssetsPage() {
               )}
               <span>
                 <span className="block max-w-[26ch] truncate font-medium text-text-primary">{l.title}</span>
-                <span className="block text-caption text-ink-500">{l.asset_type}</span>
+                <span className="block text-caption text-text-tertiary">{l.asset_type}</span>
               </span>
             </Link>
           );
@@ -205,7 +205,7 @@ export default function AssetsPage() {
       columnHelper.accessor("created_at", {
         header: "Created",
         cell: ({ getValue }) => (
-          <span className="font-mono text-mono-sm text-ink-500">
+          <span className="font-mono text-mono-sm text-text-tertiary">
             {new Date(getValue()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         ),
@@ -220,7 +220,7 @@ export default function AssetsPage() {
               <Link
                 href={`/assets/${l.id}`}
                 aria-label={`Edit ${l.title}`}
-                className="rounded-sm p-s2 text-ink-500 hover:bg-ink-100 hover:text-text-primary"
+                className="rounded-sm p-s2 text-text-tertiary hover:bg-surface-sunken hover:text-text-primary"
               >
                 <Pencil size={15} />
               </Link>
@@ -228,7 +228,7 @@ export default function AssetsPage() {
                 type="button"
                 aria-label={`Duplicate ${l.title}`}
                 onClick={() => void act(l, "duplicate")}
-                className="rounded-sm p-s2 text-ink-500 hover:bg-ink-100 hover:text-text-primary"
+                className="rounded-sm p-s2 text-text-tertiary hover:bg-surface-sunken hover:text-text-primary"
               >
                 <Copy size={15} />
               </button>
@@ -246,7 +246,7 @@ export default function AssetsPage() {
                   type="button"
                   aria-label={`Archive ${l.title}`}
                   onClick={() => setConfirmArchive([l])}
-                  className="rounded-sm p-s2 text-ink-500 hover:bg-ink-100 hover:text-text-primary"
+                  className="rounded-sm p-s2 text-text-tertiary hover:bg-surface-sunken hover:text-text-primary"
                 >
                   <Archive size={15} />
                 </button>
@@ -319,12 +319,12 @@ export default function AssetsPage() {
       {/* toolbar */}
       <div className="mb-s4 flex flex-wrap items-center gap-s2">
         <div className="flex h-9 min-w-56 items-center rounded-sm border border-border-default bg-surface-card px-s3">
-          <Search size={15} className="mr-s2 text-ink-400" aria-hidden />
+          <Search size={15} className="mr-s2 text-text-tertiary" aria-hidden />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or type"
-            className="w-full bg-transparent text-body-sm outline-none placeholder:text-ink-500"
+            className="w-full bg-transparent text-body-sm outline-none placeholder:text-text-tertiary"
           />
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by status" className="h-9 rounded-sm border border-border-default bg-surface-card px-s2 text-body-sm">
@@ -346,19 +346,19 @@ export default function AssetsPage() {
           ))}
         </select>
         <label className="flex items-center gap-s1 text-body-sm text-text-secondary">
-          <input type="checkbox" className="size-s4 accent-amber-500" checked={groupByYard} onChange={(e) => setGroupByYard(e.target.checked)} />
+          <input type="checkbox" className="size-s4 accent-action-primary" checked={groupByYard} onChange={(e) => setGroupByYard(e.target.checked)} />
           Group by yard
         </label>
-        <Button size="sm" variant="ghost" onClick={() => setYardsOpen(true)} className="text-ink-500">
+        <Button size="sm" variant="ghost" onClick={() => setYardsOpen(true)} className="text-text-tertiary">
           <Plus size={14} aria-hidden /> New yard
         </Button>
-        <span className="ml-auto text-caption text-ink-500">{data.length} assets</span>
+        <span className="ml-auto text-caption text-text-tertiary">{data.length} assets</span>
       </div>
 
       {actionError ? <Banner tone="danger" className="mb-s3">{actionError}</Banner> : null}
 
       {selected.length > 0 ? (
-        <div className="mb-s3 flex flex-wrap items-center gap-s2 rounded-sm bg-surface-inverse px-s3 py-s2 text-body-sm text-text-inverse">
+        <div className="mb-s3 flex flex-wrap items-center gap-s2 rounded-sm bg-surface-chrome px-s3 py-s2 text-body-sm text-text-on-chrome">
           <span className="font-medium">{selected.length} selected</span>
           <Button size="sm" variant="secondary" onClick={() => void bulk("pause")}>Pause</Button>
           <Button size="sm" variant="secondary" onClick={() => setConfirmArchive(selected)}>Archive</Button>
@@ -366,7 +366,7 @@ export default function AssetsPage() {
             aria-label="Assign to yard"
             defaultValue=""
             onChange={(e) => e.target.value && void bulk({ yard: e.target.value })}
-            className="h-8 rounded-sm border border-ink-600 bg-ink-800 px-s2 text-body-sm text-text-inverse"
+            className="h-8 rounded-sm border border-border-strong bg-ink-800 px-s2 text-body-sm text-text-on-chrome"
           >
             <option value="" disabled>Assign to yard…</option>
             {(yards.data ?? []).map((y) => (
@@ -399,7 +399,7 @@ export default function AssetsPage() {
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="cursor-pointer select-none border-b border-border-default px-s3 py-s2 text-left font-display text-overline uppercase tracking-[0.1em] text-ink-500"
+                      className="cursor-pointer select-none border-b border-border-default px-s3 py-s2 text-left font-display text-overline uppercase tracking-[0.1em] text-text-tertiary"
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {{ asc: " ↑", desc: " ↓" }[header.column.getIsSorted() as string] ?? ""}
@@ -417,13 +417,13 @@ export default function AssetsPage() {
                 <tbody key={groupYard ?? "all"}>
                   {groupByYard ? (
                     <tr>
-                      <td colSpan={columns.length} className="bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
+                      <td colSpan={columns.length} className="bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">
                         {yardName(groupYard)}
                       </td>
                     </tr>
                   ) : null}
                   {rows.map((row) => (
-                    <tr key={row.id} className="h-[var(--density-row-height)] border-b border-border-default last:border-0 hover:bg-ink-50">
+                    <tr key={row.id} className="h-[var(--density-row-height)] border-b border-border-default last:border-0 hover:bg-surface-sunken">
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="px-s3 py-[var(--density-cell-pad)]">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -440,7 +440,7 @@ export default function AssetsPage() {
 
       {/* archive confirm (07 §6 destructive pattern) */}
       {confirmArchive ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 p-s4" role="dialog" aria-modal="true" aria-label="Confirm archive">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-ink-950/75 p-s4" role="dialog" aria-modal="true" aria-label="Confirm archive">
           <Card className="w-full max-w-md p-s5">
             <h2 className="font-display text-h3 text-text-primary">
               Archive {confirmArchive.length === 1 ? `“${confirmArchive[0].title}”` : `${confirmArchive.length} assets`}?
@@ -472,11 +472,11 @@ export default function AssetsPage() {
 
       {/* undo toast (05 §4: portal bottom-right) */}
       {toast ? (
-        <div className="fixed bottom-s4 right-s4 z-50 flex items-center gap-s3 rounded-sm bg-surface-inverse px-s4 py-s3 text-body-sm text-text-inverse shadow-e2">
+        <div className="fixed bottom-s4 right-s4 z-50 flex items-center gap-s3 rounded-sm bg-surface-chrome px-s4 py-s3 text-body-sm text-text-on-chrome shadow-e2">
           <span>{toast.message}</span>
           <button
             type="button"
-            className="font-medium text-amber-500 underline"
+            className="font-medium text-amber-400 underline"
             onClick={() => {
               toast.undo();
               setToast(null);

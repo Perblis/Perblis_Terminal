@@ -41,7 +41,7 @@ export function Gallery({ photos, topInset }: { photos: ListingPhoto[]; topInset
     return (
       // Fixed ink letterbox — the immersive gallery stays dark in both themes.
       <View className="items-center justify-center bg-ink-900" style={{ height: height + topInset, paddingTop: topInset }}>
-        <MonoText className="text-body text-amber-500">No photos yet</MonoText>
+        <MonoText className="text-body text-amber-400">No photos yet</MonoText>
       </View>
     );
   }
@@ -93,7 +93,7 @@ export function Gallery({ photos, topInset }: { photos: ListingPhoto[]; topInset
                   height: 27,
                   borderRadius: 4,
                   borderWidth: i === index ? 1.5 : 0,
-                  borderColor: "#F59E0B",
+                  borderColor: "#E0ED34",
                   opacity: i === index ? 1 : 0.7,
                 }}
               />

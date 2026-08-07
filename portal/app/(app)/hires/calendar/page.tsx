@@ -31,11 +31,11 @@ const BLOCK_STRIPES = {
 } as const;
 
 const BLOCK_STYLE: Partial<Record<HireStatus7, string>> = {
-  requested: "border border-dashed border-amber-600 bg-amber-50 text-amber-900",
-  accepted: "border border-dashed border-blue-600 bg-blue-50 text-blue-900",
-  confirmed: "bg-teal-50 text-teal-900 border border-teal-600",
-  on_hire: "bg-green-600/25 text-green-900 border border-green-700",
-  in_dispute: "bg-violet-50 text-violet-900 border border-violet-600",
+  requested: "border border-dashed border-amber-600 bg-amber-500/10 text-amber-300",
+  accepted: "border border-dashed border-blue-600 bg-blue-400/12 text-blue-300",
+  confirmed: "bg-teal-400/12 text-teal-300 border border-teal-600",
+  on_hire: "bg-green-500/25 text-green-300 border border-green-700",
+  in_dispute: "bg-violet-400/12 text-violet-300 border border-violet-400/40",
 };
 
 function iso(d: Date): string {
@@ -147,7 +147,7 @@ export default function CalendarPage() {
           </div>
         }
       />
-      <p className="mb-s3 text-caption text-ink-500" title="Hires set availability; blocks are yours">
+      <p className="mb-s3 text-caption text-text-tertiary" title="Hires set availability; blocks are yours">
         Hires set availability. Dashed blocks are tentative (awaiting response or payment); striped
         spans are your date-blocks — click one to remove it.
       </p>
@@ -168,7 +168,7 @@ export default function CalendarPage() {
               className="sticky top-0 grid border-b border-border-default bg-surface-page"
               style={{ gridTemplateColumns: `14rem repeat(${daysInMonth}, minmax(1.6rem, 1fr))` }}
             >
-              <div className="px-s3 py-s2 font-display text-overline uppercase tracking-[0.1em] text-ink-500">Asset</div>
+              <div className="px-s3 py-s2 font-display text-overline uppercase tracking-[0.1em] text-text-tertiary">Asset</div>
               {Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
                 const weekday = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), day)).getUTCDay();
@@ -176,10 +176,10 @@ export default function CalendarPage() {
                 return (
                   <div
                     key={day}
-                    className={`relative py-s2 text-center font-mono text-mono-sm ${weekend ? "bg-paper-100 text-ink-600" : "text-ink-500"} ${todayCol === day ? "font-medium text-amber-900" : ""}`}
+                    className={`relative py-s2 text-center font-mono text-mono-sm ${weekend ? "bg-surface-sunken text-text-secondary" : "text-text-tertiary"} ${todayCol === day ? "font-medium text-amber-300" : ""}`}
                   >
                     {day}
-                    {todayCol === day ? <span className="absolute inset-y-0 left-1/2 w-px bg-amber-500" aria-hidden /> : null}
+                    {todayCol === day ? <span className="absolute inset-y-0 left-1/2 w-px bg-action-primary" aria-hidden /> : null}
                   </div>
                 );
               })}
@@ -187,7 +187,7 @@ export default function CalendarPage() {
 
             {rows.map(([yardId, yardListings]) => (
               <div key={yardId ?? "none"}>
-                <div className="border-b border-border-default bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-ink-600">
+                <div className="border-b border-border-default bg-surface-sunken px-s3 py-s1 font-display text-overline uppercase tracking-[0.1em] text-text-secondary">
                   {yardName(yardId)}
                 </div>
                 {yardListings.map((listing) => {
@@ -204,21 +204,21 @@ export default function CalendarPage() {
                         <Glyph size={14} />
                         <span className="min-w-0 flex-1 truncate text-body-sm text-text-primary">{listing.title}</span>
                         <span className="flex items-center gap-s1">
-                          <span className="h-s1 w-s5 overflow-hidden rounded-pill bg-ink-100" aria-hidden>
-                            <span className="block h-full bg-green-600" style={{ width: `${Math.min(100, util)}%` }} />
+                          <span className="h-s1 w-s5 overflow-hidden rounded-pill bg-surface-sunken" aria-hidden>
+                            <span className="block h-full bg-green-500" style={{ width: `${Math.min(100, util)}%` }} />
                           </span>
-                          <span className="font-mono text-mono-sm text-ink-500">{util}%</span>
+                          <span className="font-mono text-mono-sm text-text-tertiary">{util}%</span>
                         </span>
                       </div>
                       {/* weekend banding under blocks */}
                       {Array.from({ length: daysInMonth }, (_, i) => {
                         const weekday = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), i + 1)).getUTCDay();
                         return weekday === 0 || weekday === 6 ? (
-                          <span key={i} className="bg-paper-100" style={{ gridColumn: `${i + 2} / ${i + 3}` }} aria-hidden />
+                          <span key={i} className="bg-surface-sunken" style={{ gridColumn: `${i + 2} / ${i + 3}` }} aria-hidden />
                         ) : null;
                       })}
                       {todayCol ? (
-                        <span className="pointer-events-none absolute inset-y-0 w-px bg-amber-500" style={{ left: `calc(14rem + (100% - 14rem) / ${daysInMonth} * ${todayCol - 0.5})` }} aria-hidden />
+                        <span className="pointer-events-none absolute inset-y-0 w-px bg-action-primary" style={{ left: `calc(14rem + (100% - 14rem) / ${daysInMonth} * ${todayCol - 0.5})` }} aria-hidden />
                       ) : null}
                       {(blocksByListing.get(listing.id) ?? []).map((b) => {
                         const startCol = dayOf(b.start_date, true) + 1;
@@ -230,7 +230,7 @@ export default function CalendarPage() {
                             onClick={() => setRemovingBlock(b)}
                             title={`Blocked${b.reason ? ` · ${b.reason}` : ""} — click to remove`}
                             aria-label={`Blocked ${b.start_date} to ${b.end_date}${b.reason ? ` — ${b.reason}` : ""}`}
-                            className="z-10 my-s1 flex items-center overflow-hidden truncate rounded-sm border border-ink-400 px-s1 text-caption font-medium text-ink-600"
+                            className="z-10 my-s1 flex items-center overflow-hidden truncate rounded-sm border border-border-strong px-s1 text-caption font-medium text-text-secondary"
                             style={{ gridColumn: `${startCol} / ${endCol}`, gridRow: 1, ...BLOCK_STRIPES }}
                           >
                             {endCol - startCol > 2 ? "blocked" : ""}

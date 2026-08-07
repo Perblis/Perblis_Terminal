@@ -11,8 +11,8 @@ export function HazardStripe({ height = 6 }: { height?: number }) {
       <Svg width="100%" height={height}>
         <Defs>
           <Pattern id="hazard" width={16} height={height} patternUnits="userSpaceOnUse">
-            <Rect width={16} height={height} fill="#16181D" />
-            <Path d={`M0 ${height} L${height} 0 H${height + 8} L8 ${height} Z`} fill="#F59E0B" />
+            <Rect width={16} height={height} fill="#19191C" />
+            <Path d={`M0 ${height} L${height} 0 H${height + 8} L8 ${height} Z`} fill="#E0ED34" />
           </Pattern>
         </Defs>
         <Rect width="100%" height={height} fill="url(#hazard)" />

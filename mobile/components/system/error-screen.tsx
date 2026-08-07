@@ -23,15 +23,15 @@ export function ErrorScreen({ error, onRetry }: { error: unknown; onRetry: () =>
     <View className="flex-1 bg-ink-900" style={{ paddingTop: insets.top }}>
       <View className="flex-1 items-center justify-center gap-3 px-8">
         <TCrane size={56} />
-        <DisplayText className="text-h1 text-center text-paper-0">
+        <DisplayText className="text-h1 text-center text-text-primary">
           Something broke on our side
         </DisplayText>
-        <BodyText className="text-center text-ink-300">
+        <BodyText className="text-center text-text-tertiary">
           This screen hit an error we didn{"’"}t plan for. Try again — if it keeps happening,
           contact support@terminal.ng or our WhatsApp line and we{"’"}ll dig in.
         </BodyText>
         {eventId ? (
-          <MonoText className="text-caption text-ink-300">Ref: {eventId}</MonoText>
+          <MonoText className="text-caption text-text-tertiary">Ref: {eventId}</MonoText>
         ) : null}
         <View className="mt-3 w-full">
           <Button label="Try again" onPress={onRetry} />

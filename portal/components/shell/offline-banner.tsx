@@ -20,7 +20,7 @@ export function OfflineBanner() {
   }, []);
   if (!offline) return null;
   return (
-    <div role="status" className="flex items-center gap-s2 bg-surface-inverse px-s4 py-s2 text-body-sm text-text-inverse">
+    <div role="status" className="flex items-center gap-s2 bg-surface-chrome px-s4 py-s2 text-body-sm text-text-on-chrome">
       <WifiOff size={14} aria-hidden />
       Offline — showing saved data
     </div>

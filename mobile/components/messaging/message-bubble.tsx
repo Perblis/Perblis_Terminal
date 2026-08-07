@@ -7,8 +7,8 @@ import { BodyText, MonoText } from "../ui/text";
 function LockGlyph() {
   return (
     <Svg width={10} height={10} viewBox="0 0 24 24">
-      <Rect x={5} y={11} width={14} height={9} rx={2} stroke="#78350F" strokeWidth={2.5} fill="none" />
-      <Path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#78350F" strokeWidth={2.5} fill="none" />
+      <Rect x={5} y={11} width={14} height={9} rx={2} stroke="#E0ED34" strokeWidth={2.5} fill="none" />
+      <Path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#E0ED34" strokeWidth={2.5} fill="none" />
     </Svg>
   );
 }
@@ -33,13 +33,13 @@ export function MessageBubble({
   return (
     <View className={`my-1 max-w-[82%] gap-0.5 ${mine ? "self-end" : "self-start"}`}>
       <View
-        className={`rounded-md px-3 py-2 ${mine ? "bg-surface-inverse" : "bg-surface-sunken"} ${pending ? "opacity-60" : ""}`}
+        className={`rounded-md px-3 py-2 ${mine ? "bg-ink-700" : "bg-surface-sunken"} ${pending ? "opacity-60" : ""}`}
       >
-        <BodyText className={mine ? "text-text-inverse" : "text-text-primary"}>{message.body}</BodyText>
+        <BodyText className={mine ? "text-text-primary" : "text-text-secondary"}>{message.body}</BodyText>
         {message.masked ? (
-          <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-amber-100 px-2 py-0.5">
+          <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-amber-500/12 px-2 py-0.5">
             <LockGlyph />
-            <BodyText className="text-caption text-amber-900">contact hidden until paid</BodyText>
+            <BodyText className="text-caption text-amber-300">contact hidden until paid</BodyText>
           </View>
         ) : null}
       </View>

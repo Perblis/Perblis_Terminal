@@ -15,8 +15,8 @@ function ContextChip({ hire }: { hire: Hire }) {
 
   if (hire.status === "accepted" && pay && !pay.expired) {
     return (
-      <View className="self-start rounded-full bg-amber-100 px-2.5 py-0.5">
-        <BodyText className="text-caption font-sans-semibold text-amber-900">
+      <View className="self-start rounded-full bg-amber-500/12 px-2.5 py-0.5">
+        <BodyText className="text-caption font-sans-semibold text-amber-300">
           Pay within {pay.label}
         </BodyText>
       </View>
@@ -24,15 +24,15 @@ function ContextChip({ hire }: { hire: Hire }) {
   }
   if (hire.status === "confirmed" && hire.start_date === today) {
     return (
-      <View className="self-start rounded-full bg-amber-100 px-2.5 py-0.5">
-        <BodyText className="text-caption font-sans-semibold text-amber-900">Handover today</BodyText>
+      <View className="self-start rounded-full bg-amber-500/12 px-2.5 py-0.5">
+        <BodyText className="text-caption font-sans-semibold text-amber-300">Handover today</BodyText>
       </View>
     );
   }
   if (hire.status === "on_hire" && hire.end_date === today) {
     return (
-      <View className="self-start rounded-full bg-amber-100 px-2.5 py-0.5">
-        <BodyText className="text-caption font-sans-semibold text-amber-900">Off-hire today</BodyText>
+      <View className="self-start rounded-full bg-amber-500/12 px-2.5 py-0.5">
+        <BodyText className="text-caption font-sans-semibold text-amber-300">Off-hire today</BodyText>
       </View>
     );
   }

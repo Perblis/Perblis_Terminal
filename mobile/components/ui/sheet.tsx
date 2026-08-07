@@ -78,7 +78,7 @@ export function Sheet({
           style={[{ height }, style]}
         >
           <View className="items-center py-2.5">
-            <View className="h-1 w-10 rounded-full bg-ink-300" />
+            <View className="h-1 w-10 rounded-full bg-ink-700" />
           </View>
           {children}
         </Animated.View>

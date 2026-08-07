@@ -217,16 +217,16 @@ export function AssetForm({ initial }: { initial?: Listing }) {
             <span
               className={
                 i < step
-                  ? "h-s1 rounded-pill bg-amber-500"
+                  ? "h-s1 rounded-pill bg-action-primary"
                   : i === step
-                    ? "h-s1 rounded-pill bg-amber-500/60"
-                    : "h-s1 rounded-pill bg-ink-200"
+                    ? "h-s1 rounded-pill bg-action-primary/60"
+                    : "h-s1 rounded-pill bg-ink-700"
               }
               aria-hidden
             />
             <span
               className={
-                i === step ? "text-caption font-medium text-text-primary" : "hidden text-caption text-ink-500 lg:block"
+                i === step ? "text-caption font-medium text-text-primary" : "hidden text-caption text-text-tertiary lg:block"
               }
             >
               {i + 1}. {label}
@@ -265,7 +265,7 @@ export function AssetForm({ initial }: { initial?: Listing }) {
         </Button>
         <div className="flex items-center gap-s3">
           {savedPulse ? (
-            <span className="flex items-center gap-s1 text-caption text-green-700">
+            <span className="flex items-center gap-s1 text-caption text-green-300">
               <Check size={14} aria-hidden /> Draft saved
             </span>
           ) : null}

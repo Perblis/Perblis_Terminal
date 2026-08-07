@@ -11,10 +11,10 @@ export function TierBadge({ tier }: { tier: ListingTier }) {
   if (tier === "basic") return null;
   return (
     <View
-      className={`rounded-sm px-1.5 py-0.5 ${tier === "inspected" ? "bg-surface-inverse" : "bg-surface-sunken"}`}
+      className={`rounded-sm px-1.5 py-0.5 ${tier === "inspected" ? "bg-ink-700" : "bg-surface-sunken"}`}
     >
       <BodyText
-        className={`text-caption ${tier === "inspected" ? "text-text-inverse" : "text-text-secondary"}`}
+        className={`text-caption ${tier === "inspected" ? "text-text-primary" : "text-text-secondary"}`}
       >
         {tier === "inspected" ? "Inspected" : "Verified"}
       </BodyText>

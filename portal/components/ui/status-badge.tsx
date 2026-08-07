@@ -18,15 +18,15 @@ export type HireStatus =
   | "in_dispute";
 
 const styles: Record<HireStatus, string> = {
-  requested: "bg-amber-100 text-amber-900",
-  accepted: "bg-blue-50 text-blue-900",
-  confirmed: "bg-teal-50 text-teal-900",
-  on_hire: "bg-green-700 text-paper-0",
-  completed: "bg-ink-100 text-ink-600",
-  declined: "border border-ink-300 bg-transparent text-ink-500",
-  expired: "border border-ink-300 bg-transparent text-ink-500",
-  cancelled: "bg-red-50 text-red-900",
-  in_dispute: "bg-violet-50 text-violet-900",
+  requested: "bg-amber-500/12 text-amber-300 ring-1 ring-inset ring-amber-500/25",
+  accepted: "bg-blue-400/12 text-blue-300 ring-1 ring-inset ring-blue-400/25",
+  confirmed: "bg-teal-400/12 text-teal-300 ring-1 ring-inset ring-teal-400/25",
+  on_hire: "bg-green-500 text-ink-950",
+  completed: "bg-ink-700 text-ink-300",
+  declined: "bg-transparent text-text-tertiary ring-1 ring-inset ring-border-default",
+  expired: "bg-transparent text-text-tertiary ring-1 ring-inset ring-border-default",
+  cancelled: "bg-red-500/12 text-red-300 ring-1 ring-inset ring-red-500/25",
+  in_dispute: "bg-violet-400/12 text-violet-300 ring-1 ring-inset ring-violet-400/25",
 };
 
 const supplierLabels: Record<HireStatus, string> = {
@@ -56,7 +56,7 @@ export function StatusBadge({ status, className }: { status: HireStatus; classNa
   );
 }
 
-/** Count badge (05 §4): unread amber, urgent red. */
+/** Count badge (05 §4): unread brand, urgent red. */
 export function CountBadge({
   count,
   urgent = false,
@@ -71,7 +71,7 @@ export function CountBadge({
     <span
       className={cn(
         "inline-flex min-w-[18px] items-center justify-center rounded-pill px-s1 text-caption font-semibold leading-[18px]",
-        urgent ? "bg-red-600 text-text-inverse" : "bg-amber-500 text-text-on-brand",
+        urgent ? "bg-red-500 text-ink-950" : "bg-action-primary text-text-on-brand",
         className,
       )}
     >

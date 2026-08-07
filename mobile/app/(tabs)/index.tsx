@@ -177,8 +177,8 @@ export default function MapTab() {
         </View>
         {overCap ? (
           <View className="mt-2 items-center">
-            <View className="rounded-full bg-surface-inverse px-4 py-1.5">
-              <BodyText className="text-body-sm text-text-inverse">Zoom in to see all</BodyText>
+            <View className="rounded-full bg-surface-chrome px-4 py-1.5">
+              <BodyText className="text-body-sm text-text-on-chrome">Zoom in to see all</BodyText>
             </View>
           </View>
         ) : null}
@@ -281,10 +281,10 @@ function Banner({ text, top, onPress }: { text: string; top: number; onPress?: (
     <Pressable
       accessibilityRole={onPress ? "button" : "text"}
       onPress={onPress}
-      className="absolute inset-x-4 rounded-md bg-surface-inverse px-4 py-2.5"
+      className="absolute inset-x-4 rounded-md bg-surface-chrome px-4 py-2.5"
       style={{ top }}
     >
-      <BodyText className="text-body-sm text-text-inverse">{text}</BodyText>
+      <BodyText className="text-body-sm text-text-on-chrome">{text}</BodyText>
     </Pressable>
   );
 }

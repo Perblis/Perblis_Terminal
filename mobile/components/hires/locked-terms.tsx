@@ -19,7 +19,7 @@ function Bracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
   return (
     <View className="absolute" style={{ ...pos, transform: [{ rotate: pos.rotate }] }}>
       <Svg width={14} height={14} viewBox="0 0 14 14">
-        <Path d="M1 13 V1 H13" stroke="#F59E0B" strokeWidth={1.5} fill="none" />
+        <Path d="M1 13 V1 H13" stroke="#E0ED34" strokeWidth={1.5} fill="none" />
       </Svg>
     </View>
   );
@@ -28,8 +28,8 @@ function Bracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
 function LockGlyph() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24">
-      <Rect x={5} y={10} width={14} height={10} rx={2} stroke="#B3B8C2" strokeWidth={2} fill="none" />
-      <Path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#B3B8C2" strokeWidth={2} fill="none" />
+      <Rect x={5} y={10} width={14} height={10} rx={2} stroke="#ADAEB0" strokeWidth={2} fill="none" />
+      <Path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#ADAEB0" strokeWidth={2} fill="none" />
     </Svg>
   );
 }
@@ -47,13 +47,13 @@ export function LockedTerms({ hire }: { hire: Hire }) {
       <View className="items-center gap-3">
         <View className="flex-row items-center gap-1.5">
           <LockGlyph />
-          <BodyText className="text-caption text-ink-300">Terms locked at acceptance</BodyText>
+          <BodyText className="text-caption text-text-tertiary">Terms locked at acceptance</BodyText>
         </View>
         <View className="items-center">
-          <BodyText className="text-body-sm text-ink-300">You pay</BodyText>
-          <Money display={hire.hire_value_display} hero className="text-paper-0" />
+          <BodyText className="text-body-sm text-text-tertiary">You pay</BodyText>
+          <Money display={hire.hire_value_display} hero className="text-text-primary" />
         </View>
-        <MonoText className="text-body-sm text-ink-300">
+        <MonoText className="text-body-sm text-text-tertiary">
           {formatDateRange(hire.start_date, hire.end_date, hire.duration_days)}
         </MonoText>
       </View>

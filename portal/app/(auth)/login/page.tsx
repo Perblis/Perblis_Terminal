@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { VerifyOtp } from "@/components/auth/verify-otp";
 import { Banner } from "@/components/ui/banner";
@@ -17,6 +18,9 @@ import { loginSchema, normalizeNgPhone, type LoginInput } from "@/lib/auth-schem
 // phone_not_verified / email_not_verified drops into the OTP step with the
 // just-typed credentials held in memory, then retries the login untouched.
 
+const forgotSchema = z.object({ email: z.string().email("Enter a valid email address.") });
+type ForgotInput = z.infer<typeof forgotSchema>;
+
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
@@ -24,6 +28,8 @@ function LoginForm() {
   const [resume, setResume] = useState<{ email: string; password: string; phone: string } | null>(null);
   const [needPhone, setNeedPhone] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
+  const [forgot, setForgot] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const {
     register,
@@ -31,6 +37,12 @@ function LoginForm() {
     getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+
+  const {
+    register: registerForgot,
+    handleSubmit: handleForgotSubmit,
+    formState: { errors: forgotErrors, isSubmitting: isForgotSubmitting },
+  } = useForm<ForgotInput>({ resolver: zodResolver(forgotSchema) });
 
   async function completeLogin(email: string, password: string) {
     await auth("/login", { email, password });
@@ -52,6 +64,18 @@ function LoginForm() {
         return;
       }
       setFormError(e instanceof ApiError ? e.message : "Sign-in failed. Try again.");
+    }
+  }
+
+  async function onForgotSubmit(values: ForgotInput) {
+    setFormError(null);
+    try {
+      await auth("/password-reset", { email: values.email });
+      setResetSent(true);
+    } catch {
+      // No-enumeration: even on unexpected failure we show the sent state so
+      // the page never confirms whether an email exists.
+      setResetSent(true);
     }
   }
 
@@ -115,6 +139,47 @@ function LoginForm() {
     );
   }
 
+  if (forgot) {
+    return resetSent ? (
+      <div className="flex flex-col gap-s4">
+        <div>
+          <h1 className="font-display text-h2 text-text-primary">Check your email</h1>
+          <p className="mt-s1 text-body-sm text-text-secondary">
+            If an account exists for that address, we&apos;ve sent a link to reset your password.
+            The link expires in one hour.
+          </p>
+        </div>
+        <Banner tone="info">Didn&apos;t get it? Check spam, or try another address.</Banner>
+        <Button variant="secondary" size="lg" className="w-full" onClick={() => { setForgot(false); setResetSent(false); }}>
+          Back to sign in
+        </Button>
+      </div>
+    ) : (
+      <form onSubmit={handleForgotSubmit(onForgotSubmit)} className="flex flex-col gap-s4" noValidate>
+        <div>
+          <h1 className="font-display text-h2 text-text-primary">Reset your password</h1>
+          <p className="mt-s1 text-body-sm text-text-secondary">
+            Enter the email on your account and we&apos;ll send a reset link.
+          </p>
+        </div>
+        <TextField
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          error={forgotErrors.email?.message}
+          {...registerForgot("email")}
+        />
+        <Button type="submit" size="lg" loading={isForgotSubmitting} className="w-full">
+          Send reset link
+        </Button>
+        <Button variant="ghost" size="md" className="w-full" onClick={() => setForgot(false)}>
+          Back to sign in
+        </Button>
+      </form>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-s4" noValidate>
       <div>
@@ -137,18 +202,29 @@ function LoginForm() {
         error={errors.email?.message}
         {...register("email")}
       />
-      <PasswordField
-        label="Password"
-        autoComplete="current-password"
-        error={errors.password?.message}
-        {...register("password")}
-      />
+      <div>
+        <PasswordField
+          label="Password"
+          autoComplete="current-password"
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        <div className="mt-s1 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setForgot(true)}
+            className="text-caption text-text-tertiary hover:text-text-link hover:underline"
+          >
+            Forgot password?
+          </button>
+        </div>
+      </div>
 
       <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
         Sign in
       </Button>
 
-      <p className="text-body-sm text-text-secondary">
+      <p className="text-center text-body-sm text-text-secondary">
         New to Terminal?{" "}
         <Link href="/register" className="text-text-link underline">
           Create an account

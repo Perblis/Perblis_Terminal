@@ -163,8 +163,8 @@ export default function Conversation() {
               );
             if (item.k === "banner")
               return (
-                <View className="my-2 rounded-lg bg-amber-100 px-3 py-2">
-                  <BodyText className="text-caption text-amber-900">
+                <View className="my-2 rounded-lg bg-amber-500/12 px-3 py-2">
+                  <BodyText className="text-caption text-amber-300">
                     Numbers unlock after payment — Terminal protects both parties.
                   </BodyText>
                 </View>

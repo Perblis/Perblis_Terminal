@@ -10,8 +10,8 @@ export default function Suspended() {
   return (
     <View className="flex-1 bg-ink-900" style={{ paddingTop: insets.top }}>
       <View className="flex-1 items-center justify-center gap-3 px-8">
-        <DisplayText className="text-h1 text-paper-0">Account suspended</DisplayText>
-        <BodyText className="text-center text-ink-300">
+        <DisplayText className="text-h1 text-text-primary">Account suspended</DisplayText>
+        <BodyText className="text-center text-text-tertiary">
           Your account is suspended and can{'\u2019'}t sign in. If you think this is a mistake, contact
           support@terminal.ng and we{'\u2019'}ll look into it.
         </BodyText>

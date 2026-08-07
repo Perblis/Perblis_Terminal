@@ -128,9 +128,9 @@ export default function HandoverCapture() {
                   accessibilityRole="button"
                   accessibilityLabel={`Remove photo ${i + 1}`}
                   onPress={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-surface-inverse"
+                  className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-surface-chrome"
                 >
-                  <BodyText className="text-caption text-text-inverse">✕</BodyText>
+                  <BodyText className="text-caption text-text-on-chrome">✕</BodyText>
                 </Pressable>
               </View>
             ))}

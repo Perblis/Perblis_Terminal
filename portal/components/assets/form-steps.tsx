@@ -27,7 +27,7 @@ export function ClassStep({ draft, set, locked }: StepProps & { locked: boolean 
       <div>
         <h2 className="font-display text-h3 text-text-primary">What are you listing?</h2>
         {locked ? (
-          <p className="mt-s1 text-caption text-ink-500">
+          <p className="mt-s1 text-caption text-text-tertiary">
             Class and type are fixed for an existing listing — duplicate it to change them.
           </p>
         ) : null}
@@ -58,7 +58,7 @@ export function ClassStep({ draft, set, locked }: StepProps & { locked: boolean 
               </span>
               <span>
                 <span className="block text-body font-medium text-text-primary">{cls.label}</span>
-                <span className="block text-caption text-ink-500">
+                <span className="block text-caption text-text-tertiary">
                   {cls.types.length} asset types
                 </span>
               </span>
@@ -134,7 +134,7 @@ function SpecInput({
       <label className="flex items-center gap-s2 pt-s5 text-body-sm text-text-secondary">
         <input
           type="checkbox"
-          className="size-s4 accent-amber-500"
+          className="size-s4 accent-action-primary"
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
         />
@@ -197,10 +197,10 @@ export function SpecsStep({ draft, set }: StepProps) {
           rows={4}
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
-          className="rounded-sm border border-border-default bg-surface-card p-s3 text-body-sm outline-none placeholder:text-ink-500"
+          className="rounded-sm border border-border-default bg-surface-card p-s3 text-body-sm outline-none placeholder:text-text-tertiary"
           placeholder="Condition, what's included, site requirements, anything a hirer should know before requesting."
         />
-        <p className={`text-caption ${draft.description.trim().length >= 50 ? "text-ink-500" : "text-amber-900"}`}>
+        <p className={`text-caption ${draft.description.trim().length >= 50 ? "text-text-tertiary" : "text-amber-300"}`}>
           {draft.description.trim().length}/50 characters minimum
         </p>
       </div>
@@ -211,7 +211,7 @@ export function SpecsStep({ draft, set }: StepProps) {
         <>
           <div className="flex items-center justify-between rounded-sm bg-surface-sunken px-s3 py-s2">
             <span className="text-caption font-medium text-text-primary">{tier}</span>
-            <span className="text-caption text-ink-500">
+            <span className="text-caption text-text-tertiary">
               {filled}/{fields.length} specs{nextUnlock ? ` — ${nextUnlock}` : " — complete"}
             </span>
           </div>
@@ -232,7 +232,7 @@ export function SpecsStep({ draft, set }: StepProps) {
             ))}
           </div>
           {requiredMissing > 0 ? (
-            <p className="text-caption text-amber-900">
+            <p className="text-caption text-amber-300">
               {requiredMissing} required spec{requiredMissing > 1 ? "s" : ""} still empty — needed
               before this can go live.
             </p>
@@ -311,7 +311,7 @@ export function PricingStep({ draft, set }: StepProps) {
         />
       </div>
       {!draft.weekly_price && !draft.monthly_price ? (
-        <p className="text-caption text-ink-500">
+        <p className="text-caption text-text-tertiary">
           Set weekly and monthly rates to win longer hires — Terminal always charges the hirer the
           cheapest applicable scheme.
         </p>
@@ -324,7 +324,7 @@ export function PricingStep({ draft, set }: StepProps) {
           {naiveDaily !== null && preview.total < naiveDaily ? (
             <>
               <span className="text-text-secondary"> — beats </span>
-              <Money kobo={naiveDaily} className="font-normal text-ink-500 line-through" />
+              <Money kobo={naiveDaily} className="font-normal text-text-tertiary line-through" />
             </>
           ) : null}
           <span className="text-text-secondary">)</span>
@@ -352,7 +352,7 @@ export function PricingStep({ draft, set }: StepProps) {
           >
             +
           </button>
-          <span className="text-caption text-ink-500">
+          <span className="text-caption text-text-tertiary">
             identical machines hirers can book in parallel
           </span>
         </div>

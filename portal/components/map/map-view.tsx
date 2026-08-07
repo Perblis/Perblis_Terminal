@@ -50,16 +50,17 @@ export function MapView({
     });
     map.current = instance;
     // Interim "Terminal Chart" grade (06 §3) applied at runtime until the
-    // full style JSON lands in packages/tokens/map: paper-tinted land,
-    // desaturated water, ink roads, POI labels off at low zoom.
+    // full style JSON lands in packages/tokens/map. Dark grade only — the
+    // portal is dark-only since the Infisical port: ink-900 land, sunken
+    // water, POI labels off at low zoom.
     instance.on("load", () => {
       const style = instance.getStyle();
       for (const layer of style.layers ?? []) {
         try {
           if (layer.type === "background") {
-            instance.setPaintProperty(layer.id, "background-color", "#F7F7F5");
+            instance.setPaintProperty(layer.id, "background-color", "#19191C");
           } else if (layer.id.includes("water") && layer.type === "fill") {
-            instance.setPaintProperty(layer.id, "fill-color", "#C6D2D9");
+            instance.setPaintProperty(layer.id, "fill-color", "#141617");
           } else if (layer.type === "symbol" && layer.id.includes("poi")) {
             instance.setLayoutProperty(layer.id, "visibility", "none");
           }
@@ -100,7 +101,7 @@ export function MapView({
     if (!pin.current) {
       const el = document.createElement("div");
       // AssetPin-adjacent: ink ring + amber fill teardrop stand-in.
-      el.className = "size-s4 rounded-pill border-2 border-ink-900 bg-amber-500 shadow-e1";
+      el.className = "size-s4 rounded-pill border-2 border-border-structural bg-action-primary shadow-e1";
       pin.current = new Marker({ element: el, draggable: Boolean(onPickRef.current) })
         .setLngLat(safeMarker)
         .addTo(m);
