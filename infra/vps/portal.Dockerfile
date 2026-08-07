@@ -17,12 +17,14 @@ RUN pnpm install --frozen-lockfile --filter @terminal/portal... --ignore-scripts
 
 # ── build: tokens (tailwind preset) then the Next standalone bundle ─────
 FROM base AS build
+# tokens has zero runtime deps, so the deps stage creates no node_modules
+# dir for it — the glob keeps the COPY from failing on the absent path.
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/portal/node_modules ./portal/node_modules
-COPY --from=deps /repo/packages/tokens/node_modules ./packages/tokens/node_modules
+COPY --from=deps /repo/packages/tokens/node_module[s] ./packages/tokens/node_modules/
 COPY packages/tokens ./packages/tokens
 COPY portal ./portal
-RUN pnpm --filter @terminal/portal build
+RUN pnpm --filter @terminal/tokens build && pnpm --filter @terminal/portal build
 
 # ── runner: the standalone server only (no pnpm store, no sources) ──────
 FROM node:22-alpine AS runner
