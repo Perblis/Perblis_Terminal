@@ -1,4 +1,4 @@
-# Terminal — Hirer App (`@terminal/app`)
+# Terminal — Hirer App (`@terminal/mobile`)
 
 Expo SDK 57 · expo-router · NativeWind on `@terminal/tokens` · TanStack Query (MMKV-persisted) · Zustand. Wave 8 build brief: `docs/waves/wave-8.md`; binding look-and-feel: `docs/waves/wave-8-vision.md`.
 
@@ -6,7 +6,7 @@ Expo SDK 57 · expo-router · NativeWind on `@terminal/tokens` · TanStack Query
 
 ```bash
 pnpm install                       # repo root
-pnpm --filter @terminal/app dev    # Metro for the dev client (not Expo Go)
+pnpm --filter @terminal/mobile dev # Metro for the dev client (not Expo Go)
 ```
 
 **Expo Go cannot run this app** — MapLibre and MMKV are native modules. You need the **dev client** installed once per native-dependency change; day-to-day work is pure JS over it.
@@ -16,7 +16,7 @@ pnpm --filter @terminal/app dev    # Metro for the dev client (not Expo Go)
 Android (needs Android Studio/SDK + a connected device with USB debugging):
 
 ```bash
-cd app
+cd mobile
 pnpm exec expo run:android        # builds + installs the dev client, starts Metro
 ```
 
@@ -44,13 +44,13 @@ Devices apply it across **two cold launches**: launch #1 downloads in the backgr
 - `EXPO_PUBLIC_API_BASE_URL` — defaults to the natural-cat prod API (`https://api-production-101c8.up.railway.app`). Point it at `http://<your-lan-ip>:8000` for a local backend.
 - `EXPO_PUBLIC_SENTRY_DSN` — optional; keyless runs with Sentry inert.
 
-## Gates (same as CI — `.github/workflows/app.yml`)
+## Gates (same as CI — `.github/workflows/mobile.yml`)
 
 ```bash
-pnpm --filter @terminal/app lint
-pnpm --filter @terminal/app typecheck
-pnpm --filter @terminal/app test       # jest: fidelity table, api 401 discipline, D-014 walker
-pnpm --filter @terminal/app export     # Metro bundle-compile gate
+pnpm --filter @terminal/mobile lint
+pnpm --filter @terminal/mobile typecheck
+pnpm --filter @terminal/mobile test       # jest: fidelity table, api 401 discipline, D-014 walker
+pnpm --filter @terminal/mobile export     # Metro bundle-compile gate
 ```
 
 Tokens are rebuilt automatically by `pre*` hooks. Test conventions: screens render through `test/render.tsx`; hire-touching screens must pass `test/d014.ts`'s `expectNoFeeLeak`.

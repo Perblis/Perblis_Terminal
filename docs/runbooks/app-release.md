@@ -1,6 +1,6 @@
 # Runbook — Hirer App release (build · OTA · manual E2E)
 
-The repeatable release procedure for `@terminal/app` (Wave 8, TSD §6 distribution posture:
+The repeatable release procedure for `@terminal/mobile` (Wave 8, TSD §6 distribution posture:
 local Android builds → founder device, iOS via the EAS free tier, `expo-updates` OTA for
 JS-only changes). The manual E2E checklist at the bottom is the wave's mandatory release
 test — run it, on a physical device, before calling any release done.
@@ -46,7 +46,7 @@ do not bump `runtimeVersion` again for JS-only fixes.
 Android, local (the founder-device path — needs Android Studio SDK + USB debugging):
 
 ```bash
-cd app
+cd mobile
 pnpm exec expo run:android                         # dev client (day-to-day)
 pnpm exec expo run:android --variant release       # release build for the device demo
 ```
@@ -67,7 +67,7 @@ pnpm exec eas build --profile production --platform ios    # store-ready (channe
 ## 3. Shipping a slice (OTA — JS-only changes)
 
 **Automated (default path):** `.github/workflows/ota.yml` publishes to the `preview`
-branch on every merge to `main` that touches `app/**` or `packages/tokens/**` — the
+branch on every merge to `main` that touches `mobile/**` or `packages/tokens/**` — the
 installed preview APK picks the slice up with no manual step. One-time setup: create an
 access token at expo.dev (account → Access tokens) and add it as the **`EXPO_TOKEN`**
 repository secret on GitHub; until then the workflow fails loudly. Production-channel
@@ -78,8 +78,8 @@ channel to the same-named branch by default). The founder's preview APK is on ch
 **`preview`** — publishing to `production` never reaches it:
 
 ```bash
-cd app && pnpm exec eas update --branch preview --message "slice <name>"     # preview APKs
-cd app && pnpm exec eas update --branch production --message "slice <name>"  # production builds
+cd mobile && pnpm exec eas update --branch preview --message "slice <name>"     # preview APKs
+cd mobile && pnpm exec eas update --branch production --message "slice <name>"  # production builds
 ```
 
 Devices apply it across **two cold launches**: launch #1 downloads in the background
@@ -91,7 +91,7 @@ or native dependencies changed — and bump the static `runtimeVersion` when you
 
 For an update every user must take before continuing (S17 update-required gate):
 
-1. In `app/app.json`, bump `extra.updates.criticalIndex` by 1. Commit.
+1. In `mobile/app.json`, bump `extra.updates.criticalIndex` by 1. Commit.
 2. Publish as usual to the binary's branch: `pnpm exec eas update --branch preview --message "critical: <why>"` (or `--branch production` for production builds).
 
 Running apps download it in the background (launch + foregrounding, throttled to 15 min)

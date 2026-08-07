@@ -1,3 +1,22 @@
+<!-- vps-governance-stub -->
+## VPS agent entry point
+
+Canonical VPS-wide policy: `/root/projects/_governance/` (git repo — commit policy changes).
+Core rules load automatically in Claude Code and Cursor; this stub only points home.
+
+Before non-trivial work in this repo:
+
+```bash
+/root/projects/_governance/vps-preflight.sh
+```
+
+- Secrets: never hardcode, never print values. See `_governance/secrets-policy.md`.
+  Infisical is already running and linked — run `_governance/infisical-check.sh`, never reinstall.
+- Host facts (ports, containers, gotchas): `_governance/vps-vital-facts.md`
+
+This repository may add **stricter** requirements below, but may not weaken the VPS baseline.
+<!-- /vps-governance-stub -->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -77,7 +96,7 @@ PDF mirrors live in `docs/v2/pdf/`. `scripts/md2pdf.py` regenerates them.
 
 - **Backend:** Django 6.0.x + DRF 3.17 + simplejwt + drf-spectacular + rest_framework_gis · PostgreSQL 17 + PostGIS 3.5 · **django-tasks** (DB-broker tasks — no Redis, no Celery) · Railway hosting. Settings via django-environ (`settings/{base,dev,prod,test}.py`). Tooling: `uv`, `ruff` (lint+format), `pytest` + factory-boy + freezegun + hypothesis.
 - **Supplier Portal (`portal/`):** Next.js 15 App Router on Cloudflare Workers (@opennextjs/cloudflare), Tailwind + bespoke token-driven components (D-019/D-020 — shadcn/ui superseded), TanStack Query, BFF cookie auth, `pnpm`.
-- **Hirer app (`app/`):** Expo RN + TypeScript + expo-router, NativeWind, SecureStore, TanStack Query + Zustand, `pnpm`.
+- **Hirer app (`mobile/`):** Expo RN + TypeScript + expo-router, NativeWind, SecureStore, TanStack Query + Zustand, `pnpm`.
 - **Maps:** MapLibre GL + OpenFreeMap tiles + LocationIQ geocoding (via backend proxy). **Never embed Mapbox or Google Maps SDKs.**
 - **Services:** Paystack (collect-only) · Ably (realtime) · Termii (OTP) · Resend (email) · Cloudflare R2 (media) · Sentry.
 - **Budget guardrail:** total infra ≤ $25/month. Do not add paid services/tiers without founder approval.
@@ -98,8 +117,8 @@ ruff check . && ruff format .              # lint + format
 # portal
 cd portal && pnpm i && pnpm dev            # http://localhost:3000
 
-# app
-cd app && pnpm i && npx expo start         # Expo Go / dev client
+# mobile
+cd mobile && pnpm i && npx expo start      # Expo Go / dev client
 
 # tokens
 cd packages/tokens && pnpm build           # regenerates tailwind.tokens.js + tokens.ts

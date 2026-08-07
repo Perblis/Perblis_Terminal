@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import urllib.parse
@@ -11,7 +12,7 @@ import urllib.request
 from datetime import datetime, timezone
 from http.cookiejar import CookieJar
 
-BASE = "https://perblisterminal-production.up.railway.app"
+BASE = os.environ.get("API_BASE", "https://terminal-api.lab.perblis.com")
 ADMIN = f"{BASE}/admin"
 
 

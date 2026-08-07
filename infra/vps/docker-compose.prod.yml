@@ -1,0 +1,77 @@
+# Terminal production stack on this VPS (D-027 — supersedes the Railway +
+# Cloudflare Workers hosting in D-012; the $25/mo guardrail still binds).
+#
+# Everything binds loopback only — the host nginx ingress (vps-publish) proxies
+# 443 -> 127.0.0.1:8100 (api) and 127.0.0.1:8101 (portal). No container
+# publishes a public port (Docker bypasses ufw for published ports).
+#
+# Environment comes from /opt/terminal/.env (root:root 0600, exported from
+# Infisical prod — see infra/vps/.env.example). It is an absolute path so the
+# cron jobs can address this file from any cwd. DATABASE_URL there must point
+# at the db service below (postgis://<user>:<pass>@db:5432/<dbname>).
+name: terminal
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    restart: unless-stopped
+    env_file: [/opt/terminal/.env]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    mem_limit: 1g
+    mem_reservation: 256m
+    # No `ports:` — Postgres is reachable only on this compose network.
+
+  api:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: [/opt/terminal/.env]
+    ports:
+      - "127.0.0.1:8100:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    mem_limit: 768m
+    mem_reservation: 256m
+
+  worker:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: [/opt/terminal/.env]
+    command: ["python", "manage.py", "db_worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 384m
+    mem_reservation: 128m
+
+  portal:
+    build:
+      context: ../../
+      dockerfile: infra/vps/portal.Dockerfile
+    restart: unless-stopped
+    env_file: [/opt/terminal/.env]
+    ports:
+      - "127.0.0.1:8101:3000"
+    depends_on:
+      - api
+    mem_limit: 512m
+    mem_reservation: 128m
+
+volumes:
+  pgdata:

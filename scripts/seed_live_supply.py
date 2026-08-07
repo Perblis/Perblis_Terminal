@@ -25,7 +25,7 @@ import urllib.request
 from datetime import datetime, timezone
 from http.cookiejar import CookieJar
 
-BASE = os.environ.get("API_BASE", "https://api-production-101c8.up.railway.app")
+BASE = os.environ.get("API_BASE", "https://terminal-api.lab.perblis.com")
 API = f"{BASE}/api/v1"
 ADMIN = f"{BASE}/admin"
 

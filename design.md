@@ -47,7 +47,7 @@ Budget guardrail: total infra must stay ≤ $25/month — do not add paid servic
 ```
 backend/            Django (apps: core accounts suppliers listings search hires payments messaging ops)
 portal/             Next.js Supplier Portal (Workers)
-app/                Expo hirer app ("Terminal")
+mobile/             Expo hirer app ("Terminal")
 packages/tokens/    design tokens → tailwind.tokens.js + tokens.ts + glyphs/
 docs/               all specs; docs/runbooks/ operational procedures
 docker-compose.yml  dev: postgis + mailpit
@@ -85,8 +85,8 @@ cd backend && uv sync                      # or pip install -e .
 pytest -x                                  # tests; pytest --cov for gates
 # portal
 cd portal && pnpm i && pnpm dev            # http://localhost:3000
-# app
-cd app && pnpm i && npx expo start         # Expo Go / dev client
+# mobile
+cd mobile && pnpm i && npx expo start      # Expo Go / dev client
 # tokens
 cd packages/tokens && pnpm build           # regenerates tailwind.tokens.js + tokens.ts
 ```

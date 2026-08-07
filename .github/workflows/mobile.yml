@@ -1,17 +1,17 @@
-name: app
+name: mobile
 
 on:
   push:
     branches: [main]
     paths:
-      - "app/**"
+      - "mobile/**"
       - "packages/tokens/**"
-      - ".github/workflows/app.yml"
+      - ".github/workflows/mobile.yml"
   pull_request:
     paths:
-      - "app/**"
+      - "mobile/**"
       - "packages/tokens/**"
-      - ".github/workflows/app.yml"
+      - ".github/workflows/mobile.yml"
 
 jobs:
   build:
@@ -35,16 +35,16 @@ jobs:
         run: pnpm --filter @terminal/tokens build
 
       - name: Lint
-        run: pnpm --filter @terminal/app lint
+        run: pnpm --filter @terminal/mobile lint
 
       - name: Typecheck
-        run: pnpm --filter @terminal/app typecheck
+        run: pnpm --filter @terminal/mobile typecheck
 
       - name: Test (jest — D-014 leak gate, hirer state-machine fidelity, api client)
-        run: pnpm --filter @terminal/app test
+        run: pnpm --filter @terminal/mobile test
 
       # No native builds in CI (founder machine / EAS per TSD §6). The export
       # compiles the full Metro bundle — catches NativeWind/resolution breakage
       # that tsc and jest cannot.
       - name: Bundle-compile gate (expo export)
-        run: pnpm --filter @terminal/app export
+        run: pnpm --filter @terminal/mobile export

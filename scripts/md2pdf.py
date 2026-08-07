@@ -4,7 +4,7 @@ from pathlib import Path
 
 from markdown_pdf import MarkdownPdf, Section
 
-ROOT = Path(r"D:\Projects\Terminal")
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "v2" / "pdf"
 
 # Segoe UI covers ₦ (U+20A6); fall back handled by PyMuPDF if needed.

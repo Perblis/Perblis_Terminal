@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 
-BASE = "https://perblisterminal-production.up.railway.app"
+BASE = os.environ.get("API_BASE", "https://terminal-api.lab.perblis.com")
 API = f"{BASE}/api/v1"
 
 

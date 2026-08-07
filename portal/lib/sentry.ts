@@ -1,8 +1,8 @@
 "use client";
 
 // Sentry, keyless-degraded (TSD §9): no DSN → no-op. Client-side only — the
-// Worker side relies on Cloudflare observability (wrangler.toml) + error
-// digests until a Workers-native Sentry transport is warranted.
+// server side (self-hosted Node, D-027) relies on container logs + error
+// digests until a server-native Sentry transport is warranted.
 import * as Sentry from "@sentry/browser";
 
 let initialized = false;

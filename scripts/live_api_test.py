@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 
-BASE = "https://perblisterminal-production.up.railway.app"
+BASE = os.environ.get("API_BASE", "https://terminal-api.lab.perblis.com")
 API = f"{BASE}/api/v1"
 
 ASSET_SAMPLES = [

@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────────────────────────
 # Terminal monorepo .gitignore
-# backend/ (Django) · portal/ (Next.js/Cloudflare Workers) · app/ (Expo RN)
+# backend/ (Django) · portal/ (Next.js) · mobile/ (Expo RN)
 # ──────────────────────────────────────────────────────────────────
 
 # ── Python / Django ──────────────────────────────────────────────
@@ -42,16 +42,16 @@ portal/.vercel/
 portal/.cloudflare/
 portal/.wrangler/
 
-# ── Expo / React Native (app/) ───────────────────────────────────
-app/.expo/
-app/dist/
-app/android/
-app/ios/
-app/*.jks
-app/*.keystore
-app/*.p8
-app/*.p12
-app/*.mobileprovision
+# ── Expo / React Native (mobile/) ────────────────────────────────
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+mobile/*.jks
+mobile/*.keystore
+mobile/*.p8
+mobile/*.p12
+mobile/*.mobileprovision
 
 # ── Build artefacts ──────────────────────────────────────────────
 *.tsbuildinfo
