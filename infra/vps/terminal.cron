@@ -1,0 +1,19 @@
+# Terminal periodic tasks (D-027) — installed to /etc/cron.d/terminal by
+# infra/vps/deploy.sh. django-tasks uses Postgres as the broker, so jobs
+# enqueued from the api container are executed by the worker service.
+SHELL=/bin/sh
+COMPOSE=docker compose --project-directory /opt/terminal/repo/infra/vps -f /opt/terminal/repo/infra/vps/docker-compose.prod.yml
+
+# Hire sweeps (payment-window expiry, auto-cancel, reminders) — every 5 min.
+*/5 * * * * root $COMPOSE exec -T api python manage.py run_hire_sweeps >> /var/log/terminal-cron.log 2>&1
+# Daily: payout/reconciliation report.
+17 3 * * * root $COMPOSE exec -T api python manage.py run_daily_reconciliation >> /var/log/terminal-cron.log 2>&1
+# Daily: handover-photo purge (D-026, 90 days after off-hire).
+27 3 * * * root $COMPOSE exec -T api python manage.py run_handover_photo_purge >> /var/log/terminal-cron.log 2>&1
+# Daily: NDPR soft-delete purge — no management-command wrapper exists, so
+# enqueue the task via shell (a wrapper command is a known follow-up).
+47 3 * * * root $COMPOSE exec -T api python manage.py shell -c "from accounts.tasks import purge_soft_deleted_accounts; purge_soft_deleted_accounts.enqueue()" >> /var/log/terminal-cron.log 2>&1
+# Weekly founder digest — Mondays 04:37.
+37 4 * * 1 root $COMPOSE exec -T api python manage.py run_weekly_digest >> /var/log/terminal-cron.log 2>&1
+# Nightly DB backup, 14-day retention (replaces Railway's implicit backups).
+37 2 * * * root mkdir -p /var/backups/terminal && $COMPOSE exec -T db pg_dump -U terminal terminal | gzip > /var/backups/terminal/terminal-$(date +\%F).sql.gz && find /var/backups/terminal -name 'terminal-*.sql.gz' -mtime +14 -delete
