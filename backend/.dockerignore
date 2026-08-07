@@ -1,0 +1,11 @@
+# Backend image context (infra/vps/docker-compose.prod.yml builds backend/).
+.git
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+staticfiles/
+htmlcov/

@@ -1,0 +1,19 @@
+# Docker build-context trims. The root context is used by
+# infra/vps/portal.Dockerfile (portal + packages/tokens only); the backend
+# image builds with backend/ as its own context (see backend/.dockerignore).
+.git
+node_modules
+**/node_modules
+**/.next
+**/.open-next
+**/.wrangler
+**/.expo
+**/dist-export
+**/test-results
+**/*.tsbuildinfo
+backend/
+mobile/
+docs/
+scripts/
+.github/
+infra/
