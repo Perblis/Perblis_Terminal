@@ -10,7 +10,10 @@ FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/tokens/package.json packages/tokens/
 COPY portal/package.json portal/
-RUN pnpm install --frozen-lockfile --filter @terminal/portal...
+# --ignore-scripts: the tokens package's prepare hook runs `tsx build.ts`,
+# but at this stage only manifests are copied (no sources) — the build stage
+# below builds tokens explicitly after COPYing the sources.
+RUN pnpm install --frozen-lockfile --filter @terminal/portal... --ignore-scripts
 
 # ── build: tokens (tailwind preset) then the Next standalone bundle ─────
 FROM base AS build
