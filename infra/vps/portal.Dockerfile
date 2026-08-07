@@ -21,21 +21,24 @@ RUN pnpm install --frozen-lockfile --filter @terminal/portal... --ignore-scripts
 
 # ── build: tokens (tailwind preset) then the Next standalone bundle ─────
 FROM base AS build
-# tokens has zero runtime deps, so the deps stage creates no node_modules
-# dir for it — the glob keeps the COPY from failing on the absent path.
+COPY package.json ./
+RUN corepack prepare --activate
+# Workspace manifests + lockfile let pnpm resolve filters from /repo root.
+COPY --from=deps /repo/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /repo/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /repo/package.json ./package.json
+COPY --from=deps /repo/packages/tokens/package.json ./packages/tokens/package.json
+COPY --from=deps /repo/portal/package.json ./portal/package.json
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/portal/node_modules ./portal/node_modules
 COPY --from=deps /repo/packages/tokens/node_module[s] ./packages/tokens/node_modules/
-# The corepack cache carries the pinned pnpm across stages, so `pnpm run`
-# here resolves offline; run-script has no --offline flag, the deps-status
-# check just reads the (unchanged) lockfile against the copied store.
-COPY --from=deps /root/.cache/node/corepack /root/.cache/node/corepack
 COPY packages/tokens ./packages/tokens
 COPY portal ./portal
 # Filtered install hoists dev-tool bins (tsx) to /repo/node_modules/.bin, but
 # @terminal/tokens has no local node_modules — add the root .bin to PATH.
 ENV PATH="/repo/node_modules/.bin:${PATH}"
-RUN pnpm --filter @terminal/portal build
+RUN pnpm --filter @terminal/tokens build \
+ && cd portal && next build
 
 # ── runner: the standalone server only (no pnpm store, no sources) ──────
 FROM node:22-alpine AS runner
