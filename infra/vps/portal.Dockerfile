@@ -7,9 +7,10 @@ WORKDIR /repo
 
 # ── deps: portal + its workspace deps from the frozen lockfile ──────────
 FROM base AS deps
-# Pin pnpm before any manifest exists: corepack would otherwise resolve the
-# "packageManager" field at RUN time (network) or fall back to latest.
-RUN corepack prepare pnpm@10.33.0 --activate
+# Match the packageManager pin (corepack prepares it in this stage; the
+# build stage then resolves the same version offline from the cache).
+COPY package.json ./
+RUN corepack prepare --activate
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/tokens/package.json packages/tokens/
 COPY portal/package.json portal/
@@ -25,11 +26,13 @@ FROM base AS build
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/portal/node_modules ./portal/node_modules
 COPY --from=deps /repo/packages/tokens/node_module[s] ./packages/tokens/node_modules/
-# Manifests come from the deps stage unchanged; --offline stops pnpm's
-# pre-run deps-status check from reaching for the registry.
+# The corepack cache carries the pinned pnpm across stages, so `pnpm run`
+# here resolves offline; run-script has no --offline flag, the deps-status
+# check just reads the (unchanged) lockfile against the copied store.
+COPY --from=deps /root/.cache/node/corepack /root/.cache/node/corepack
 COPY packages/tokens ./packages/tokens
 COPY portal ./portal
-RUN pnpm --offline --filter @terminal/tokens build && pnpm --offline --filter @terminal/portal build
+RUN pnpm --filter @terminal/tokens build && pnpm --filter @terminal/portal build
 
 # ── runner: the standalone server only (no pnpm store, no sources) ──────
 FROM node:22-alpine AS runner
