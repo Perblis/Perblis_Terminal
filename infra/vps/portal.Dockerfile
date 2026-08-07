@@ -32,7 +32,10 @@ COPY --from=deps /repo/packages/tokens/node_module[s] ./packages/tokens/node_mod
 COPY --from=deps /root/.cache/node/corepack /root/.cache/node/corepack
 COPY packages/tokens ./packages/tokens
 COPY portal ./portal
-RUN pnpm --filter @terminal/tokens build && pnpm --filter @terminal/portal build
+# Filtered install hoists dev-tool bins (tsx) to /repo/node_modules/.bin, but
+# @terminal/tokens has no local node_modules — add the root .bin to PATH.
+ENV PATH="/repo/node_modules/.bin:${PATH}"
+RUN pnpm --filter @terminal/portal build
 
 # ── runner: the standalone server only (no pnpm store, no sources) ──────
 FROM node:22-alpine AS runner
