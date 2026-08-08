@@ -3,14 +3,18 @@
 // Mirrors portal/lib/server/proxy.ts semantics client-side.
 import * as SecureStore from "expo-secure-store";
 
+// Defaults are the D-027 self-hosted VPS stack. They are baked into every
+// OTA bundle (`ota.yml` sets no EXPO_PUBLIC_* env), so a stale default here
+// ships a working update that points the app at a dead host — the Railway
+// originals returned 404 from the cutover onward.
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://api-production-101c8.up.railway.app";
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://terminal-api.lab.perblis.com";
 
 export const API_V1 = `${API_BASE_URL}/api/v1`;
 
 /** Supplier portal (F8 hand-off) — the app never implements supplier tools. */
 export const PORTAL_URL =
-  process.env.EXPO_PUBLIC_PORTAL_URL ?? "https://terminal-portal.nwabueze.workers.dev";
+  process.env.EXPO_PUBLIC_PORTAL_URL ?? "https://terminal.lab.perblis.com";
 
 const ACCESS_KEY = "terminal.access";
 const REFRESH_KEY = "terminal.refresh";

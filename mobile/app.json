@@ -11,7 +11,10 @@
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/a2177bd7-0417-4823-9c4a-fe70ab11d07e"
+      "url": "https://u.expo.dev/a2177bd7-0417-4823-9c4a-fe70ab11d07e",
+      "requestHeaders": {
+        "expo-channel-name": "preview"
+      }
     },
     "extra": {
       "updates": {

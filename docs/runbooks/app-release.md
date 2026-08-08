@@ -41,6 +41,37 @@ no channel header) can never receive OTA and must be replaced by this build. The
 `react-native-keyboard-controller` native module (PR #53) is baked into the `"1"` baseline —
 do not bump `runtimeVersion` again for JS-only fixes.
 
+### The three-way match (2026-08-08 re-diagnosis)
+
+A binary receives an update only when **all three** of these agree with the published update:
+
+1. **`runtimeVersion`** — `"1"`. A mismatch is a silent `204 No Content`, forever.
+2. **channel** — `preview`. EAS builds inject it from the profile; local builds get it from
+   `updates.requestHeaders["expo-channel-name"]` in `app.json` (added 2026-08-08). A binary
+   built before that commit *without* an EAS profile sends no channel header and gets `400`.
+3. **Expo project** — `@perble/terminal` / `a2177bd7-0417-4823-9c4a-fe70ab11d07e`. The
+   repoint from `@perblis-organization` landed 2026-07-13 (`b499d19`); binaries built
+   before it poll a different project entirely.
+
+The last recorded EAS preview APK was built at `1dc5ddd` (2026-07-10) — runtimeVersion
+`"0.1.1"`, old project. It fails (1) and (3), which is why no OTA has ever landed on the
+founder device even though publishing has been green since 2026-07-13.
+
+**Verify the publish side without a device** — query the update server exactly as the app
+does (no auth needed; `200` = an update is waiting, `204` = nothing for that runtime,
+`404` = no such channel, `400` = missing headers):
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'expo-platform: android' -H 'expo-runtime-version: 1' \
+  -H 'expo-channel-name: preview' -H 'expo-protocol-version: 1' \
+  -H 'accept: multipart/mixed, application/expo+json, application/json' \
+  https://u.expo.dev/a2177bd7-0417-4823-9c4a-fe70ab11d07e
+```
+
+**Verify the device side:** `pnpm exec eas build:list --platform android --limit 5` and read
+the `Runtime version` + `Channel` of the build that is actually installed.
+
 ## 2. Builds
 
 Android, local (the founder-device path — needs Android Studio SDK + USB debugging):
@@ -51,10 +82,25 @@ pnpm exec expo run:android                         # dev client (day-to-day)
 pnpm exec expo run:android --variant release       # release build for the device demo
 ```
 
-**Locally-built binaries receive no OTA** — `app.json` carries no
-`updates.requestHeaders["expo-channel-name"]`, so only EAS builds (which inject their
-profile's channel) poll a branch. Use the EAS preview/production profiles for any binary
-that must take updates.
+**Local builds now DO receive OTA (2026-08-08).** `app.json` carries
+`updates.requestHeaders["expo-channel-name"]: "preview"` — the documented way to set a
+channel on a non-EAS build in a CNG project. A local `--variant release` APK polls the
+`preview` channel exactly like an EAS preview build, so the whole binary path can run
+without an Expo account: **you build locally, CI publishes.** (Before this, local builds
+sent no channel header and the server answered `400`.)
+
+Requirements and caveats for the local path:
+
+- Android SDK + JDK on the build machine. **No `eas login` and no `EXPO_TOKEN`** —
+  `expo run:android` is plain prebuild + Gradle. Note `eas build --local` is *not* this:
+  it still authenticates to resolve the project slug and pull credentials.
+- **Signing differs from EAS**, so Android refuses an in-place upgrade over an
+  EAS-built APK. Uninstall the old app first — that clears SecureStore tokens and the
+  MMKV cache, so you sign in fresh.
+- If you later switch back to EAS Build, its profile `channel` is what gets applied.
+  Verify which wins before running a mixed workflow.
+- Publishing still needs auth, but that lives in CI (`EXPO_TOKEN` repo secret) — not on
+  your machine.
 
 iOS + EAS builds (free tier):
 
@@ -68,10 +114,11 @@ pnpm exec eas build --profile production --platform ios    # store-ready (channe
 
 **Automated (default path):** `.github/workflows/ota.yml` publishes to the `preview`
 branch on every merge to `main` that touches `mobile/**` or `packages/tokens/**` — the
-installed preview APK picks the slice up with no manual step. One-time setup: create an
-access token at expo.dev (account → Access tokens) and add it as the **`EXPO_TOKEN`**
-repository secret on GitHub; until then the workflow fails loudly. Production-channel
-publishes stay deliberate and manual (below), not tied to merges.
+installed preview APK picks the slice up with no manual step. The **`EXPO_TOKEN`** repository
+secret this needs was added 2026-07-13 and the job has been green on every push since — it is
+the only place an Expo credential is required, which is what frees the local build path from
+needing one. Production-channel publishes stay deliberate and manual (below), not tied to
+merges.
 
 **Manual:** publish **to the branch matching the installed binary's channel** (EAS maps a
 channel to the same-named branch by default). The founder's preview APK is on channel
@@ -149,3 +196,37 @@ test keys. This is the wave-8 exit-criterion script — run it verbatim, stopwat
     Back to Map.
 
 Any step failing = not releasable; file it in `Implementations.md` and fix before OTA.
+
+## 6. Self-hosting the update server (evaluated 2026-08-08 — NOT adopted)
+
+`expo-updates` speaks an open protocol ([Expo Updates v1](https://docs.expo.dev/technical-specs/expo-updates-1/)),
+so `updates.url` can point at any conformant server — including one on the VPS behind the
+existing nginx ingress, which is consistent with the D-027 self-hosting direction. Expo
+publishes a reference implementation ([`expo/custom-expo-updates-server`](https://github.com/expo/custom-expo-updates-server))
+and there are production-grade OSS servers (e.g. `expo-open-ota`).
+
+**What it would take:** serve `/manifest` and `/assets` per the spec, keyed on the
+`expo-platform` / `expo-runtime-version` / `expo-channel-name` headers; run `expo export`
+yourself and store the bundles; implement channel→release routing (channels are an EAS
+concept, so the routing logic becomes yours); optionally implement code signing
+(`expo-expect-signature` / `expo-signature`). `.github/workflows/ota.yml` would be rewritten
+from `eas update` to export-and-upload, and rollbacks/rollouts would be hand-rolled.
+
+**Why not now:**
+
+- It fixes nothing currently broken. The 2026-08-08 diagnosis proved publishing is green
+  and the server healthy; the only defect was a stale binary. Self-hosting would swap a
+  working component for one we'd have to build and operate.
+- `updates.url` is **native config** — changing it later means yet another baseline
+  rebuild + reinstall. Doing it now to avoid that is the only real argument for it, and it
+  is weaker than the operational cost.
+- EAS Update's free tier already covers this project's volume at $0, so it does not press
+  on the ≤$25/month guardrail. Serving 6.6 MB bundles + ~84 assets per release from the VPS
+  moves that bandwidth onto our own box for no gain.
+- It adds a service to keep alive on the critical path of shipping fixes to devices. If it
+  is down, we cannot ship — where today an outage is Expo's problem.
+
+**Revisit if** any of these change: EAS Update pricing stops covering our volume, a
+compliance requirement forbids third-party update hosting, or we need routing/rollout logic
+EAS cannot express. Until then this is a deliberate no, not an oversight — do not
+re-litigate it in code.
