@@ -204,6 +204,22 @@ def public_url(key: str) -> str:
     return reverse("api:media-public") + f"?key={key}"
 
 
+def public_presign_get(key: str, ttl: int | None = None) -> str | None:
+    """A short-lived direct-download URL for a public-bucket object.
+
+    Lets the media proxy hand the client straight to R2's edge instead of
+    streaming hundreds of kilobytes through a gunicorn worker (there are only
+    three). Returns ``None`` in local mode, where the proxy serves from disk.
+    """
+    if not _public_is_r2():
+        return None
+    return _r2_client().generate_presigned_url(
+        "get_object",
+        Params={"Bucket": settings.R2_PUBLIC_BUCKET, "Key": key},
+        ExpiresIn=ttl or settings.R2_PRESIGN_TTL,
+    )
+
+
 def delete_public_file(key: str) -> None:
     """Remove a public-bucket object; a missing key is a no-op (idempotent)."""
     if _public_is_r2():
