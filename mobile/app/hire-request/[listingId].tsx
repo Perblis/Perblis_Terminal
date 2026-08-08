@@ -143,7 +143,7 @@ export default function HireRequest() {
     <KeyboardAvoidingView className="flex-1 bg-surface-page" behavior="padding">
       {/* Step header */}
       <View
-        className="flex-row items-center gap-3 border-b border-border bg-surface-card px-4 pb-3"
+        className="flex-row items-center gap-3 border-b border-border-default bg-surface-card px-4 pb-3"
         style={{ paddingTop: insets.top + 8 }}
       >
         <Pressable
@@ -202,7 +202,7 @@ export default function HireRequest() {
 
             {/* Manifest — the total here is a CLIENT ESTIMATE; the server
                 figure renders after submit (no quote endpoint exists). */}
-            <View className="gap-2.5 rounded-lg border border-border bg-surface-card p-4">
+            <View className="gap-2.5 rounded-lg border border-border-default bg-surface-card p-4">
               <View className="flex-row justify-between">
                 <BodyText className="text-text-secondary">Dates</BodyText>
                 <MonoText className="text-body-sm">
@@ -215,7 +215,7 @@ export default function HireRequest() {
                 <BodyText className="text-text-secondary">Rate</BodyText>
                 <MonoText className="text-body-sm">{estimate?.durationLine ?? "—"}</MonoText>
               </View>
-              <View className="mt-1 flex-row items-baseline justify-between border-t border-border pt-2.5">
+              <View className="mt-1 flex-row items-baseline justify-between border-t border-border-default pt-2.5">
                 <BodyText className="font-sans-semibold">Estimated total</BodyText>
                 <MonoText className="text-mono-lg">{estimate?.totalDisplayEstimate ?? "—"}</MonoText>
               </View>
@@ -234,7 +234,7 @@ export default function HireRequest() {
             />
 
             {requiresAck ? (
-              <View className="flex-row items-center gap-3 rounded-lg border border-border bg-surface-sunken p-3">
+              <View className="flex-row items-center gap-3 rounded-lg border border-border-default bg-surface-sunken p-3">
                 <Switch
                   accessibilityLabel="Acknowledge operator responsibility"
                   value={acknowledged}

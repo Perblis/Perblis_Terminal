@@ -8,12 +8,10 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Dimensions, FlatList, Pressable, View, type ViewToken } from "react-native";
 
-import { tokens } from "@terminal/tokens";
-
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { splitListingTitle } from "../../lib/listing-title";
 import { resolveMediaUrl } from "../../lib/media";
 import type { MapSoloListing, MapYard } from "../../lib/types";
-import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
 import { availabilityCaption } from "./pins";
 import type { MapSelection } from "./terminal-map";
@@ -237,8 +235,11 @@ function CarouselCard({
           : `Listing: ${item.listing.title}`
       }
       onPress={onPress}
-      className={`flex-row items-center gap-3 rounded-lg border bg-surface-card p-3 shadow-lg ${
-        active ? "border-surface-brand" : "border-border"
+      // Only the ACTIVE card is outlined — an inactive card sitting on the
+      // darkened chart reads perfectly well on surface + elevation alone, and
+      // outlining every card was a row of competing frames (§11 de-boxing).
+      className={`flex-row items-center gap-3 rounded-lg bg-surface-card p-3 shadow-lg ${
+        active ? "border border-surface-brand" : "border border-transparent"
       }`}
       style={{ width }}
     >
@@ -248,6 +249,7 @@ function CarouselCard({
 }
 
 function ListingCardBody({ listing }: { listing: MapSoloListing }) {
+  const { name, qualifier } = splitListingTitle(listing.title);
   return (
     <>
       {listing.photo ? (
@@ -265,22 +267,32 @@ function ListingCardBody({ listing }: { listing: MapSoloListing }) {
         </View>
       )}
       <View className="flex-1">
-        <DisplayText className="text-h3" numberOfLines={1}>
-          {listing.title}
-        </DisplayText>
-        <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
-          {CLASS_BY_VALUE[listing.asset_class].label} · {listing.distance_km} km ·{" "}
-          {availabilityCaption(listing)}
+        <BodyText className="font-sans-medium" numberOfLines={1}>
+          {name}
         </BodyText>
-        <View className="mt-0.5 flex-row items-baseline gap-1">
+        <BodyText className="text-caption text-text-tertiary" numberOfLines={1}>
+          {qualifier ?? CLASS_BY_VALUE[listing.asset_class].label} · {listing.distance_km} km
+        </BodyText>
+        <View className="mt-0.5 flex-row items-baseline gap-1.5">
           <Money display={listing.price_from_display} />
-          <BodyText className="text-caption text-text-tertiary">/ day from</BodyText>
+          <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
+          <BodyText
+            className={`text-caption ${listing.available ? "text-green-400" : "text-text-tertiary"}`}
+          >
+            · {availabilityCaption(listing)}
+          </BodyText>
         </View>
       </View>
     </>
   );
 }
 
+/**
+ * Rail card for a yard — deliberately the SAME identity anatomy as the sheet's
+ * peek header (bay → company → counts → from-price), so raising the sheet
+ * feels like the same object growing rather than a second card appearing.
+ * The three class glyphs are gone: a third taxonomy layer on a 54pt card.
+ */
 function YardCardBody({ yard }: { yard: MapYard }) {
   const initials = yard.supplier.name
     .split(/\s+/)
@@ -308,23 +320,22 @@ function YardCardBody({ yard }: { yard: MapYard }) {
         <DisplayText className="text-h3" numberOfLines={1}>
           {yard.name}
         </DisplayText>
-        <View className="flex-row items-center gap-1.5">
-          <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
-            {yard.listing_count} assets · {availableCount} available
+        <BodyText className="text-caption text-text-secondary" numberOfLines={1}>
+          {yard.supplier.name}
+        </BodyText>
+        <View className="flex-row items-baseline gap-1">
+          <BodyText className="text-caption text-text-tertiary">
+            {yard.listing_count} assets ·
           </BodyText>
-          <View className="flex-row items-center gap-1">
-            {yard.class_mix.slice(0, 3).map((c) => {
-              const Glyph = CLASS_GLYPHS[c];
-              return <Glyph key={c} size={11} color={tokens.color.colorInk700} />;
-            })}
-          </View>
+          <BodyText className="text-caption text-green-400">{availableCount} available</BodyText>
         </View>
         <View className="mt-0.5 flex-row items-baseline gap-1">
+          <BodyText className="text-caption text-text-tertiary">From</BodyText>
           <Money display={yard.price_from_display} />
-          <BodyText className="text-caption text-text-tertiary">/ day from</BodyText>
+          <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
         </View>
       </View>
-      <BodyText className="text-text-link">Assets →</BodyText>
+      <BodyText className="text-body-sm text-text-link">View assets ↑</BodyText>
     </>
   );
 }

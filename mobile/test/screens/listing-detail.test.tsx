@@ -62,11 +62,27 @@ beforeEach(() => {
 
 test("S6 renders the showroom with no fee vocabulary (D-014)", async () => {
   const screen = await renderScreen(<ListingDetail />);
-  await screen.findByText("CAT 320D — 20t Excavator");
+  // 2026-08-08: the title splits — asset name as the heading, purpose beneath.
+  await screen.findByText("CAT 320D");
+  expect(screen.getByText("20t Excavator")).toBeTruthy();
   expect(screen.getByText("₦450,000")).toBeTruthy();
   expect(await screen.findByText("Operating weight")).toBeTruthy();
   expect(screen.getByText("20 t")).toBeTruthy();
   expect(screen.getByText("Request to hire")).toBeTruthy();
+  expectNoFeeLeak(collectStrings(screen.toJSON() as never));
+});
+
+test("the sticky CTAs distinguish themselves — price on the primary, intent on the secondary", async () => {
+  const screen = await renderScreen(<ListingDetail />);
+  await screen.findByText("CAT 320D");
+  // The label stays queryable on its own; the price rides as a second node.
+  expect(screen.getByText("Request to hire")).toBeTruthy();
+  // The DAY rate, not the weekly — the CTA quotes what one day costs.
+  expect(screen.getByText("₦90,000 / day")).toBeTruthy();
+  // "Enquire" is the Lexicon's term (02 §Enquiry) — the caption explains it
+  // rather than renaming it.
+  expect(screen.getByText("Enquire")).toBeTruthy();
+  expect(screen.getByText("Ask a question first")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
 });
 

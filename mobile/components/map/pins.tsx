@@ -11,70 +11,85 @@
 //
 // Price-first revision (founder, 2026-07-13): every plate leads with the
 // from-price — the one datum a hirer decides on — matching the map-
-// marketplace convention (Airbnb/Zillow price pills). Compact yard plates
-// show price | count instead of initials | count (two-letter initials read
-// as class codes and collide across suppliers); identity stays on the
-// detailed/selected plate. The verification tick renders only there too,
-// as a circular seal — a floating rounded square on every compact pin read
-// as a field of checkboxes.
+// marketplace convention (Airbnb/Zillow price pills).
+//
+// Discovery-layer revision (founder, 2026-08-08): "the selected marker
+// duplicates information shown in the bottom card." It did, literally: the
+// detailed yard plate (logo/initials │ count │ ≤3 class glyphs, over a
+// `from ₦68k` row, plus the verification seal) only ever rendered on the
+// SELECTED pin — i.e. exactly when the bottom sheet below it was already
+// showing the same company, the same count and the same price. So the
+// detailed plate is gone. ONE anatomy now, selected or not:
+//
+//     ₦68k │ 5          price primary (paper), count secondary (ink-300)
+//
+// Selection is expressed by the frame alone — brand border + elevation, same
+// size, same layout, so a selected pin never grows or re-anchors under the
+// finger. Identity (logo, company name, verification tick) belongs to the
+// sheet, which is the only place it is now drawn. Everything the plate stopped
+// drawing survives verbatim in the accessibility label.
+//
+// Brand correction (D-028): selection/emphasis is `primary.500` acid lime, the
+// brand. `amber.500` became the WARNING hue when the palette was ported from
+// Infisical — these plates had been painting the map's most important state in
+// the warning colour ever since.
 import { View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { tokens } from "@terminal/tokens";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
-import { resolveMediaUrl } from "../../lib/media";
 import { compactNaira } from "../../lib/naira";
 import { useThemeTokens } from "../../lib/theme";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import type { MapYard, MapSoloListing } from "../../lib/types";
 import { MonoText, BodyText } from "../ui/text";
-import { RemoteImage } from "../ui/remote-image";
 
 const INK = tokens.color.colorInk900;
 const INK_RULE = tokens.color.colorInk700;
 const PLATE_BORDER = tokens.color.colorInk400;
-const AMBER = tokens.color.colorAmber500;
+/** Brand = acid lime (D-028). NOT amber — amber is the warning hue. */
+const BRAND = tokens.color.colorPrimary500;
 const PAPER = tokens.color.colorPaper0;
+const COUNT = tokens.color.colorInk300;
 
-/** Shared plate frame: ink field, hairline border, amber when selected. */
+/** Shared plate frame: ink field, hairline border, brand + lift when selected. */
 function plateFrame(selected: boolean) {
   return {
     backgroundColor: INK,
     borderRadius: 4,
     borderWidth: selected ? 2 : 1,
-    borderColor: selected ? AMBER : PLATE_BORDER,
+    borderColor: selected ? BRAND : PLATE_BORDER,
+    // e-1 (08 §elevation) — overlay lift, the only thing that changes on select
+    // besides the border. No scale, so the plate never jumps under the finger.
+    ...(selected
+      ? { shadowColor: "#000000", shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4 }
+      : null),
   } as const;
 }
 
 /**
- * Solo asset plate: ink tag with the class-coloured edge strip, paper glyph,
- * and the compact from-price — price stays on the compact plate too (the pin
- * answers "what does this cost?" at a glance). On-hire listings dim to 45%
- * (like zero-match yards — informative, never removed). The class hue stays
- * an index mark, not the body of the pin (D-023).
+ * Solo asset plate: ink tag with the class-coloured edge strip and the compact
+ * from-price. The class glyph rides along only on the selected plate — on the
+ * 20-odd unselected pins in a viewport it was decoration competing with the one
+ * datum that decides a tap. On-hire listings dim to 45% (like zero-match yards
+ * — informative, never removed). The class hue stays an index mark, not the
+ * body of the pin (D-023).
  */
 export function AssetPin({
   listing,
   selected = false,
-  compact = false,
 }: {
   listing: MapSoloListing;
   selected?: boolean;
-  /** Carousel mode: the plate shrinks but keeps its price (the selected pin
-   *  keeps the full plate + amber border). */
-  compact?: boolean;
 }) {
   const t = useThemeTokens();
   const meta = CLASS_BY_VALUE[listing.asset_class];
   const strip = t[meta.varKey];
   const Glyph = CLASS_GLYPHS[listing.asset_class];
-  const small = compact && !selected;
-  const height = selected ? 28 : compact ? 22 : 24;
   return (
     <View
       accessibilityLabel={`${meta.label} listing: ${listing.title}, from ${listing.price_from_display} a day${listing.available ? "" : ", currently on hire"}`}
       style={{
-        height,
+        height: selected ? 28 : 24,
         flexDirection: "row",
         alignItems: "stretch",
         overflow: "hidden",
@@ -83,133 +98,70 @@ export function AssetPin({
       }}
     >
       <View style={{ width: 3, backgroundColor: strip }} />
-      <View style={{ justifyContent: "center", paddingLeft: 5 }}>
-        <Glyph size={small ? 11 : 13} color={PAPER} />
-      </View>
+      {selected ? (
+        <View style={{ justifyContent: "center", paddingLeft: 5 }}>
+          <Glyph size={13} color={PAPER} />
+        </View>
+      ) : null}
       {listing.price_from > 0 ? (
-        <View style={{ justifyContent: "center", paddingHorizontal: 5 }}>
-          <MonoText style={{ color: PAPER, fontSize: small ? 10 : 11 }}>
+        <View style={{ justifyContent: "center", paddingHorizontal: selected ? 5 : 6 }}>
+          <MonoText style={{ color: PAPER, fontSize: selected ? 12 : 11 }}>
             {compactNaira(listing.price_from)}
           </MonoText>
         </View>
       ) : (
-        <View style={{ width: 5 }} />
+        <View style={{ width: 6, justifyContent: "center", paddingRight: 6 }}>
+          {selected ? null : <Glyph size={11} color={PAPER} />}
+        </View>
       )}
     </View>
   );
 }
 
 /**
- * Yard plate. Compact (unselected on the map): price-first — paper from-
- * price, rule, count (matching_count when filtered); initials only when
- * there is no price. Detailed (selected / non-compact): logo/amber initials,
- * rule, count, rule, ≤3 paper class glyphs — over an amber from-price row —
- * with the circular verification seal on the corner. matching_count 0 ⇒
- * whole plate at 40%, never removed.
+ * Yard plate — one anatomy, always: `₦68k │ 5`. Price leads in paper mono
+ * (the datum that decides a tap), the count follows in ink-300 (how much is
+ * here), separated by a hairline rule. `matching_count` when filtered, so a
+ * class filter changes the number on the pin. Initials stand in only when the
+ * yard has no price at all.
+ *
+ * matching_count 0 ⇒ whole plate at 40%, never removed (FSD §6). Identity —
+ * logo, company name, verification — is the sheet's job, not the pin's.
  */
 export function YardPin({
   yard,
   filtered = false,
   selected = false,
-  compact = false,
 }: {
   yard: MapYard;
   filtered?: boolean;
   selected?: boolean;
-  /** Carousel mode: drop the price row and class glyphs — initials + count
-   *  only (the yard card carries the detail). */
-  compact?: boolean;
 }) {
   const dimmed = filtered && yard.matching_count === 0;
   const count = filtered ? yard.matching_count : yard.listing_count;
-  const showDetail = !compact || selected;
   const initials = yard.supplier.name
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
-  const glyphClasses = yard.class_mix.slice(0, 3);
   return (
     <View
       accessibilityLabel={`Yard: ${yard.name}, ${count} listings${yard.price_from > 0 ? `, from ${yard.price_from_display} a day` : ""}${yard.supplier.badge ? ", verified supplier" : ""}`}
       style={{ alignItems: "center", opacity: dimmed ? 0.4 : 1 }}
     >
       <View style={{ overflow: "hidden", ...plateFrame(selected) }}>
-        <View style={{ flexDirection: "row", alignItems: "stretch", height: showDetail ? 28 : 24 }}>
-          {showDetail ? (
-            yard.supplier.logo ? (
-              <RemoteImage uri={resolveMediaUrl(yard.supplier.logo)} style={{ width: 28, height: 28 }} />
-            ) : (
-              <View style={{ justifyContent: "center", paddingHorizontal: 7 }}>
-                <MonoText style={{ color: AMBER, fontSize: 13 }}>{initials}</MonoText>
-              </View>
-            )
-          ) : (
-            <View style={{ justifyContent: "center", paddingHorizontal: 6 }}>
-              <MonoText style={{ color: PAPER, fontSize: 11 }}>
-                {yard.price_from > 0 ? compactNaira(yard.price_from) : initials}
-              </MonoText>
-            </View>
-          )}
-          <View style={{ width: 1, backgroundColor: INK_RULE }} />
-          <View style={{ justifyContent: "center", paddingHorizontal: showDetail ? 7 : 6 }}>
-            <MonoText style={{ color: showDetail ? PAPER : tokens.color.colorInk300, fontSize: showDetail ? 13 : 11 }}>
-              {count}
+        <View style={{ flexDirection: "row", alignItems: "stretch", height: selected ? 28 : 24 }}>
+          <View style={{ justifyContent: "center", paddingHorizontal: 6 }}>
+            <MonoText style={{ color: PAPER, fontSize: selected ? 12 : 11 }}>
+              {yard.price_from > 0 ? compactNaira(yard.price_from) : initials}
             </MonoText>
           </View>
-          {showDetail && glyphClasses.length > 0 ? (
-            <>
-              <View style={{ width: 1, backgroundColor: INK_RULE }} />
-              <View
-                testID="yard-class-glyphs"
-                accessibilityLabel={`Offers ${glyphClasses.map((c) => CLASS_BY_VALUE[c].label).join(", ")}`}
-                style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6 }}
-              >
-                {glyphClasses.map((c) => {
-                  const ClassGlyph = CLASS_GLYPHS[c];
-                  return <ClassGlyph key={c} size={11} color={PAPER} />;
-                })}
-              </View>
-            </>
-          ) : null}
-        </View>
-        {showDetail && yard.price_from > 0 ? (
-          <View
-            style={{
-              borderTopWidth: 1,
-              borderTopColor: INK_RULE,
-              alignItems: "center",
-              paddingVertical: 2,
-              paddingHorizontal: 6,
-            }}
-          >
-            <MonoText style={{ color: AMBER, fontSize: 10 }}>from {compactNaira(yard.price_from)}</MonoText>
+          <View style={{ width: 1, backgroundColor: INK_RULE }} />
+          <View style={{ justifyContent: "center", paddingHorizontal: 6 }}>
+            <MonoText style={{ color: COUNT, fontSize: selected ? 12 : 11 }}>{count}</MonoText>
           </View>
-        ) : null}
-      </View>
-      {/* Verification seal — circular (a rounded square reads as a checkbox),
-          detailed plate only: on every compact pin the map became a field of
-          checks, and trust marks belong where identity is shown. */}
-      {yard.supplier.badge && showDetail ? (
-        <View
-          testID="yard-verified-seal"
-          style={{
-            position: "absolute",
-            right: -4,
-            top: -4,
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: tokens.color.colorBlue600,
-          }}
-        >
-          <Svg width={8} height={8} viewBox="0 0 24 24">
-            <Path d="M4 12l6 6 10 -12" stroke={PAPER} strokeWidth={3.5} fill="none" />
-          </Svg>
         </View>
-      ) : null}
+      </View>
     </View>
   );
 }

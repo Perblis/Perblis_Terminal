@@ -1,9 +1,11 @@
 // Pin state matrix per 06 §3 anatomy under the D-023 plate revision, the
-// 2026-07-11 glance revision, and the 2026-07-13 price-first revision:
-// every plate leads with the from-price; compact yard plates are
-// price | count (initials only when priceless); the verification seal is
-// circular and detailed-plate-only; dim/count semantics are unchanged; the
-// frame is a fixed ink equipment tag.
+// 2026-07-11 glance revision, the 2026-07-13 price-first revision, and the
+// 2026-08-08 discovery-layer revision: ONE plate anatomy — `price │ count` —
+// selected or not, because the old detailed plate only ever rendered on the
+// selected pin and duplicated the sheet beneath it. Selection is the frame
+// alone (brand border + lift, no size change). Identity moved to the sheet;
+// the accessibility label still carries it. Brand = primary.500 (D-028), not
+// amber — amber is the warning hue.
 import { render } from "@testing-library/react-native";
 import { tokens } from "@terminal/tokens";
 
@@ -37,6 +39,17 @@ const YARD: MapYard = {
   listings: [],
 };
 
+function styleOf(node: { props: { style?: unknown } }) {
+  return [node.props.style].flat(Infinity).find((s) => s && typeof s === "object") as
+    | Record<string, unknown>
+    | undefined;
+}
+
+function colorOf(node: { props: { style?: unknown } }) {
+  const styles = [node.props.style].flat(Infinity) as (Record<string, unknown> | null)[];
+  return styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
+}
+
 test("compactNaira scales kobo to pin-legible strings", () => {
   expect(compactNaira(25_000_000)).toBe("₦250k");
   expect(compactNaira(180_000_000)).toBe("₦1.8m");
@@ -67,17 +80,18 @@ test("yard plate shows listing_count unfiltered and matching_count filtered", as
   expect(filtered.getByText("3")).toBeTruthy();
 });
 
-test("yard plate carries the amber from-price row", async () => {
+test("yard plate is price │ count — price leads, count is the secondary datum", async () => {
   const { getByText } = await render(<YardPin yard={YARD} />);
-  const price = getByText("from ₦250k");
-  const styles = [price.props.style].flat(Infinity);
-  const color = styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
-  expect(color).toBe(tokens.color.colorAmber500);
+  const price = getByText(compactNaira(YARD.price_from));
+  const count = getByText("8");
+  expect(colorOf(price)).toBe(tokens.color.colorPaper0);
+  expect(colorOf(count)).toBe(tokens.color.colorInk300);
 });
 
-test("yard plate skips the price row when there is no from-price", async () => {
-  const { queryByText } = await render(<YardPin yard={{ ...YARD, price_from: 0 }} />);
-  expect(queryByText(/^from /)).toBeNull();
+test("priceless yard plate falls back to initials │ count", async () => {
+  const { getByText } = await render(<YardPin yard={{ ...YARD, price_from: 0 }} />);
+  expect(getByText("KH")).toBeTruthy();
+  expect(getByText("8")).toBeTruthy();
 });
 
 test("zero-match yard dims to 40% but still renders (never removed)", async () => {
@@ -88,17 +102,6 @@ test("zero-match yard dims to 40% but still renders (never removed)", async () =
     "Yard: Apapa Yard, 0 listings, from ₦250,000 a day, verified supplier",
   );
   expect(pin.props.style).toMatchObject({ opacity: 0.4 });
-});
-
-test("initials fall back when there is no logo; ≤3 class glyphs name the offer", async () => {
-  const { getByText, getByTestId } = await render(<YardPin yard={YARD} />);
-  expect(getByText("KH")).toBeTruthy();
-  // 4 classes in the mix — anatomy caps the glyph strip at 3
-  const glyphStrip = getByTestId("yard-class-glyphs");
-  expect(glyphStrip.children).toHaveLength(3);
-  expect(glyphStrip.props.accessibilityLabel).toBe(
-    "Offers Plant & Machinery, Trucks & Haulage, Warehousing & Storage",
-  );
 });
 
 test("cluster is a drab mono count", async () => {
@@ -112,56 +115,44 @@ test("availability caption vocabulary", () => {
   expect(availabilityCaption({ available: false })).toBe("Currently on hire");
 });
 
-test("yard initials are brand amber on the fixed ink plate (contrast holds in both themes)", async () => {
-  const { getByText } = await render(<YardPin yard={YARD} />);
-  const initials = getByText("KH");
-  const styles = [initials.props.style].flat(Infinity);
-  const color = styles.find((s) => s && typeof s === "object" && "color" in s)?.color;
-  expect(color).toBe(tokens.color.colorAmber500);
-});
-
-test("selected plates switch to the amber frame (no ring, no motion)", async () => {
+test("selected plates switch to the BRAND frame — primary.500, not the warning amber", async () => {
   const { getByLabelText } = await render(<AssetPin listing={SOLO} selected />);
   const pin = getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day");
-  expect(pin.props.style).toMatchObject({ borderColor: tokens.color.colorAmber500, borderWidth: 2 });
+  expect(pin.props.style).toMatchObject({
+    borderColor: tokens.color.colorPrimary500,
+    borderWidth: 2,
+  });
+  // D-028 regression guard: amber is the warning hue and must never mark selection.
+  expect(pin.props.style.borderColor).not.toBe(tokens.color.colorAmber500);
 });
 
-test("compact solo plate keeps the price (price-first: pins answer cost at a glance)", async () => {
-  const { getByText, getByLabelText } = await render(<AssetPin listing={SOLO} compact />);
-  expect(getByText("₦250k")).toBeTruthy();
+test("selecting a yard changes the frame, NOT the anatomy — no company, no glyphs, no price row", async () => {
+  // The 2026-08-08 revision: the selected pin used to redraw the whole bottom
+  // card (initials │ count │ class glyphs over `from ₦250k`, plus a seal).
+  const selected = await render(<YardPin yard={YARD} selected />);
+  expect(selected.getByText(compactNaira(YARD.price_from))).toBeTruthy();
+  expect(selected.getByText("8")).toBeTruthy();
+  expect(selected.queryByText("KH")).toBeNull();
+  expect(selected.queryByText(`from ${compactNaira(YARD.price_from)}`)).toBeNull();
+  expect(selected.queryByTestId("yard-class-glyphs")).toBeNull();
+  expect(selected.queryByTestId("yard-verified-seal")).toBeNull();
+});
+
+test("the selected plate never grows sideways under the finger", async () => {
+  // Same layout, same paddings — only the frame and type size change, so a
+  // tapped pin does not re-anchor away from the tap point.
+  const unselected = await render(<YardPin yard={YARD} />);
+  const selected = await render(<YardPin yard={YARD} selected />);
+  const rowOf = (r: ReturnType<typeof render> extends Promise<infer T> ? T : never) =>
+    styleOf(r.getByText("8").parent as never);
+  expect(rowOf(unselected as never)?.paddingHorizontal).toBe(
+    rowOf(selected as never)?.paddingHorizontal,
+  );
+});
+
+test("verification survives for screen readers even though the plate stopped drawing a seal", async () => {
+  const { getByLabelText } = await render(<YardPin yard={YARD} />);
   expect(
-    getByLabelText("Plant & Machinery listing: 20t Excavator, from ₦250,000 a day"),
-  ).toBeTruthy();
-});
-
-test("compact yard plate is price | count; selected restores initials, glyphs and the price row", async () => {
-  const compact = await render(<YardPin yard={YARD} compact />);
-  expect(compact.getByText(compactNaira(YARD.price_from))).toBeTruthy();
-  expect(compact.getByText("8")).toBeTruthy();
-  expect(compact.queryByText("KH")).toBeNull();
-  expect(compact.queryByText(`from ${compactNaira(YARD.price_from)}`)).toBeNull();
-  expect(compact.queryByTestId("yard-class-glyphs")).toBeNull();
-
-  const selected = await render(<YardPin yard={YARD} compact selected />);
-  expect(selected.getByText("KH")).toBeTruthy();
-  expect(selected.getByText(`from ${compactNaira(YARD.price_from)}`)).toBeTruthy();
-  expect(selected.getByTestId("yard-class-glyphs")).toBeTruthy();
-});
-
-test("priceless compact yard plate falls back to initials | count", async () => {
-  const { getByText } = await render(<YardPin yard={{ ...YARD, price_from: 0 }} compact />);
-  expect(getByText("KH")).toBeTruthy();
-  expect(getByText("8")).toBeTruthy();
-});
-
-test("verification seal renders on the detailed plate only (compact pins stay clean)", async () => {
-  const detailed = await render(<YardPin yard={YARD} />);
-  expect(detailed.getByTestId("yard-verified-seal")).toBeTruthy();
-
-  const compact = await render(<YardPin yard={YARD} compact />);
-  expect(compact.queryByTestId("yard-verified-seal")).toBeNull();
-  // The semantic survives on compact pins via the accessibility label.
-  expect(
-    compact.getByLabelText("Yard: Apapa Yard, 8 listings, from ₦250,000 a day, verified supplier"),
+    getByLabelText("Yard: Apapa Yard, 8 listings, from ₦250,000 a day, verified supplier"),
   ).toBeTruthy();
 });

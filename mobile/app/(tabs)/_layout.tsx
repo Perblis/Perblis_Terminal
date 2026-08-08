@@ -14,8 +14,9 @@ export default function TabsLayout() {
         headerShown: false,
         // Fixed ink shell (8A): the tab bar is a brand plate in both themes —
         // surface-inverse would flip it to paper in dark. Inactive tint is
-        // ink-400 (≥4.5:1 on ink-900); active stays amber.
-        tabBarActiveTintColor: tokens.color.colorAmber500,
+        // ink-400 (≥4.5:1 on ink-900); active is the brand, primary.500 acid
+        // lime (D-028) — this was still amber, which is now the warning hue.
+        tabBarActiveTintColor: tokens.color.colorPrimary500,
         tabBarInactiveTintColor: tokens.color.colorInk400,
         tabBarStyle: {
           backgroundColor: tokens.color.colorInk900,

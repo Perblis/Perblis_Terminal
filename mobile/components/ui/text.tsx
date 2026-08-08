@@ -18,6 +18,17 @@ function withDefaultColor(className: string, defaultColor: string): string {
   return TEXT_COLOR_CLASS.test(className) ? className : `${defaultColor} ${className}`;
 }
 
+/** Same hazard as colour, for size: two fontSize utilities on one Text resolve
+ *  by stylesheet order, so a caller's `text-money-md` can silently lose to the
+ *  component's own `text-money`. Money is the only primitive that hard-codes a
+ *  size, so it is the only one that needs this. */
+const TEXT_SIZE_CLASS =
+  /(?:^|\s)text-(?:money|money-md|money-hero|display-|h[123]\b|body|body-lg|body-sm|caption|overline|mono)/;
+
+function withDefaultSize(className: string, defaultSize: string): string {
+  return TEXT_SIZE_CLASS.test(className) ? className : `${defaultSize} ${className}`;
+}
+
 /** Body text — Inter; primary ink unless the caller sets a colour. */
 export function BodyText({ className = "", ...rest }: Props) {
   return (
@@ -53,7 +64,10 @@ export function Money({
 }: Omit<Props, "children"> & { display: string; hero?: boolean }) {
   return (
     <Text
-      className={`font-mono ${hero ? "text-money-hero" : "text-money"} ${withDefaultColor(className, "text-text-money")}`}
+      className={`font-mono ${withDefaultColor(
+        hero ? `text-money-hero ${className}` : withDefaultSize(className, "text-money"),
+        "text-text-money",
+      )}`}
       {...rest}
     >
       {display}

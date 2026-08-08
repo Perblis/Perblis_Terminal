@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { View, type NativeSyntheticEvent } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import { tokens } from "@terminal/tokens";
 
 import { getSoloFeatures, buildSoloIndex, type SoloFeature } from "../../lib/cluster";
 import { findPressedPin, type PressablePin } from "../../lib/map-press";
@@ -182,7 +183,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
       />
 
       {/* Yard pins — never clustered, never dissolve (FSD §6). The selected
-          pin renders LAST (after solos too) so its detailed plate is never
+          pin renders LAST (after solos too) so its brand frame is never
           occluded by a neighbour — markers stack in render order. */}
       {yards
         .filter((y) => !(selection?.kind === "yard" && selection.yard.yard_id === y.yard_id))
@@ -193,7 +194,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
             anchor="center"
             onPress={() => select({ kind: "yard", yard })}
           >
-            <YardPin yard={yard} filtered={filtered} compact />
+            <YardPin yard={yard} filtered={filtered} />
           </Marker>
         ))}
 
@@ -224,7 +225,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
               anchor="center"
               onPress={() => select({ kind: "listing", listing: f.listing })}
             >
-              <AssetPin listing={f.listing} compact />
+              <AssetPin listing={f.listing} />
             </Marker>
           );
         })}
@@ -237,7 +238,7 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
           anchor="center"
           onPress={() => select({ kind: "yard", yard: selection.yard })}
         >
-          <YardPin yard={selection.yard} filtered={filtered} selected compact />
+          <YardPin yard={selection.yard} filtered={filtered} selected />
         </Marker>
       ) : null}
       {selection?.kind === "listing" ? (
@@ -247,15 +248,18 @@ export const TerminalMap = forwardRef<TerminalMapHandle, Props>(function Termina
           anchor="center"
           onPress={() => select({ kind: "listing", listing: selection.listing })}
         >
-          <AssetPin listing={selection.listing} selected compact />
+          <AssetPin listing={selection.listing} selected />
         </Marker>
       ) : null}
     </MapLibreMap>
   );
 });
 
+/** primary.500 at 18% — the brand lime the ring already uses (D-028). */
+const PRIVACY_RADIUS_FILL = "rgba(224,237,52,0.18)";
+
 /**
- * S6 privacy mini-map: non-interactive chart with a ~200m amber radius —
+ * S6 privacy mini-map: non-interactive chart with a ~200m brand radius —
  * never the exact pin until Confirmed (FSD §6 privacy posture). Lives here
  * to keep this file the sole maplibre importer.
  */
@@ -284,14 +288,17 @@ export function StaticMiniMap({ lng, lat, height = 160 }: { lng: number; lat: nu
       >
         <Camera initialViewState={{ center: [lng, lat], zoom: 13.5 }} />
         <Marker lngLat={[lng, lat]} anchor="center">
+          {/* One hue, brand lime (D-028). The fill was a hard-coded
+              rgba(245,158,11,…) — the PRE-D-028 amber — inside a lime ring,
+              which rendered as a muddy brown disc in a yellow-green circle. */}
           <View
             style={{
               width: 72,
               height: 72,
               borderRadius: 36,
-              backgroundColor: "rgba(245,158,11,0.25)",
+              backgroundColor: PRIVACY_RADIUS_FILL,
               borderWidth: 1.5,
-              borderColor: "#E0ED34",
+              borderColor: tokens.color.colorPrimary500,
             }}
           />
         </Marker>

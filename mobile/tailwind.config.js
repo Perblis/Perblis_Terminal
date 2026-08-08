@@ -20,6 +20,11 @@ module.exports = {
       fontSize: {
         // Money sizes (no fontWeight — weight lives in the family name).
         money: ["18px", { lineHeight: "24px" }],
+        // S6's day rate: the headline price on a browsing surface. Between
+        // `money` (inline, in lists) and `money-hero` (the one figure you are
+        // about to pay, in the request/pay flow) — a 40px rate on a listing
+        // reads as a bill rather than a price list.
+        "money-md": ["26px", { lineHeight: "32px" }],
         "money-hero": ["40px", { lineHeight: "48px" }],
       },
     },

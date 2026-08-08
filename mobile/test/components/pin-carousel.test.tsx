@@ -47,13 +47,19 @@ test("carouselItems puts yard cards before solo cards", () => {
   expect(ITEMS.map((i) => i.kind)).toEqual(["yard", "listing"]);
 });
 
-test("yard card shows the summary (assets, availability, from-price)", async () => {
+test("yard card shows the identity summary (bay, company, availability, from-price)", async () => {
+  // 2026-08-08: the card gained the COMPANY name and split the counts so
+  // "N available" can carry the availability green — it is now the same
+  // anatomy as the sheet's peek header, so raising the sheet reads as the
+  // same object growing rather than a second card appearing.
   const screen = await render(
     <PinCarousel items={ITEMS} selection={null} onActive={jest.fn()} onOpen={jest.fn()} bottomInset={0} />,
   );
   expect(screen.getByText("Apapa Yard")).toBeTruthy();
-  expect(screen.getByText("8 assets · 1 available")).toBeTruthy();
-  expect(screen.getByText("Assets →")).toBeTruthy();
+  expect(screen.getByText("Kano Heavy Co")).toBeTruthy();
+  expect(screen.getByText("8 assets ·")).toBeTruthy();
+  expect(screen.getByText("1 available")).toBeTruthy();
+  expect(screen.getByText("View assets ↑")).toBeTruthy();
   expect(screen.getByText("20t Excavator")).toBeTruthy(); // the solo card
 });
 
@@ -178,7 +184,7 @@ describe("selection→carousel snapping", () => {
   });
 });
 
-test("the active card carries the selected state (amber border cue)", async () => {
+test("the active card carries the selected state (brand border cue)", async () => {
   const selection = { kind: "listing", listing: SOLO } as const;
   const screen = await render(
     <PinCarousel items={ITEMS} selection={selection} onActive={jest.fn()} onOpen={jest.fn()} bottomInset={0} />,
