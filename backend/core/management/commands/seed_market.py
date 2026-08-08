@@ -28,6 +28,7 @@ import secrets
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
 from django.contrib.gis.geos import Point
@@ -623,7 +624,7 @@ class _notifications_muted:
 
     def __init__(self, *, enabled: bool) -> None:
         self.enabled = enabled
-        self.original = None
+        self.original: Callable[..., None] | None = None
 
     def __enter__(self):
         if not self.enabled:
