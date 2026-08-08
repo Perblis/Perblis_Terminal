@@ -12,10 +12,13 @@ export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   /** Rendered inside the field's left edge (e.g. the +234 phone prefix). */
   prefix?: ReactNode;
+  /** Right-aligned companion in the label row (e.g. "Forgot password?").
+      Lives outside <label> so the input's accessible name stays clean. */
+  labelAside?: ReactNode;
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, helper, error, prefix, className, id: idProp, ...rest },
+  { label, helper, error, prefix, labelAside, className, id: idProp, ...rest },
   ref,
 ) {
   const autoId = useId();
@@ -24,13 +27,19 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
 
   return (
     <div className={cn("flex flex-col gap-s1", className)}>
-      <label htmlFor={id} className="text-caption font-medium text-text-secondary">
-        {label}
-      </label>
+      <div className="flex items-baseline justify-between gap-s3">
+        <label htmlFor={id} className="text-caption font-medium text-text-secondary">
+          {label}
+        </label>
+        {labelAside ? <span className="text-caption">{labelAside}</span> : null}
+      </div>
       <div
         className={cn(
           "flex h-10 items-center overflow-hidden rounded-sm border bg-surface-sunken",
-          error ? "border-border-error" : "border-border-default",
+          "transition-[border-color] duration-micro ease-out",
+          error
+            ? "border-border-error"
+            : "border-border-default focus-within:border-border-focus",
           rest.disabled && "bg-ink-800 text-text-tertiary",
         )}
       >

@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -86,7 +85,7 @@ function LoginForm() {
         email={resume.email}
         onVerified={() => {
           void completeLogin(resume.email, resume.password).catch(() =>
-            setFormError("Verified — but sign-in failed. Try again."),
+            setFormError("Verified, but sign-in failed. Try again."),
           );
           setResume(null);
         }}
@@ -185,7 +184,7 @@ function LoginForm() {
       <div>
         <h1 className="font-display text-h2 text-text-primary">Sign in</h1>
         <p className="mt-s1 text-body-sm text-text-secondary">
-          Run your fleet — requests, money, messages, one place.
+          Requests, money, messages and availability, in one place.
         </p>
       </div>
 
@@ -198,38 +197,30 @@ function LoginForm() {
         label="Email"
         type="email"
         autoComplete="email"
+        autoFocus
         placeholder="you@company.com"
         error={errors.email?.message}
         {...register("email")}
       />
-      <div>
-        <PasswordField
-          label="Password"
-          autoComplete="current-password"
-          error={errors.password?.message}
-          {...register("password")}
-        />
-        <div className="mt-s1 flex justify-end">
+      <PasswordField
+        label="Password"
+        autoComplete="current-password"
+        error={errors.password?.message}
+        labelAside={
           <button
             type="button"
             onClick={() => setForgot(true)}
-            className="text-caption text-text-tertiary hover:text-text-link hover:underline"
+            className="rounded-sm text-text-tertiary hover:text-text-link hover:underline"
           >
             Forgot password?
           </button>
-        </div>
-      </div>
+        }
+        {...register("password")}
+      />
 
       <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
         Sign in
       </Button>
-
-      <p className="text-center text-body-sm text-text-secondary">
-        New to Terminal?{" "}
-        <Link href="/register" className="text-text-link underline">
-          Create an account
-        </Link>
-      </p>
     </form>
   );
 }

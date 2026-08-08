@@ -124,6 +124,19 @@
 }
 
 @layer utilities {
+  /* Auth form enter: 6px rise + fade on the token easing. Collapses to ~80ms
+     under prefers-reduced-motion via the base-layer override. */
+  @keyframes auth-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* M1 hazard stripe (01 §2): 4px section punctuation line, never a border.
      On the dark ground the second band is the sunken surface, not the
      inverse one — brand-on-white would strobe. */
