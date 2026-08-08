@@ -51,15 +51,25 @@ export function Button({
       accessibilityLabel={sublabel ? `${label}, ${sublabel}` : label}
       accessibilityState={{ disabled: !!disabled || busy, busy }}
       disabled={!!disabled || busy}
-      className={`min-h-12 flex-row items-center justify-center rounded-md px-6 ${sublabel ? "py-2.5" : "py-3.5"} ${FRAME[variant]} ${disabled ? "opacity-50" : ""}`}
+      // px-4 with a sublabel: at px-6 a side-by-side pair leaves the narrower
+      // button ~105dp of text room, which is less than its own caption needs.
+      className={`min-h-12 flex-row items-center justify-center rounded-md ${sublabel ? "px-4 py-2.5" : "px-6 py-3.5"} ${FRAME[variant]} ${disabled ? "opacity-50" : ""}`}
       {...rest}
     >
       {busy ? (
         <ActivityIndicator size="small" />
       ) : sublabel ? (
+        // numberOfLines is load-bearing, not cosmetic: a wrapping sublabel makes
+        // one button taller than the other, and a side-by-side pair then sits
+        // visibly misaligned. Capped at one line each, both buttons are always
+        // exactly two lines tall, so they match by construction.
         <View className="items-center">
-          <BodyText className={LABEL[variant]}>{label}</BodyText>
-          <BodyText className={`text-caption ${SUBLABEL[variant]}`}>{sublabel}</BodyText>
+          <BodyText className={LABEL[variant]} numberOfLines={1}>
+            {label}
+          </BodyText>
+          <BodyText className={`text-caption ${SUBLABEL[variant]}`} numberOfLines={1}>
+            {sublabel}
+          </BodyText>
         </View>
       ) : (
         <BodyText className={LABEL[variant]}>{label}</BodyText>

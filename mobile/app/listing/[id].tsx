@@ -259,7 +259,7 @@ export default function ListingDetail() {
           <Button
             variant="secondary"
             label="Enquire"
-            sublabel="Ask a question first"
+            sublabel="Ask a question"
             busy={createEnquiry.isPending}
             onPress={() =>
               protectedAction(`/listing/${listing.id}`, () =>
