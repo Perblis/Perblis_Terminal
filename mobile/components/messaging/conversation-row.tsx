@@ -1,4 +1,4 @@
-import { Image, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { resolveMediaUrl } from "../../lib/media";
@@ -6,6 +6,7 @@ import { relTime } from "../../lib/rel-time";
 import { useThemeTokens } from "../../lib/theme";
 import type { Conversation } from "../../lib/types";
 import { BodyText } from "../ui/text";
+import { RemoteImage } from "../ui/remote-image";
 
 function VerifiedTick() {
   const tk = useThemeTokens();
@@ -30,7 +31,7 @@ export function ConversationRow({ conv, onPress }: { conv: Conversation; onPress
       className="flex-row items-center gap-3 border-b border-border-default bg-surface-card px-4 py-3 active:bg-surface-sunken"
     >
       {thumb ? (
-        <Image source={{ uri: thumb }} style={{ width: 52, height: 52, borderRadius: 8 }} />
+        <RemoteImage uri={thumb} style={{ width: 52, height: 52, borderRadius: 8 }} />
       ) : (
         <View className="h-[52px] w-[52px] items-center justify-center rounded-lg bg-surface-sunken">
           <BodyText className="text-caption text-text-tertiary">GEN</BodyText>

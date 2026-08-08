@@ -3,7 +3,7 @@
 // round-trips (asserted by test).
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "../../lib/asset-classes";
@@ -12,6 +12,7 @@ import type { AssetClass, MapYard } from "../../lib/types";
 import { availabilityCaption } from "./pins";
 import { Sheet } from "../ui/sheet";
 import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
+import { RemoteImage } from "../ui/remote-image";
 
 function VerifiedTick() {
   return (
@@ -33,8 +34,8 @@ function RowThumb({ photo, title }: { photo: string; title: string }) {
       style={{ width: 64, height: 48 }}
     >
       {photo && !broken ? (
-        <Image
-          source={{ uri: resolveMediaUrl(photo) }}
+        <RemoteImage
+          uri={resolveMediaUrl(photo)}
           style={{ width: 64, height: 48 }}
           accessibilityLabel={`Photo of ${title}`}
           onError={() => setBroken(true)}
@@ -80,7 +81,10 @@ export function YardSheet({ yard, onDismiss }: { yard: MapYard; onDismiss: () =>
       <View className="flex-row items-center gap-3 border-b border-border px-4 pb-3">
         <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
           {yard.supplier.logo ? (
-            <Image source={{ uri: resolveMediaUrl(yard.supplier.logo) }} style={{ width: 44, height: 44 }} />
+            <RemoteImage
+              uri={resolveMediaUrl(yard.supplier.logo)}
+              style={{ width: 44, height: 44 }}
+            />
           ) : (
             <MonoText className="text-body text-text-brand-on-inverse">{initials}</MonoText>
           )}

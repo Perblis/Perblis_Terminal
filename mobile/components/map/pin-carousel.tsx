@@ -6,7 +6,7 @@
 // FlatList (FlashList is not a dependency); a syncSource ref breaks the
 // swipe→select→scrollToIndex feedback loop.
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Dimensions, FlatList, Image, Pressable, View, type ViewToken } from "react-native";
+import { Dimensions, FlatList, Pressable, View, type ViewToken } from "react-native";
 
 import { tokens } from "@terminal/tokens";
 
@@ -17,6 +17,7 @@ import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import { BodyText, DisplayText, Money, MonoText } from "../ui/text";
 import { availabilityCaption } from "./pins";
 import type { MapSelection } from "./terminal-map";
+import { RemoteImage } from "../ui/remote-image";
 
 export type CarouselItem =
   | { kind: "yard"; yard: MapYard }
@@ -250,9 +251,10 @@ function ListingCardBody({ listing }: { listing: MapSoloListing }) {
   return (
     <>
       {listing.photo ? (
-        <Image
-          source={{ uri: resolveMediaUrl(listing.photo) }}
+        <RemoteImage
+          uri={resolveMediaUrl(listing.photo)}
           style={{ width: 72, height: 54, borderRadius: 6 }}
+          recyclingKey={listing.id}
         />
       ) : (
         <View
@@ -289,9 +291,10 @@ function YardCardBody({ yard }: { yard: MapYard }) {
   return (
     <>
       {yard.supplier.logo ? (
-        <Image
-          source={{ uri: resolveMediaUrl(yard.supplier.logo) }}
+        <RemoteImage
+          uri={resolveMediaUrl(yard.supplier.logo)}
           style={{ width: 54, height: 54, borderRadius: 6 }}
+          recyclingKey={yard.yard_id}
         />
       ) : (
         <View

@@ -1,10 +1,11 @@
-import { Image, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
 import { resolveMediaUrl } from "../../lib/media";
 import type { ListingTier, MapSoloListing } from "../../lib/types";
 import { availabilityCaption } from "../map/pins";
 import { BodyText, Money, MonoText } from "../ui/text";
+import { RemoteImage } from "../ui/remote-image";
 
 /** Listing tier badge (basic renders nothing — trust is earned, not stamped). */
 export function TierBadge({ tier }: { tier: ListingTier }) {
@@ -39,7 +40,11 @@ export function ListingRow({
       className="flex-row gap-3 border-b border-border bg-surface-card px-4 py-3 active:bg-surface-sunken"
     >
       {listing.photo ? (
-        <Image source={{ uri: resolveMediaUrl(listing.photo) }} style={{ width: 88, height: 66, borderRadius: 6 }} />
+        <RemoteImage
+          uri={resolveMediaUrl(listing.photo)}
+          style={{ width: 88, height: 66, borderRadius: 6 }}
+          recyclingKey={listing.id}
+        />
       ) : (
         <View
           className="items-center justify-center rounded-md bg-surface-sunken"
