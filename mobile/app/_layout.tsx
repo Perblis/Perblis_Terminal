@@ -4,6 +4,7 @@ import { Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -50,23 +51,29 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
-      {/* IME-inset tracking for every KeyboardAvoidingView below (edge-to-edge
-          Android ignores adjustResize; RN's own KAV is unreliable there). */}
-      <KeyboardProvider>
-        <QueryProvider>
-          <ThemeRoot>
-            <StatusBar style="auto" />
-            <SessionHydrator />
-            <SessionExpiredGate />
-            <SuspendedGate />
-            <HandoverQueueDrainer />
-            <RealtimeInvalidator />
-            <Stack screenOptions={{ headerShown: false }} />
-            <UpdateGate />
-          </ThemeRoot>
-        </QueryProvider>
-      </KeyboardProvider>
-    </SafeAreaProvider>
+    /* react-native-gesture-handler needs this at the root on Android or every
+       GestureDetector below it silently never fires. There was none in the
+       tree — the only consumer was the yard sheet's drag, which is now the
+       map's primary interaction (S5 peek/half/full), so it has to be here. */
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        {/* IME-inset tracking for every KeyboardAvoidingView below (edge-to-edge
+            Android ignores adjustResize; RN's own KAV is unreliable there). */}
+        <KeyboardProvider>
+          <QueryProvider>
+            <ThemeRoot>
+              <StatusBar style="auto" />
+              <SessionHydrator />
+              <SessionExpiredGate />
+              <SuspendedGate />
+              <HandoverQueueDrainer />
+              <RealtimeInvalidator />
+              <Stack screenOptions={{ headerShown: false }} />
+              <UpdateGate />
+            </ThemeRoot>
+          </QueryProvider>
+        </KeyboardProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

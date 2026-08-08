@@ -126,7 +126,7 @@ export default function Storefront() {
         </View>
 
         {/* Identity plate — overlaps the cover so the page breathes */}
-        <View className="-mt-8 mx-4 rounded-xl border border-border bg-surface-card p-4 shadow-sm">
+        <View className="-mt-8 mx-4 rounded-xl border border-border-default bg-surface-card p-4 shadow-sm">
           <View className="flex-row items-center gap-3.5">
             <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
               {data.logo_url ? (
@@ -166,7 +166,7 @@ export default function Storefront() {
                 [String(data.yards.length), data.yards.length === 1 ? "yard" : "yards"],
               ] as const
             ).map(([n, label], i) => (
-              <View key={label} className={`flex-1 items-center ${i > 0 ? "border-l border-border" : ""}`}>
+              <View key={label} className={`flex-1 items-center ${i > 0 ? "border-l border-border-default" : ""}`}>
                 <MonoText className="text-h2">{n}</MonoText>
                 <BodyText className="text-caption text-text-tertiary">{label}</BodyText>
               </View>
@@ -176,7 +176,7 @@ export default function Storefront() {
 
         {/* About */}
         {data.about ? (
-          <View className="mx-4 mt-4 gap-2 rounded-xl border border-border bg-surface-card p-4">
+          <View className="mx-4 mt-4 gap-2 rounded-xl border border-border-default bg-surface-card p-4">
             <SectionLabel>ABOUT</SectionLabel>
             <BodyText className="leading-6 text-text-secondary">{data.about}</BodyText>
           </View>
@@ -196,7 +196,7 @@ export default function Storefront() {
                     accessibilityRole="button"
                     accessibilityLabel={`View ${yard.name} on the map`}
                     onPress={() => openYardOnMap(yard)}
-                    className="w-44 gap-1 rounded-xl border border-border bg-surface-card p-3.5 active:bg-surface-sunken"
+                    className="w-44 gap-1 rounded-xl border border-border-default bg-surface-card p-3.5 active:bg-surface-sunken"
                   >
                     <BodyText className="font-sans-medium" numberOfLines={1}>
                       {yard.name}
@@ -221,7 +221,7 @@ export default function Storefront() {
                 key={listing.id}
                 accessibilityRole="button"
                 onPress={() => router.push(`/listing/${listing.id}` as never)}
-                className="mb-3 w-[48.5%] overflow-hidden rounded-xl border border-border bg-surface-card active:opacity-90"
+                className="mb-3 w-[48.5%] overflow-hidden rounded-xl border border-border-default bg-surface-card active:opacity-90"
               >
                 {listing.cover_photo_url ? (
                   <Image source={{ uri: resolveMediaUrl(listing.cover_photo_url) }} style={{ width: "100%", height: 108 }} />
@@ -253,7 +253,7 @@ export default function Storefront() {
 
       {/* Sticky message CTA (guest → auth sheet preserving intent) */}
       <View
-        className="absolute inset-x-0 bottom-0 border-t border-border bg-surface-card px-4 pt-3"
+        className="absolute inset-x-0 bottom-0 border-t border-border-default bg-surface-card px-4 pt-3"
         style={{ paddingBottom: insets.bottom + 12 }}
       >
         <Button label={`Message ${data.business_name}`} busy={createEnquiry.isPending} onPress={message} />

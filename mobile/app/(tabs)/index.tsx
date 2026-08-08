@@ -146,7 +146,7 @@ export default function MapTab() {
         <Pressable
           accessibilityRole="search"
           onPress={() => router.push("/search" as never)}
-          className="mx-4 min-h-12 flex-row items-center gap-2 rounded-full border border-border bg-surface-card px-4 py-3 shadow-md"
+          className="mx-4 min-h-12 flex-row items-center gap-2 rounded-full border border-border-default bg-surface-card px-4 py-3 shadow-md"
         >
           <Svg width={18} height={18} viewBox="0 0 24 24">
             <Circle cx={10.5} cy={10.5} r={7} stroke={tk["--text-secondary"]} strokeWidth={2} fill="none" />
@@ -203,13 +203,16 @@ export default function MapTab() {
         />
       ) : null}
 
-      {/* Locate-me */}
+      {/* Locate-me — lifts clear of whichever bottom surface is up: the rail,
+          or the yard sheet's 88pt peek band. */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Centre the map on my location"
         onPress={() => setLocateAsk(true)}
-        className="absolute right-4 h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-card shadow-md"
-        style={{ bottom: insets.bottom + (items.length > 0 ? 116 : 24) }}
+        className="absolute right-4 h-12 w-12 items-center justify-center rounded-full border border-border-default bg-surface-card shadow-md"
+        style={{
+          bottom: insets.bottom + (yardSheet ? 100 : items.length > 0 ? 116 : 24),
+        }}
       >
         <Svg width={22} height={22} viewBox="0 0 24 24">
           <Circle cx={12} cy={12} r={6.5} stroke={tk["--text-primary"]} strokeWidth={2} fill="none" />
@@ -249,7 +252,7 @@ export default function MapTab() {
 
       {/* Empty viewport */}
       {emptyViewport ? (
-        <View className="absolute inset-x-8 top-1/3 rounded-lg border border-border bg-surface-card">
+        <View className="absolute inset-x-8 top-1/3 rounded-lg border border-border-default bg-surface-card">
           <EmptyState
             title="Nothing here yet"
             body="Widen the search or move the map — new yards come online every week."
@@ -258,8 +261,10 @@ export default function MapTab() {
         </View>
       ) : null}
 
-      {/* Snap-to-pin carousel — the browsing surface (replaces the peek card).
-          Swipe ↔ pin selection stay in sync; tap a card to open it. */}
+      {/* Snap-to-pin rail — the browsing surface across pins. Swipe ↔ pin
+          selection stay in sync; tap a card to open it. The yard sheet takes
+          over the bottom while it is up (a rail behind a sheet is two stacked
+          bottom surfaces), and dragging the sheet away brings it back. */}
       {items.length > 0 && !yardSheet ? (
         <PinCarousel
           items={items}

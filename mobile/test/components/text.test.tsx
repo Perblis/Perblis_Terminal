@@ -47,3 +47,26 @@ test("Money keeps its money colour by default but yields when overridden", async
   expect(className(inverse)).toContain("text-text-inverse");
   expect(className(inverse)).not.toContain("text-text-money");
 });
+
+test("Money yields its hard-coded size when the caller passes one (S6's day rate)", async () => {
+  // Two fontSize utilities on one Text resolve by stylesheet order, not
+  // className order — the same hazard the colour guard exists for. Without
+  // the size guard, `text-money-md` silently loses to Money's own
+  // `text-money` and the listing's hero price renders at 18px.
+  const plain = await render(<Money display="₦165,000" />);
+  expect(className(plain)).toContain("text-money");
+
+  const md = await render(<Money display="₦165,000" className="text-money-md" />);
+  expect(className(md)).toContain("text-money-md");
+  expect(className(md).split(/\s+/)).not.toContain("text-money");
+
+  // A colour-only override must NOT strip the default size.
+  const coloured = await render(<Money display="₦165,000" className="text-text-inverse" />);
+  expect(coloured && className(coloured).split(/\s+/)).toContain("text-money");
+});
+
+test("Money hero still wins over any caller size", async () => {
+  const hero = await render(<Money display="₦900,000" hero />);
+  expect(className(hero)).toContain("text-money-hero");
+  expect(className(hero).split(/\s+/)).not.toContain("text-money");
+});

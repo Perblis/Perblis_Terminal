@@ -94,7 +94,7 @@ export function RangeCalendar({
     range.start !== null && range.end !== null && day >= range.start && day <= range.end;
 
   return (
-    <View className="rounded-lg border border-border bg-surface-card p-3">
+    <View className="rounded-lg border border-border-default bg-surface-card p-3">
       <View className="flex-row items-center justify-between pb-2">
         <Pressable
           accessibilityRole="button"

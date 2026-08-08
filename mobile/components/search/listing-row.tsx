@@ -1,6 +1,7 @@
 import { Pressable, View } from "react-native";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { splitListingTitle } from "../../lib/listing-title";
 import { resolveMediaUrl } from "../../lib/media";
 import type { ListingTier, MapSoloListing } from "../../lib/types";
 import { availabilityCaption } from "../map/pins";
@@ -23,7 +24,9 @@ export function TierBadge({ tier }: { tier: ListingTier }) {
   );
 }
 
-/** S12 ListingCard row (asset grouping adds the +N-more-at-yard subline). */
+/** S12 ListingCard row (asset grouping adds the +N-more-at-yard subline).
+ *  Title splits onto two lines — asset, then what it's for — so the part a
+ *  hirer scans for never shares a truncated line with prose. */
 export function ListingRow({
   listing,
   moreAtYard = 0,
@@ -33,11 +36,13 @@ export function ListingRow({
   moreAtYard?: number;
   onPress: () => void;
 }) {
+  const { name, qualifier } = splitListingTitle(listing.title);
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${listing.title}, ${listing.price_from_display} a day, ${availabilityCaption(listing)}`}
       onPress={onPress}
-      className="flex-row gap-3 border-b border-border bg-surface-card px-4 py-3 active:bg-surface-sunken"
+      className="flex-row gap-3 border-b border-border-default bg-surface-card px-4 py-3.5 active:bg-surface-sunken"
     >
       {listing.photo ? (
         <RemoteImage
@@ -53,20 +58,24 @@ export function ListingRow({
           <MonoText className="text-caption text-text-tertiary">—</MonoText>
         </View>
       )}
-      <View className="flex-1">
-        <View className="flex-row items-center gap-1.5">
-          <BodyText className="flex-1 font-sans-medium" numberOfLines={1}>
-            {listing.title}
+      <View className="flex-1 justify-center">
+        <View className="flex-row items-start gap-1.5">
+          <BodyText className="flex-1 font-sans-medium" numberOfLines={2}>
+            {name}
           </BodyText>
           <TierBadge tier={listing.badge} />
         </View>
-        <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
-          {CLASS_BY_VALUE[listing.asset_class].label} · {listing.distance_km} km ·{" "}
-          {availabilityCaption(listing)}
+        <BodyText className="text-caption text-text-tertiary" numberOfLines={1}>
+          {qualifier ?? CLASS_BY_VALUE[listing.asset_class].label} · {listing.distance_km} km
         </BodyText>
-        <View className="mt-1 flex-row items-baseline gap-1">
+        <View className="mt-1 flex-row items-baseline gap-1.5">
           <Money display={listing.price_from_display} />
           <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
+          <BodyText
+            className={`text-caption ${listing.available ? "text-green-400" : "text-text-tertiary"}`}
+          >
+            · {availabilityCaption(listing)}
+          </BodyText>
         </View>
         {moreAtYard > 0 ? (
           <BodyText className="mt-0.5 text-caption text-text-link">

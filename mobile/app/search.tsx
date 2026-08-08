@@ -94,7 +94,7 @@ export default function Search() {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(`/supplier/${item.supplier.id}` as never)}
-          className="border-b border-border bg-surface-sunken px-4 py-3 active:opacity-90"
+          className="border-b border-border-default bg-surface-sunken px-4 py-3 active:opacity-90"
         >
           <View className="flex-row items-center gap-3">
             <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
@@ -135,7 +135,7 @@ export default function Search() {
   return (
     <View className="flex-1 bg-surface-page" style={{ paddingTop: insets.top }}>
       {/* Expanded pill: q + filter toggles */}
-      <View className="gap-2 border-b border-border bg-surface-card px-4 pb-3 pt-2">
+      <View className="gap-2 border-b border-border-default bg-surface-card px-4 pb-3 pt-2">
         <View className="flex-row items-center gap-2">
           <Pressable accessibilityRole="button" accessibilityLabel="Back to map" onPress={() => router.back()}>
             <DisplayText className="px-1 text-h3">←</DisplayText>

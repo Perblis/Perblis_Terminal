@@ -1,5 +1,12 @@
 // S6 SpecTable: template-driven rows — join the versioned template's field
 // definitions against the listing's specs dict. Values render verbatim.
+//
+// 2026-08-08 (founder, §8): the zebra-striped bordered table was a box inside
+// a box inside a scroll view, and every row spent half its width on a label
+// column. It's now a two-column grid — label as an overline above its value —
+// which halves the vertical run, kills the outer border, and lets the values
+// (the part anyone reads) sit at full weight. Every spec still renders; the
+// template join and formatValue are untouched.
 import { View } from "react-native";
 
 import type { SpecTemplate } from "../../lib/types";
@@ -36,18 +43,26 @@ export function SpecTable({
   if (entries.length === 0) return null;
 
   return (
-    <View className="overflow-hidden rounded-lg border border-border">
-      {entries.map((row, i) => (
-        <View
-          key={row.key}
-          className={`flex-row items-center justify-between px-3.5 py-2.5 ${
-            i % 2 === 0 ? "bg-surface-card" : "bg-surface-sunken"
-          }`}
-        >
-          <BodyText className="flex-1 text-body-sm text-text-secondary">{row.label}</BodyText>
-          <MonoText className="text-body-sm">{row.value}</MonoText>
-        </View>
-      ))}
+    <View className="flex-row flex-wrap">
+      {entries.map((row, i) => {
+        // Hairline between grid ROWS only — a full box around each cell would
+        // put us straight back to nested containers.
+        const onSecondRowOrLater = i >= 2;
+        return (
+          <View
+            key={row.key}
+            accessibilityLabel={`${row.label}: ${row.value}`}
+            className={`w-1/2 gap-0.5 py-3 ${onSecondRowOrLater ? "border-t border-border-default" : ""} ${
+              i % 2 === 1 ? "pl-4" : "pr-4"
+            }`}
+          >
+            <BodyText className="text-overline uppercase text-text-tertiary" numberOfLines={1}>
+              {row.label}
+            </BodyText>
+            <MonoText className="text-body">{row.value}</MonoText>
+          </View>
+        );
+      })}
     </View>
   );
 }

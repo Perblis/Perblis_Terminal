@@ -1,5 +1,6 @@
 {
   "_doc": "Terminal Chart grade (D-022): the canonical layer-override definition applied to the OpenFreeMap Liberty base style, per theme. Rules run in order; the FIRST rule whose `match` hits a layer applies its paint/layout and stops. `match.type` = MapLibre layer type; `match.idIncludes` = substring test on layer id (any of). Values are resolved from packages/tokens/src/primitives.json — keep them in sync by hand (this file is consumed by native apps at runtime, no build step). Both surfaces (app 8B, portal post-8B) consume this; snapshot-style.mjs bakes it into full committed style JSONs when run with network access.",
+  "_revision": "2026-08-08 discovery-layer revision (founder): the chart is a discovery layer, not the product. The prior grade left Liberty's own defaults showing through on every layer it did not name — `landuse_residential` (hsla(0,3%,85%,.84) up to z12) was the bright grey landmass, `boundary_2/3` the prominent dashed lines, `highway-shield-*` the white E1/F265/A1 boxes, `waterway_river` the blue lines, and every symbol shared one flat ink-300 so a village read as loudly as a city. Rules below name every Liberty layer group by its real id (list them with `curl <styleUrl> | jq '.layers[].id'`), give roads and place labels a hierarchy, and ramp street names in only once the user has zoomed into a neighbourhood. ORDER IS LOAD-BEARING: `waterway` must precede the road rule (`waterway_tunnel` contains 'tunnel'), the water-name rule must precede the POI rule (`water_name_POInt_label` contains 'poi' — the old grade hid it by accident), major roads must precede the general road rule, and every symbol rule must precede the catch-all. Verified by replaying these rules over all 111 live Liberty layers: zero fall through.",
   "styleUrl": "https://tiles.openfreemap.org/styles/liberty",
   "themes": {
     "light": {
@@ -10,19 +11,103 @@
           "paint": { "background-color": "#F5F5F5" }
         },
         {
+          "_": "world-zoom relief raster held right down (only drawn below z7)",
+          "match": { "type": "raster", "idIncludes": ["natural_earth"] },
+          "paint": { "raster-opacity": 0.12, "raster-saturation": -1 }
+        },
+        {
           "_": "desaturated chart water",
           "match": { "type": "fill", "idIncludes": ["water"] },
           "paint": { "fill-color": "#C6D2D9" }
         },
         {
-          "_": "POI noise off — pins are the content",
-          "match": { "type": "symbol", "idIncludes": ["poi"] },
+          "_": "rivers/canals join the water body — before the road rule (waterway_tunnel)",
+          "match": { "type": "line", "idIncludes": ["waterway"] },
+          "paint": { "line-color": "#C6D2D9" }
+        },
+        {
+          "_": "all landcover flattened toward paper-100 — residential/greenspace/sand/aeroway/buildings",
+          "match": {
+            "type": "fill",
+            "idIncludes": ["landuse", "landcover", "park", "building", "aeroway", "road_area"]
+          },
+          "paint": { "fill-color": "#EBEBEB" }
+        },
+        {
+          "_": "extruded buildings flatten into the landcover they sit on",
+          "match": { "type": "fill-extrusion" },
+          "paint": { "fill-extrusion-color": "#EBEBEB", "fill-extrusion-opacity": 0.4 }
+        },
+        {
+          "_": "park outlines and runway/taxiway linework vanish into the land",
+          "match": {
+            "type": "line",
+            "idIncludes": ["park_outline", "aeroway_runway", "aeroway_taxiway"]
+          },
+          "paint": { "line-color": "#EBEBEB" }
+        },
+        {
+          "_": "water names present but quiet — BEFORE the POI rule ('poi' ⊂ 'water_name_point_label')",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["water_name", "waterway_line_label"]
+          },
+          "paint": { "text-color": "#8C8D90", "text-halo-color": "#FFFFFF", "text-opacity": 0.7 }
+        },
+        {
+          "_": "POI + airport noise off — pins are the content",
+          "match": { "type": "symbol", "idIncludes": ["poi", "airport"] },
           "layout": { "visibility": "none" }
         },
         {
-          "_": "greenspace flattened toward paper (paper-100)",
-          "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood"] },
-          "paint": { "fill-color": "#EBEBEB" }
+          "_": "route shields and one-way arrows off — motorway furniture, not marketplace data",
+          "match": { "type": "symbol", "idIncludes": ["shield", "one_way"] },
+          "layout": { "visibility": "none" }
+        },
+        {
+          "_": "street names fade in only at neighbourhood zoom",
+          "match": { "type": "symbol", "idIncludes": ["highway-name"] },
+          "paint": {
+            "text-color": "#707174",
+            "text-halo-color": "#FFFFFF",
+            "text-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 14.5, 0.55]
+          }
+        },
+        {
+          "_": "the geographic anchors stay legible (country/state/city)",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["label_country", "label_state", "label_city"]
+          },
+          "paint": { "text-color": "#323439", "text-halo-color": "#FFFFFF" }
+        },
+        {
+          "_": "towns/villages one step quieter than the anchors",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["label_town", "label_village", "label_other"]
+          },
+          "paint": { "text-color": "#707174", "text-halo-color": "#FFFFFF" }
+        },
+        {
+          "_": "administrative boundaries survive as faint structure, never an outline",
+          "match": { "type": "line", "idIncludes": ["boundary"] },
+          "paint": { "line-color": "#CCCCCE", "line-opacity": 0.5 }
+        },
+        {
+          "_": "major roads carry the structure — before the general road rule",
+          "match": { "type": "line", "idIncludes": ["motorway", "trunk"] },
+          "paint": { "line-color": "#CCCCCE" }
+        },
+        {
+          "_": "minor roads recede into paper",
+          "match": { "type": "line", "idIncludes": ["road", "highway", "bridge", "tunnel"] },
+          "paint": { "line-color": "#FFFFFF" }
+        },
+        {
+          "_": "anything else that speaks",
+          "match": { "type": "symbol" },
+          "paint": { "text-color": "#323439", "text-halo-color": "#FFFFFF" }
         }
       ]
     },
@@ -34,29 +119,103 @@
           "paint": { "background-color": "#19191C" }
         },
         {
-          "_": "deep water one step up from land (ink-800)",
+          "_": "world-zoom relief raster held right down (only drawn below z7)",
+          "match": { "type": "raster", "idIncludes": ["natural_earth"] },
+          "paint": { "raster-opacity": 0.08, "raster-saturation": -1, "raster-brightness-max": 0.3 }
+        },
+        {
+          "_": "deep water one step up from land (ink-850)",
           "match": { "type": "fill", "idIncludes": ["water"] },
           "paint": { "fill-color": "#1A1C1E" }
         },
         {
-          "_": "POI noise off",
-          "match": { "type": "symbol", "idIncludes": ["poi"] },
-          "layout": { "visibility": "none" }
+          "_": "rivers/canals join the water body — before the road rule (waterway_tunnel)",
+          "match": { "type": "line", "idIncludes": ["waterway"] },
+          "paint": { "line-color": "#1A1C1E" }
         },
         {
-          "_": "greenspace/buildings sink into ink-800",
-          "match": { "type": "fill", "idIncludes": ["park", "landcover_grass", "landcover_wood", "building"] },
+          "_": "ALL landcover sinks into ink-850 — landuse_residential was the grey blob",
+          "match": {
+            "type": "fill",
+            "idIncludes": ["landuse", "landcover", "park", "building", "aeroway", "road_area"]
+          },
           "paint": { "fill-color": "#1A1C1E" }
         },
         {
-          "_": "roads as ink-700 linework",
-          "match": { "type": "line", "idIncludes": ["road", "highway", "motorway", "bridge", "tunnel"] },
-          "paint": { "line-color": "#26272B" }
+          "_": "extruded buildings flatten into the landcover they sit on",
+          "match": { "type": "fill-extrusion" },
+          "paint": { "fill-extrusion-color": "#1A1C1E", "fill-extrusion-opacity": 0.4 }
         },
         {
-          "_": "labels read paper on ink",
-          "match": { "type": "symbol" },
+          "_": "park outlines and runway/taxiway linework vanish into the land",
+          "match": {
+            "type": "line",
+            "idIncludes": ["park_outline", "aeroway_runway", "aeroway_taxiway"]
+          },
+          "paint": { "line-color": "#1A1C1E" }
+        },
+        {
+          "_": "water names present but quiet — BEFORE the POI rule ('poi' ⊂ 'water_name_point_label')",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["water_name", "waterway_line_label"]
+          },
+          "paint": { "text-color": "#707174", "text-halo-color": "#19191C", "text-opacity": 0.7 }
+        },
+        {
+          "_": "POI + airport noise off — pins are the content",
+          "match": { "type": "symbol", "idIncludes": ["poi", "airport"] },
+          "layout": { "visibility": "none" }
+        },
+        {
+          "_": "route shields and one-way arrows off — the E1/F265/A1 boxes",
+          "match": { "type": "symbol", "idIncludes": ["shield", "one_way"] },
+          "layout": { "visibility": "none" }
+        },
+        {
+          "_": "street names fade in only at neighbourhood zoom",
+          "match": { "type": "symbol", "idIncludes": ["highway-name"] },
+          "paint": {
+            "text-color": "#707174",
+            "text-halo-color": "#19191C",
+            "text-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 14.5, 0.55]
+          }
+        },
+        {
+          "_": "the geographic anchors stay legible (country/state/city)",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["label_country", "label_state", "label_city"]
+          },
           "paint": { "text-color": "#ADAEB0", "text-halo-color": "#19191C" }
+        },
+        {
+          "_": "towns/villages one step quieter than the anchors",
+          "match": {
+            "type": "symbol",
+            "idIncludes": ["label_town", "label_village", "label_other"]
+          },
+          "paint": { "text-color": "#707174", "text-halo-color": "#19191C" }
+        },
+        {
+          "_": "administrative boundaries survive as faint structure, never an outline",
+          "match": { "type": "line", "idIncludes": ["boundary"] },
+          "paint": { "line-color": "#26272B", "line-opacity": 0.35 }
+        },
+        {
+          "_": "major roads carry the structure (ink-600) — before the general road rule",
+          "match": { "type": "line", "idIncludes": ["motorway", "trunk"] },
+          "paint": { "line-color": "#2D2F33" }
+        },
+        {
+          "_": "minor roads recede to ink-800 linework",
+          "match": { "type": "line", "idIncludes": ["road", "highway", "bridge", "tunnel"] },
+          "paint": { "line-color": "#1E1F22" }
+        },
+        {
+          "_": "anything else that speaks",
+          "match": { "type": "symbol" },
+          "paint": { "text-color": "#8C8D90", "text-halo-color": "#19191C" }
         }
       ]
     }
