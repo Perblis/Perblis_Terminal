@@ -113,3 +113,20 @@ describe("tap-to-expand ladder", () => {
     expect(screen.getByLabelText("Dismiss")).toBeTruthy();
   });
 });
+
+describe("worklet safety (2026-08-08 crash regression)", () => {
+  // The shipped build crashed on every gesture RELEASE: `.onEnd` runs on the
+  // UI thread, and it called `resolveSnap` — a plain JS function at the time.
+  // Calling a non-worklet from a worklet throws and takes the app down.
+  //
+  // Nothing else caught this. The Reanimated jest mock runs worklets as
+  // ordinary JS, so every behavioural test above passed while the device died.
+  // The Babel plugin stamps real worklets with __workletHash, so asserting on
+  // that is the one check that actually reaches the failure mode.
+  test.each([
+    ["resolveSnap", resolveSnap],
+    ["snapOffsets", snapOffsets],
+  ])("%s is compiled as a worklet — it is called from Gesture.onEnd", (_name, fn) => {
+    expect(typeof (fn as unknown as { __workletHash?: number }).__workletHash).toBe("number");
+  });
+});

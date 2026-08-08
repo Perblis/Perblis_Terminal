@@ -38,8 +38,21 @@ export const DEFAULT_SNAPS: SnapPoints = { half: 0.55, full: 0.92 };
 /** design-system ch.04 §3 — the map/discovery sheet. */
 export const MAP_SNAPS: SnapPoints = { peek: 88, half: 0.5, full: 0.92 };
 
+// ⚠️ BOTH helpers below are WORKLETS and must stay that way.
+//
+// They are called from Gesture.Pan().onEnd, which Reanimated compiles to run
+// on the UI thread. Calling a plain JS function from there throws and takes
+// the app down — which is exactly what shipped on 2026-08-08: dragging the
+// sheet worked (onUpdate is inline arithmetic) and RELEASING it crashed.
+//
+// Jest cannot catch this. The Reanimated mock runs worklets as ordinary JS,
+// so the unit tests below pass on the JS thread while the device crashes.
+// If you add a helper and call it from a gesture callback, it needs the
+// directive too.
+
 /** Translate-Y for each stop, largest (lowest on screen) first. */
 export function snapOffsets(snaps: SnapPoints, height: number): { name: SnapName; y: number }[] {
+  "worklet";
   const stops: { name: SnapName; y: number }[] = [];
   if (snaps.peek !== undefined) stops.push({ name: "peek", y: height - snaps.peek });
   stops.push({ name: "half", y: height * (1 - snaps.half) });
@@ -61,6 +74,7 @@ export function resolveSnap(
   snaps: SnapPoints,
   height: number,
 ): SnapName | "dismiss" {
+  "worklet";
   const stops = snapOffsets(snaps, height);
   const lowest = stops[0]; // largest y — closest to the bottom of the screen
   // Half the remaining gap below the lowest stop reads as intent to close.
@@ -104,8 +118,11 @@ export function Sheet({
   };
   const stops = snapOffsets(snaps, height);
   const yFor = (name: SnapName) => stops.find((s) => s.name === name)?.y ?? stops[0].y;
+  // Resolved to plain numbers here so the gesture worklet can capture them
+  // directly and never has to call back into JS-thread code.
   const fullY = yFor("full");
   const halfY = yFor("half");
+  const peekY = stops[0].y; // lowest stop: `peek` when present, else `half`
   /** A peek stop means this is a map sheet: the chart must stay reachable. */
   const collapsible = snaps.peek !== undefined;
 
@@ -167,7 +184,12 @@ export function Sheet({
         y.value = withSpring(height, SPRING, () => runOnJS(dismiss)());
         return;
       }
-      y.value = withSpring(yFor(target), SPRING);
+      // Plain captured numbers, NOT yFor() — a component-body closure is not
+      // a worklet and calling it here would crash on the UI thread.
+      y.value = withSpring(
+        target === "full" ? fullY : target === "half" ? halfY : peekY,
+        SPRING,
+      );
       runOnJS(settle)(target);
     });
 
