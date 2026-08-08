@@ -23,10 +23,15 @@ export function FilterBar({
   active,
   onChange,
   resultCount,
+  countText,
 }: {
   active: AssetClass | null;
   onChange: (next: AssetClass | null) => void;
   resultCount: number | null;
+  /** Overrides the default "N assets in view" line. S12 uses it to disclose
+   *  ordering ("24+ assets · nearest first") — the /search/list contract has
+   *  no total and no sort param, so both facts have to be stated honestly. */
+  countText?: string;
 }) {
   const t = useThemeTokens();
   return (
@@ -82,10 +87,11 @@ export function FilterBar({
           <View className="h-full w-4 opacity-80" style={{ backgroundColor: t["--surface-page"] }} />
         </View>
       </View>
-      {resultCount !== null ? (
+      {countText !== undefined || resultCount !== null ? (
         <View className="ml-4 mt-2 self-start">
           <MonoText className="text-caption text-text-tertiary">
-            {resultCount} {resultCount === 1 ? "asset" : "assets"} in view
+            {countText ??
+              `${resultCount} ${resultCount === 1 ? "asset" : "assets"} in view`}
           </MonoText>
         </View>
       ) : null}

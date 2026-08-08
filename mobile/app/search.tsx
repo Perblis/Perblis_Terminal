@@ -1,26 +1,39 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RangeCalendar, type DateRange as CalendarRange } from "../components/hires/range-calendar";
+import { FilterBar } from "../components/map/filter-bar";
+import { FilterSheet } from "../components/search/filter-sheet";
 import { ListingRow } from "../components/search/listing-row";
+import { YardRow } from "../components/search/yard-row";
+import { Chip } from "../components/ui/chip";
 import { EmptyState } from "../components/ui/empty-state";
-import { BodyText, DisplayText, Money, MonoText } from "../components/ui/text";
-import { TextField } from "../components/ui/text-field";
+import { Segmented } from "../components/ui/segmented";
+import { BodyText, DisplayText, MonoText } from "../components/ui/text";
 import { ASSET_CLASSES } from "../lib/asset-classes";
 import { parseNairaInput } from "../lib/naira";
+import { starFieldChipLabel } from "../lib/star-field";
 import { useThemeTokens } from "../lib/theme";
-import { resolveMediaUrl } from "../lib/media";
 import { useListSearch, type ListRow } from "../lib/queries";
 import type { SearchFilters } from "../lib/search-params";
+import type { ListLocationYard } from "../lib/types";
 import { useMapState } from "../stores/map-state";
 
-const RADII = [5, 10, 25, 50, 100] as const;
-
 /**
- * S12 Search & Results. Ordering is distance-only — the frozen /search/list
- * contract has no sort param (price sort is a recorded additive-backend ask).
+ * S12 Search & Results.
+ *
+ * Ordering is distance-only — the frozen /search/list contract has no sort
+ * param (price sort is a recorded additive-backend ask), so the summary line
+ * says "nearest first" rather than pretending a sort control exists.
+ *
+ * 2026-08-09 hierarchy rework (founder): the header used to run ~150pt
+ * collapsed and ~600pt expanded on a ~780pt viewport — with an autoFocus
+ * keyboard on top, the assets were entirely below the fold. Advanced filters
+ * moved into FilterSheet; the four loose grouping/view pills became two
+ * Segmented controls; the class chips reuse the map's FilterBar so both
+ * surfaces look like one product. Search → category → summary → assets.
  */
 export default function Search() {
   const tk = useThemeTokens();
@@ -73,7 +86,8 @@ export default function Search() {
   if (specMin || specMax) {
     activeChips.push({
       key: "spec",
-      label: `★ ${specMin || "…"}–${specMax || "…"}`,
+      // Names the actual field ("Operating weight 10–30 tonnes") instead of "★".
+      label: starFieldChipLabel(classFilter, specMin, specMax),
       clear: () => {
         setSpecMin("");
         setSpecMax("");
@@ -87,39 +101,24 @@ export default function Search() {
       clear: () => setDateRange(null),
     });
   }
+  const clearAll = () => activeChips.forEach((c) => c.clear());
+
+  // A count, not a total: /search/list is keyset-paginated with no `count`
+  // field, so "24+" is the honest form while another page exists.
+  const summary = `${rows.length}${search.hasNextPage ? "+" : ""} ${
+    rows.length === 1 ? "asset" : "assets"
+  } · nearest first`;
+
+  const backToMap = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)" as never);
+  };
 
   const renderRow = ({ item }: { item: ListRow }) => {
     if ("type" in item && item.type === "yard") {
+      const yard = item as ListLocationYard;
       return (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push(`/supplier/${item.supplier.id}` as never)}
-          className="border-b border-border-default bg-surface-sunken px-4 py-3 active:opacity-90"
-        >
-          <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
-              {item.supplier.logo ? (
-                <Image source={{ uri: resolveMediaUrl(item.supplier.logo) }} style={{ width: 40, height: 40 }} />
-              ) : (
-                <MonoText className="text-text-brand-on-inverse">
-                  {item.supplier.name.slice(0, 2).toUpperCase()}
-                </MonoText>
-              )}
-            </View>
-            <View className="flex-1">
-              <BodyText className="font-sans-semibold" numberOfLines={1}>
-                {item.name}
-              </BodyText>
-              <BodyText className="text-body-sm text-text-secondary">
-                {item.listing_count} assets · {item.distance_km} km
-              </BodyText>
-            </View>
-            <View className="items-end">
-              <Money display={item.price_from_display} />
-              <BodyText className="text-caption text-text-tertiary">/ day from</BodyText>
-            </View>
-          </View>
-        </Pressable>
+        <YardRow yard={yard} onPress={() => router.push(`/supplier/${yard.supplier.id}` as never)} />
       );
     }
     const listing = item as Extract<ListRow, { id: string }>;
@@ -134,15 +133,21 @@ export default function Search() {
 
   return (
     <View className="flex-1 bg-surface-page" style={{ paddingTop: insets.top }}>
-      {/* Expanded pill: q + filter toggles */}
-      <View className="gap-2 border-b border-border-default bg-surface-card px-4 pb-3 pt-2">
-        <View className="flex-row items-center gap-2">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back to map" onPress={() => router.back()}>
-            <DisplayText className="px-1 text-h3">←</DisplayText>
+      {/* Header: search → category → summary → assets. No border box — the
+          results list's own hairlines separate it from the content. */}
+      <View className="gap-2 bg-surface-page pb-2 pt-2">
+        <View className="flex-row items-center gap-2 px-4">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to map"
+            hitSlop={12}
+            onPress={backToMap}
+          >
+            <DisplayText className="pr-1 text-h3">←</DisplayText>
           </Pressable>
           <TextInput
             accessibilityLabel="Search assets"
-            className="min-h-12 flex-1 rounded-full border border-border-strong bg-surface-page px-4 font-sans text-body text-text-primary"
+            className="min-h-11 flex-1 rounded-full bg-surface-sunken px-4 font-sans text-body text-text-primary"
             placeholder="Search assets, e.g. “30t excavator”"
             placeholderTextColor={tk["--text-tertiary"]}
             value={q}
@@ -150,163 +155,79 @@ export default function Search() {
             returnKeyType="search"
             autoFocus
           />
+          {/* The count badge is what lets the panel collapse without hiding
+              state — the old "Filters" label gave no sign anything was on. */}
           <Pressable
+            testID="open-filters"
             accessibilityRole="button"
-            onPress={() => setFiltersOpen((v) => !v)}
-            className={`min-h-12 items-center justify-center rounded-full border px-3.5 ${filtersOpen ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
+            accessibilityLabel={
+              activeChips.length > 0 ? `Filters, ${activeChips.length} active` : "Filters"
+            }
+            onPress={() => setFiltersOpen(true)}
+            hitSlop={{ top: 8, bottom: 8 }}
+            className="min-h-11 flex-row items-center gap-1.5 rounded-full bg-surface-sunken px-3.5"
           >
-            <BodyText className={filtersOpen ? "text-text-primary" : "text-text-secondary"}>Filters</BodyText>
-          </Pressable>
-        </View>
-
-        {filtersOpen ? (
-          <View className="gap-3 pt-1">
-            {/* Class chips */}
-            <View className="flex-row flex-wrap gap-2">
-              {ASSET_CLASSES.map((meta) => {
-                const selected = classFilter === meta.value;
-                return (
-                  <Pressable
-                    key={meta.value}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    onPress={() => setClassFilter(selected ? null : meta.value)}
-                    className={`rounded-full border px-3 py-1.5 ${selected ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
-                  >
-                    <BodyText className={`text-body-sm ${selected ? "text-text-primary" : "text-text-secondary"}`}>
-                      {meta.label}
-                    </BodyText>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {/* Radius */}
-            <View className="flex-row items-center gap-2">
-              <BodyText className="text-body-sm text-text-secondary">Within</BodyText>
-              {RADII.map((r) => (
-                <Pressable
-                  key={r}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: radiusKm === r }}
-                  onPress={() => setRadiusKm(r)}
-                  className={`rounded-full border px-3 py-1.5 ${radiusKm === r ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
-                >
-                  <MonoText className={`text-body-sm ${radiusKm === r ? "text-text-primary" : "text-text-secondary"}`}>
-                    {r}km
-                  </MonoText>
-                </Pressable>
-              ))}
-            </View>
-            {/* Dates — 'available' then means "for these dates" */}
-            <View className="flex-row items-center gap-2">
-              <BodyText className="text-body-sm text-text-secondary">Dates</BodyText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Choose hire dates"
-                onPress={() => {
-                  setPendingDates(
-                    dateRange ? { start: dateRange.from, end: dateRange.to } : { start: null, end: null },
-                  );
-                  setDatesOpen(true);
-                }}
-                className={`rounded-full border px-3 py-1.5 ${dateRange ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
-              >
-                <MonoText className={`text-body-sm ${dateRange ? "text-text-primary" : "text-text-secondary"}`}>
-                  {dateRange ? `${dateRange.from} → ${dateRange.to}` : "Any dates"}
+            <BodyText className="text-body-sm text-text-primary">Filters</BodyText>
+            {activeChips.length > 0 ? (
+              <View className="h-5 min-w-5 items-center justify-center rounded-full bg-surface-brand px-1">
+                <MonoText className="text-caption text-text-on-brand">
+                  {activeChips.length}
                 </MonoText>
-              </Pressable>
-              {dateRange ? (
-                <Pressable accessibilityRole="button" accessibilityLabel="Clear dates" onPress={() => setDateRange(null)}>
-                  <BodyText className="text-body-sm text-text-tertiary">✕</BodyText>
-                </Pressable>
-              ) : null}
-            </View>
-            {/* Price */}
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <TextField
-                  label="Min ₦/day"
-                  keyboardType="number-pad"
-                  value={priceMin}
-                  onChangeText={setPriceMin}
-                />
-              </View>
-              <View className="flex-1">
-                <TextField
-                  label="Max ₦/day"
-                  keyboardType="number-pad"
-                  value={priceMax}
-                  onChangeText={setPriceMax}
-                />
-              </View>
-            </View>
-            {/* ★spec — class-dependent (server rejects without a class) */}
-            {classFilter ? (
-              <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <TextField
-                    label="★ spec min"
-                    keyboardType="numeric"
-                    value={specMin}
-                    onChangeText={setSpecMin}
-                  />
-                </View>
-                <View className="flex-1">
-                  <TextField
-                    label="★ spec max"
-                    keyboardType="numeric"
-                    value={specMax}
-                    onChangeText={setSpecMax}
-                  />
-                </View>
               </View>
             ) : null}
-          </View>
-        ) : null}
-
-        {/* Grouping + map toggle */}
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: groupBy === "asset" }}
-            onPress={() => setGroupBy("asset")}
-            className={`rounded-full border px-3 py-1.5 ${groupBy === "asset" ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
-          >
-            <BodyText className={`text-body-sm ${groupBy === "asset" ? "text-text-primary" : "text-text-secondary"}`}>
-              By asset
-            </BodyText>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: groupBy === "location" }}
-            onPress={() => setGroupBy("location")}
-            className={`rounded-full border px-3 py-1.5 ${groupBy === "location" ? "border-ink-600 bg-ink-700" : "border-border-strong"}`}
-          >
-            <BodyText className={`text-body-sm ${groupBy === "location" ? "text-text-primary" : "text-text-secondary"}`}>
-              By location
-            </BodyText>
-          </Pressable>
-          <View className="flex-1" />
-          <Pressable accessibilityRole="button" onPress={() => router.back()}>
-            <BodyText className="text-text-link">Map view →</BodyText>
           </Pressable>
         </View>
 
-        {/* Clearable active-filter chips */}
+        {/* Category + the summary line, reusing the map's compact chip row. */}
+        <FilterBar active={classFilter} onChange={setClassFilter} resultCount={null} countText={summary} />
+
+        {/* Two controls, not four pills: what's grouped, and where it's shown. */}
+        <View className="flex-row items-center justify-between px-4">
+          <Segmented
+            testID="group-by"
+            value={groupBy}
+            onChange={setGroupBy}
+            options={[
+              { value: "asset", label: "Assets", a11yLabel: "Group by asset" },
+              { value: "location", label: "Yards", a11yLabel: "Group by yard" },
+            ]}
+          />
+          <Segmented
+            testID="view-mode"
+            value="list"
+            onChange={(next) => {
+              if (next === "map") backToMap();
+            }}
+            options={[
+              { value: "list", label: "List", a11yLabel: "List view" },
+              { value: "map", label: "Map", a11yLabel: "Map view" },
+            ]}
+          />
+        </View>
+
+        {/* Applied filters stay visible, countable and clearable (07 §8). */}
         {activeChips.length > 0 ? (
-          <View className="flex-row flex-wrap gap-2">
+          <View className="flex-row flex-wrap items-center gap-2 px-4">
             {activeChips.map((chip) => (
-              <Pressable
+              <Chip
                 key={chip.key}
-                accessibilityRole="button"
-                accessibilityLabel={`Clear ${chip.label}`}
+                testID={`chip-${chip.key}`}
+                label={chip.label}
+                dismissible
+                a11yLabel={`Clear ${chip.label}`}
                 onPress={chip.clear}
-                className="flex-row items-center gap-1 rounded-full bg-surface-sunken px-3 py-1"
-              >
-                <BodyText className="text-body-sm text-text-secondary">{chip.label}</BodyText>
-                <BodyText className="text-body-sm text-text-tertiary">✕</BodyText>
-              </Pressable>
+              />
             ))}
+            {activeChips.length >= 2 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={clearAll}
+                hitSlop={{ top: 8, bottom: 8 }}
+                className="h-8 justify-center px-1"
+              >
+                <BodyText className="text-body-sm text-text-link">Clear all</BodyText>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -316,6 +237,23 @@ export default function Search() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
         </View>
+      ) : search.isError ? (
+        /* This branch did not exist: a failed request fell through to the
+           empty state and told the user their search was too narrow. */
+        <View className="flex-1 items-center justify-center">
+          <EmptyState
+            title="Couldn’t load results"
+            body="Check your connection and try again — your filters are still set."
+          />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void search.refetch()}
+            className="min-h-12 items-center justify-center rounded-md bg-surface-brand px-6 py-3"
+          >
+            <BodyText className="font-sans-semibold text-text-on-brand">Try again</BodyText>
+          </Pressable>
+          <View className="h-8" />
+        </View>
       ) : rows.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <EmptyState
@@ -323,31 +261,68 @@ export default function Search() {
             body="Widen the radius or clear a filter."
           />
           {activeChips.length > 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => activeChips.forEach((c) => c.clear())}
-              className="pb-6"
-            >
+            <Pressable accessibilityRole="button" onPress={clearAll} className="pb-6">
               <BodyText className="text-text-link">Clear all filters</BodyText>
             </Pressable>
           ) : null}
         </View>
       ) : (
-        <FlatList
-          data={rows}
-          keyExtractor={(item, i) =>
-            "type" in item && item.type === "yard" ? `y-${item.yard_id}` : `l-${(item as { id: string }).id}-${i}`
-          }
-          renderItem={renderRow}
-          onEndReached={() => {
-            if (search.hasNextPage && !search.isFetchingNextPage) void search.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={
-            search.isFetchingNextPage ? <ActivityIndicator className="py-4" /> : <View className="h-8" />
-          }
-        />
+        /* keepPreviousData means a filter change re-renders the OLD rows with
+           isLoading false. Dimming them is the only signal the user gets that
+           the list is about to change under them. */
+        <View
+          className="flex-1"
+          style={{ opacity: search.isFetching && !search.isFetchingNextPage ? 0.55 : 1 }}
+        >
+          <FlatList
+            data={rows}
+            keyExtractor={(item, i) =>
+              "type" in item && item.type === "yard" ? `y-${item.yard_id}` : `l-${(item as { id: string }).id}-${i}`
+            }
+            renderItem={renderRow}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            onEndReached={() => {
+              if (search.hasNextPage && !search.isFetchingNextPage) void search.fetchNextPage();
+            }}
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={
+              search.isFetchingNextPage ? <ActivityIndicator className="py-4" /> : <View className="h-8" />
+            }
+          />
+        </View>
       )}
+
+      {/* Advanced filters — a sheet, not a permanently expanded panel. */}
+      {filtersOpen ? (
+        <FilterSheet
+          assetClass={classFilter}
+          onAssetClass={setClassFilter}
+          radiusKm={radiusKm}
+          onRadiusKm={setRadiusKm}
+          dateRange={dateRange}
+          onOpenDates={() => {
+            setPendingDates(
+              dateRange ? { start: dateRange.from, end: dateRange.to } : { start: null, end: null },
+            );
+            setDatesOpen(true);
+          }}
+          onClearDates={() => setDateRange(null)}
+          priceMin={priceMin}
+          priceMax={priceMax}
+          onPriceMin={setPriceMin}
+          onPriceMax={setPriceMax}
+          specMin={specMin}
+          specMax={specMax}
+          onSpecMin={setSpecMin}
+          onSpecMax={setSpecMax}
+          resultCount={rows.length}
+          hasMore={search.hasNextPage ?? false}
+          activeCount={activeChips.length}
+          onClearAll={clearAll}
+          onDismiss={() => setFiltersOpen(false)}
+        />
+      ) : null}
 
       {/* Hire-dates picker (shared RangeCalendar) */}
       {datesOpen ? (

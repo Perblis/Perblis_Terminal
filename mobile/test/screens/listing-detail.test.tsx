@@ -82,7 +82,9 @@ test("the sticky CTAs distinguish themselves — price on the primary, intent on
   // "Enquire" is the Lexicon's term (02 §Enquiry) — the caption explains it
   // rather than renaming it.
   expect(screen.getByText("Enquire")).toBeTruthy();
-  expect(screen.getByText("Ask a question first")).toBeTruthy();
+  // Short enough to stay on ONE line: a wrapping sublabel made this button
+  // taller than the primary and the pair sat visibly misaligned.
+  expect(screen.getByText("Ask a question")).toBeTruthy();
   expectNoFeeLeak(collectStrings(screen.toJSON() as never));
 });
 
