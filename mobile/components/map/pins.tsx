@@ -17,7 +17,7 @@
 // detailed/selected plate. The verification tick renders only there too,
 // as a circular seal — a floating rounded square on every compact pin read
 // as a field of checkboxes.
-import { Image, View } from "react-native";
+import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { tokens } from "@terminal/tokens";
 
@@ -28,6 +28,7 @@ import { useThemeTokens } from "../../lib/theme";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
 import type { MapYard, MapSoloListing } from "../../lib/types";
 import { MonoText, BodyText } from "../ui/text";
+import { RemoteImage } from "../ui/remote-image";
 
 const INK = tokens.color.colorInk900;
 const INK_RULE = tokens.color.colorInk700;
@@ -137,7 +138,7 @@ export function YardPin({
         <View style={{ flexDirection: "row", alignItems: "stretch", height: showDetail ? 28 : 24 }}>
           {showDetail ? (
             yard.supplier.logo ? (
-              <Image source={{ uri: resolveMediaUrl(yard.supplier.logo) }} style={{ width: 28, height: 28 }} />
+              <RemoteImage uri={resolveMediaUrl(yard.supplier.logo)} style={{ width: 28, height: 28 }} />
             ) : (
               <View style={{ justifyContent: "center", paddingHorizontal: 7 }}>
                 <MonoText style={{ color: AMBER, fontSize: 13 }}>{initials}</MonoText>

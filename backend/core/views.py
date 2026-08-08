@@ -9,7 +9,9 @@ round-trip works without external storage.
 
 from __future__ import annotations
 
-from django.http import FileResponse, Http404
+import mimetypes
+
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -70,6 +72,18 @@ class MediaUploadView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _content_type_for(key: str) -> str:
+    """Guess an object's content type from its key.
+
+    ``FileResponse`` only infers this from a real file object; handed a bytes
+    iterator it falls back to ``text/html``, which — combined with the
+    ``nosniff`` header SecurityMiddleware sets — makes every client refuse to
+    render the image. Both serve views therefore state the type explicitly.
+    """
+    guessed, _ = mimetypes.guess_type(key)
+    return guessed or "application/octet-stream"
+
+
 class MediaPrivateServeView(APIView):
     """Local-mode (dev/CI) private-object serve view — the presigned-GET stand-in.
 
@@ -89,19 +103,57 @@ class MediaPrivateServeView(APIView):
             content = media.read_private_file(key)
         except Exception as exc:  # noqa: BLE001 — bad/expired token or missing key => 404
             raise Http404() from exc
-        return FileResponse(iter([content]), filename=key.split("/")[-1])
+        return FileResponse(
+            iter([content]),
+            filename=key.split("/")[-1],
+            content_type=_content_type_for(key),
+        )
 
 
 class MediaServeView(APIView):
-    """Local-mode (dev/CI) public-object serve view. Prod serves from R2 directly."""
+    """Public-object read path for both clients.
+
+    R2's public bucket is only reachable over the S3 API endpoint, which is not
+    publicly readable, so the portal (PR #42) and the app resolve every public
+    media URL onto this endpoint. This is not a dev-only shim — in prod it is how
+    listing photos reach the screen.
+
+    In prod it **redirects** to a short-lived presigned R2 URL rather than
+    streaming the bytes: the API runs three gunicorn workers, and proxying a
+    gallery's worth of photos through them starves the whole process (photos
+    load slowly, then not at all). The redirect costs a signature and hands the
+    client to Cloudflare's edge. Local mode has no R2, so it serves from disk.
+    """
 
     permission_classes = [AllowAny]
+
+    # Long enough that a gallery scroll reuses one signature, short enough that a
+    # leaked URL is worthless. The object key itself is unguessable (UUIDv7).
+    PRESIGN_TTL = 60 * 60
 
     @extend_schema(exclude=True)
     def get(self, request):
         key = request.query_params.get("key", "")
+        if not key or ".." in key or key.startswith("/"):
+            raise Http404()
+
+        target = media.public_presign_get(key, ttl=self.PRESIGN_TTL)
+        if target is not None:
+            response = HttpResponseRedirect(target)
+            # Cache the *redirect* for well under its TTL so a client never
+            # follows a signature that expired while it sat in cache.
+            response["Cache-Control"] = f"public, max-age={self.PRESIGN_TTL // 2}"
+            return response
+
         try:
             content = media.read_public_file(key)
         except Exception as exc:  # noqa: BLE001 — missing/invalid key => 404
             raise Http404() from exc
-        return FileResponse(iter([content]), filename=key.split("/")[-1])
+        response = FileResponse(
+            iter([content]),
+            filename=key.split("/")[-1],
+            content_type=_content_type_for(key),
+        )
+        # Public listing media is immutable — the key changes when the photo does.
+        response["Cache-Control"] = "public, max-age=604800, immutable"
+        return response

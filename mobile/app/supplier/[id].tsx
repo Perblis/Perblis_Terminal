@@ -12,6 +12,7 @@ import { useCreateEnquiry, useStorefront } from "../../lib/queries";
 import { resolveMediaUrl } from "../../lib/media";
 import { useMapState } from "../../stores/map-state";
 import { useSession } from "../../stores/session";
+import { RemoteImage } from "../../components/ui/remote-image";
 
 function CornerMarks() {
   // M4 registration marks on the cover (01 §2).
@@ -106,7 +107,7 @@ export default function Storefront() {
         {/* Cover */}
         <View className="h-52 bg-surface-chrome">
           {cover ? (
-            <Image source={{ uri: resolveMediaUrl(cover) }} style={{ width: "100%", height: 208 }} resizeMode="cover" />
+            <RemoteImage uri={resolveMediaUrl(cover)} style={{ width: "100%", height: 208 }} />
           ) : (
             <View className="flex-1 items-center justify-center">
               <MonoText className="text-body text-text-brand-on-inverse">{data.business_name}</MonoText>

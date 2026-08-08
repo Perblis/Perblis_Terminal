@@ -2,12 +2,13 @@
 // the status bar, counter chip, M4 corner marks on the first photo, and a
 // thumbnail rail. The machine as showpiece.
 import { useRef, useState } from "react";
-import { FlatList, Image, Pressable, View, useWindowDimensions } from "react-native";
+import { FlatList, Pressable, View, useWindowDimensions } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { resolveMediaUrl } from "../../lib/media";
 import type { ListingPhoto } from "../../lib/types";
 import { MonoText } from "../ui/text";
+import { RemoteImage } from "../ui/remote-image";
 
 function CornerMarks() {
   const arm = "M1 13 V1 H13";
@@ -58,10 +59,10 @@ export function Gallery({ photos, topInset }: { photos: ListingPhoto[]; topInset
         onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
         renderItem={({ item, index: i }) => (
           <View style={{ width, height: height + topInset }}>
-            <Image
-              source={{ uri: resolveMediaUrl(item.url) }}
+            <RemoteImage
+              uri={resolveMediaUrl(item.url)}
               style={{ width, height: height + topInset }}
-              resizeMode="cover"
+              recyclingKey={item.id}
             />
             {i === 0 ? <CornerMarks /> : null}
           </View>
@@ -86,8 +87,8 @@ export function Gallery({ photos, topInset }: { photos: ListingPhoto[]; topInset
                 setIndex(i);
               }}
             >
-              <Image
-                source={{ uri: resolveMediaUrl(p.url) }}
+              <RemoteImage
+                uri={resolveMediaUrl(p.url)}
                 style={{
                   width: 36,
                   height: 27,

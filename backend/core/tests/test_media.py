@@ -91,6 +91,49 @@ def test_local_upload_then_serve_round_trip(auth, supplier):
     assert served.status_code == 200
 
 
+def test_public_serve_declares_the_image_content_type(auth, supplier, client):
+    """The proxy must name the type: SecurityMiddleware sends ``nosniff``, so a
+    photo served as ``text/html`` is one no client will render (both surfaces
+    load listing photos through this endpoint)."""
+    presign = (
+        auth(supplier)
+        .post(
+            PRESIGN,
+            {"kind": "listing_photo", "content_type": "image/jpeg", "file_size": 4},
+            format="json",
+        )
+        .json()
+    )
+    auth(supplier).put(
+        presign["presigned_put_url"], data=b"\xff\xd8\xff\xe0", content_type="image/jpeg"
+    )
+
+    served = client.get(media.public_url(presign["key"]))
+    assert served.status_code == 200
+    assert served.headers["Content-Type"] == "image/jpeg"
+
+
+def test_public_serve_redirects_to_r2_when_configured(client, monkeypatch):
+    """With R2 live the proxy must hand off, not stream.
+
+    Three gunicorn workers cannot also be a CDN — proxying a gallery starves
+    them and photos stop loading, which is exactly the bug this replaced.
+    """
+    monkeypatch.setattr(
+        media, "public_presign_get", lambda key, ttl=None: f"https://r2/{key}?sig=x"
+    )
+
+    served = client.get("/api/v1/media/public?key=listings/abc.jpg")
+
+    assert served.status_code == 302
+    assert served.headers["Location"] == "https://r2/listings/abc.jpg?sig=x"
+    assert "max-age" in served.headers["Cache-Control"]
+
+
+def test_public_serve_rejects_a_traversal_key(client):
+    assert client.get("/api/v1/media/public?key=../../etc/passwd").status_code == 404
+
+
 def test_service_raises_on_unknown_kind_directly():
     with pytest.raises(media.MediaKindInvalid):
         media.presign_upload(kind="nope", content_type="image/png", file_size=10)
