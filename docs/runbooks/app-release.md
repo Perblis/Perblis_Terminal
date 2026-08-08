@@ -134,6 +134,22 @@ Devices apply it across **two cold launches**: launch #1 downloads in the backgr
 backgrounding) runs the new bundle. Rebuild the binary instead whenever `app.json` plugins
 or native dependencies changed — and bump the static `runtimeVersion` when you do (§1).
 
+### Verify what is actually on the channel
+
+`eas update` going green proves the upload worked, not that the bundle is correct — the
+2026-08-08 incident had weeks of green publishes carrying a decommissioned API host. Before
+trusting a channel, or before installing any new binary:
+
+```bash
+cd mobile && ./scripts/verify-ota-bundle.sh              # android / runtime 1 / preview
+```
+
+It fetches the manifest as `expo-updates` would, maps the update id back to the `ota` run
+that published it, and inspects that commit's `lib/api.ts` for the hosts compiled into the
+bundle. Exit code 1 means do not install. (Bundle bytes cannot be read directly —
+`assets.eascdn.net` answers 403 to unauthenticated asset requests by design — so the check
+works by provenance, which needs no Expo login.)
+
 ### Critical (blocking) update
 
 For an update every user must take before continuing (S17 update-required gate):
