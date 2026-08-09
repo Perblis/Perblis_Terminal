@@ -55,6 +55,7 @@ export function FilterSheet({
   onSpecMax,
   resultCount,
   hasMore,
+  resultNoun,
   activeCount,
   onClearAll,
   onDismiss,
@@ -76,6 +77,9 @@ export function FilterSheet({
   onSpecMax: (v: string) => void;
   resultCount: number;
   hasMore: boolean;
+  /** "asset" or "yard" — follows the screen's grouping, so location mode
+   *  doesn't call a list of yard cards a list of assets. */
+  resultNoun: string;
   activeCount: number;
   onClearAll: () => void;
   onDismiss: () => void;
@@ -197,7 +201,9 @@ export function FilterSheet({
       >
         <Button
           label="Show results"
-          sublabel={`${resultCount}${hasMore ? "+" : ""} ${resultCount === 1 ? "asset" : "assets"}`}
+          sublabel={`${resultCount}${hasMore ? "+" : ""} ${
+            resultCount === 1 ? resultNoun : `${resultNoun}s`
+          }`}
           onPress={onDismiss}
         />
       </View>

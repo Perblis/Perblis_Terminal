@@ -20,6 +20,7 @@ from core.money import display
 from hires.availability import availability_map
 from listings.enums import ListingStatus
 from listings.models import Listing
+from search.services import text
 from suppliers.models import SupplierProfile
 
 # Supplier verification badge — mirrors the storefront's mapping (FSD §5.3).
@@ -105,11 +106,12 @@ def matches(listing: Listing, params: dict, star: str | None) -> bool:
     if asset_class and listing.asset_class != asset_class:
         return False
 
+    # Tokens are ANDed and prefix-matched over the listing's whole document
+    # (title, asset type, specs, description, yard, supplier) — see
+    # ``search.services.text`` for why a contiguous substring was not a search.
     q = params.get("q")
-    if q:
-        needle = q.lower()
-        if needle not in listing.title.lower() and needle not in listing.description.lower():
-            return False
+    if q and not text.matches_query(listing, q):
+        return False
 
     price = listing.daily_price
     if params.get("price_min") is not None and price < params["price_min"]:

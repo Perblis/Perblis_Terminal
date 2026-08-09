@@ -56,13 +56,20 @@ export const keys = {
   geocode: (q: string) => ["geocode", q] as const,
 };
 
-/** S4: viewport search — previous pins stay while the next viewport loads. */
-export function useMapSearch(bbox: Bbox, filters: SearchFilters) {
+/** S4: viewport search — previous pins stay while the next viewport loads.
+ *
+ *  `enabled` exists so the map can stand down while it is not the visible
+ *  screen. expo-router keeps the tab mounted underneath a pushed route, so
+ *  without it every filter change made on S12 also refetched the map behind
+ *  it — doubling the request rate against a 60/min throttle for pins nobody
+ *  was looking at. keepPreviousData keeps the last pins on screen across the
+ *  gap, so re-focusing shows the old map while the new one loads. */
+export function useMapSearch(bbox: Bbox, filters: SearchFilters, enabled = true) {
   const query = isValidBbox(bbox) ? mapSearchQuery(bbox, filters) : null;
   return useQuery({
     queryKey: keys.mapSearch(query ?? "invalid"),
     queryFn: () => apiFetch<MapResponse>(`/search/map?${query}`),
-    enabled: query !== null,
+    enabled: enabled && query !== null,
     placeholderData: keepPreviousData,
     staleTime: 15_000,
   });

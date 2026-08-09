@@ -39,7 +39,9 @@ class MapSearchView(GenericAPIView):
             ),
             OpenApiParameter("asset_class", str, description="Filter to one asset class."),
             OpenApiParameter(
-                "q", str, description="Case-insensitive match on title + description."
+                "q",
+                str,
+                description="Free-text query: terms are ANDed and prefix-matched against title, asset type, make/model, description, yard and supplier name.",
             ),
             OpenApiParameter("price_min", int, description="Daily price floor (kobo)."),
             OpenApiParameter("price_max", int, description="Daily price ceiling (kobo)."),
@@ -87,7 +89,9 @@ class ListSearchView(GenericAPIView):
             OpenApiParameter("radius_km", float, description="One of 5/10/25/50/100 or custom."),
             OpenApiParameter("asset_class", str, description="Filter to one asset class."),
             OpenApiParameter(
-                "q", str, description="Case-insensitive match on title + description."
+                "q",
+                str,
+                description="Free-text query: terms are ANDed and prefix-matched against title, asset type, make/model, description, yard and supplier name.",
             ),
             OpenApiParameter("price_min", int, description="Daily price floor (kobo)."),
             OpenApiParameter("price_max", int, description="Daily price ceiling (kobo)."),
