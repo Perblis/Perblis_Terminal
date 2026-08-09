@@ -31,7 +31,9 @@ class MapSearchParamsSerializer(serializers.Serializer):
     )
     asset_class = serializers.ChoiceField(choices=AssetClass.choices, required=False)
     q = serializers.CharField(
-        required=False, allow_blank=True, help_text="Case-insensitive match on title + description."
+        required=False,
+        allow_blank=True,
+        help_text="Free-text query: terms are ANDed and prefix-matched against title, asset type, make/model, description, yard and supplier name.",
     )
     price_min = serializers.IntegerField(
         required=False, min_value=0, help_text="Daily price floor, integer kobo."

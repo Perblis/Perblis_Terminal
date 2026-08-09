@@ -1,7 +1,7 @@
 import NetInfo from "@react-native-community/netinfo";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -20,11 +20,12 @@ import {
 } from "../../components/map/terminal-map";
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText } from "../../components/ui/text";
+import { parseNairaInput } from "../../lib/naira";
 import { useMapSearch } from "../../lib/queries";
 import { useThemeTokens } from "../../lib/theme";
 import type { Bbox } from "../../lib/search-params";
 import { YardSheet } from "../../components/map/yard-sheet";
-import { useMapState } from "../../stores/map-state";
+import { hasContentFilter, useMapState } from "../../stores/map-state";
 
 /** S4 Map (Home) — the front door. Terminal Chart + pins per 06 §3. */
 export default function MapTab() {
@@ -36,6 +37,10 @@ export default function MapTab() {
     classFilter,
     dateRange,
     q,
+    priceMin,
+    priceMax,
+    specMin,
+    specMax,
     setRegion,
     setClassFilter,
     setQ,
@@ -76,11 +81,41 @@ export default function MapTab() {
     [setRegion],
   );
 
-  const search = useMapSearch(
-    bbox ?? { minLng: Number.NaN, minLat: Number.NaN, maxLng: Number.NaN, maxLat: Number.NaN },
-    { assetClass: classFilter, q, dateFrom: dateRange?.from, dateTo: dateRange?.to },
+  // Stand down while S12 (or any pushed route) is on top: expo-router leaves
+  // this screen mounted, so without this the map refetches behind the search
+  // sheet on every committed filter change.
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
   );
 
+  // The map is sent the SAME content filters as the list. It used to get only
+  // class/q/dates, so a price or ★ bound set on S12 narrowed the list while
+  // the map kept showing (and counting) assets the filter excluded.
+  const search = useMapSearch(
+    bbox ?? { minLng: Number.NaN, minLat: Number.NaN, maxLng: Number.NaN, maxLat: Number.NaN },
+    {
+      assetClass: classFilter,
+      q,
+      priceMinKobo: parseNairaInput(priceMin),
+      priceMaxKobo: parseNairaInput(priceMax),
+      specMin: specMin ? Number(specMin) : null,
+      specMax: specMax ? Number(specMax) : null,
+      dateFrom: dateRange?.from,
+      dateTo: dateRange?.to,
+    },
+    focused,
+  );
+
+  // `filtered` drives BOTH the dimming and which count a yard pin badges
+  // (pins.tsx). It used to be `classFilter !== null`, so with only a text
+  // query set the pins stayed at full opacity badging `listing_count` while
+  // the line underneath reported `matching_count` — two contradictory numbers
+  // on one screen, and searching appeared to do nothing to the map.
+  const filtered = hasContentFilter({ classFilter, q, priceMin, priceMax, specMin, specMax });
   const yards = search.data?.yards ?? [];
   const solos = search.data?.listings ?? [];
   const items = carouselItems(yards, solos);
@@ -134,7 +169,7 @@ export default function MapTab() {
         initialZoom={region.zoom}
         yards={yards}
         solos={solos}
-        filtered={classFilter !== null}
+        filtered={filtered}
         selection={selection}
         onSelect={setSelection}
         onRegionChanged={onRegionChanged}
@@ -169,7 +204,10 @@ export default function MapTab() {
               </Pressable>
             </>
           ) : (
-            <BodyText className="text-text-tertiary">Search assets, e.g. “30t excavator”</BodyText>
+            // "22t excavator", not "30t excavator": the shipped placeholder
+            // matched nothing in the catalogue, so the first query a new hirer
+            // tried came back empty and search looked broken on sight.
+            <BodyText className="text-text-tertiary">Search assets, e.g. “22t excavator”</BodyText>
           )}
         </Pressable>
         <View className="mt-2">

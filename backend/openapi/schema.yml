@@ -1639,7 +1639,8 @@ paths:
         name: q
         schema:
           type: string
-        description: Case-insensitive match on title + description.
+        description: 'Free-text query: terms are ANDed and prefix-matched against
+          title, asset type, make/model, description, yard and supplier name.'
       - in: query
         name: radius_km
         schema:
@@ -1726,7 +1727,8 @@ paths:
         name: q
         schema:
           type: string
-        description: Case-insensitive match on title + description.
+        description: 'Free-text query: terms are ANDed and prefix-matched against
+          title, asset type, make/model, description, yard and supplier name.'
       - in: query
         name: radius_km
         schema:

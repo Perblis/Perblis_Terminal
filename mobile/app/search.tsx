@@ -15,11 +15,12 @@ import { BodyText, DisplayText, MonoText } from "../components/ui/text";
 import { ASSET_CLASSES } from "../lib/asset-classes";
 import { parseNairaInput } from "../lib/naira";
 import { starFieldChipLabel } from "../lib/star-field";
+import { useDebouncedCommit } from "../lib/use-debounced-commit";
 import { useThemeTokens } from "../lib/theme";
 import { useListSearch, type ListRow } from "../lib/queries";
 import type { SearchFilters } from "../lib/search-params";
 import type { ListLocationYard } from "../lib/types";
-import { useMapState } from "../stores/map-state";
+import { DEFAULT_RADIUS_KM, useMapState } from "../stores/map-state";
 
 /**
  * S12 Search & Results.
@@ -34,24 +35,67 @@ import { useMapState } from "../stores/map-state";
  * moved into FilterSheet; the four loose grouping/view pills became two
  * Segmented controls; the class chips reuse the map's FilterBar so both
  * surfaces look like one product. Search → category → summary → assets.
+ *
+ * 2026-08-10 search/filter repair (founder: "something wrong with the search
+ * and filter, more prevalent on the mobile apk"). Two structural faults:
+ *
+ * 1. Every keystroke wrote the shared store, so every keystroke was a request
+ *    — and two, because expo-router keeps the map tab mounted behind this
+ *    route. Typing "excavator" was 18 calls against a 60/min throttle, and the
+ *    429 rendered as "Couldn't load results". Text inputs now hold a local
+ *    draft and commit on a 300ms debounce (lib/use-debounced-commit.ts).
+ * 2. radius/price/★ lived in `useState` here while class/q/dates lived in the
+ *    store, so half the filter set silently reset on remount and the map could
+ *    never be told about the other half. All of it now lives in map-state, so
+ *    S4 and S12 filter one result set through one source of truth.
  */
 export default function Search() {
   const tk = useThemeTokens();
   const insets = useSafeAreaInsets();
-  // q is shared with the S4 map (map-state store) so a query typed here
-  // still applies when the user returns to the map view.
-  const { region, classFilter, dateRange, q, setClassFilter, setDateRange, setQ } =
-    useMapState();
+  // Every filter is shared with the S4 map (map-state store) so the two
+  // surfaces can never disagree about what is being filtered.
+  const {
+    region,
+    classFilter,
+    dateRange,
+    q,
+    radiusKm,
+    priceMin,
+    priceMax,
+    specMin,
+    specMax,
+    setClassFilter,
+    setDateRange,
+    setQ,
+    setRadiusKm,
+    setPriceMin,
+    setPriceMax,
+    setSpecMin,
+    setSpecMax,
+    clearFilters,
+  } = useMapState();
 
-  const [radiusKm, setRadiusKm] = useState<number>(25);
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [specMin, setSpecMin] = useState("");
-  const [specMax, setSpecMax] = useState("");
+  // Draft ↔ committed pairs: the draft is what the field shows (instant), the
+  // committed value is what the query keys off (settled).
+  const [qDraft, onQChange, resetQ] = useDebouncedCommit(q, setQ);
+  const [priceMinDraft, onPriceMinChange, resetPriceMin] = useDebouncedCommit(priceMin, setPriceMin);
+  const [priceMaxDraft, onPriceMaxChange, resetPriceMax] = useDebouncedCommit(priceMax, setPriceMax);
+  const [specMinDraft, onSpecMinChange, resetSpecMin] = useDebouncedCommit(specMin, setSpecMin);
+  const [specMaxDraft, onSpecMaxChange, resetSpecMax] = useDebouncedCommit(specMax, setSpecMax);
+
   const [groupBy, setGroupBy] = useState<"asset" | "location">("asset");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [pendingDates, setPendingDates] = useState<CalendarRange>({ start: null, end: null });
+
+  // Changing the class invalidates the ★ bounds (the store clears them); cancel
+  // any in-flight spec commit too, or a late timer would resurrect a bound that
+  // belongs to the class the user just left.
+  const changeClass = (next: typeof classFilter) => {
+    setClassFilter(next);
+    resetSpecMin("");
+    resetSpecMax("");
+  };
 
   const filters: SearchFilters = useMemo(
     () => ({
@@ -78,19 +122,36 @@ export default function Search() {
   const activeChips: { key: string; label: string; clear: () => void }[] = [];
   if (classFilter) {
     const meta = ASSET_CLASSES.find((c) => c.value === classFilter);
-    activeChips.push({ key: "class", label: meta?.label ?? "", clear: () => setClassFilter(null) });
+    activeChips.push({ key: "class", label: meta?.label ?? "", clear: () => changeClass(null) });
   }
-  if (q) activeChips.push({ key: "q", label: `“${q}”`, clear: () => setQ("") });
-  if (priceMin) activeChips.push({ key: "pmin", label: `≥ ₦${priceMin}`, clear: () => setPriceMin("") });
-  if (priceMax) activeChips.push({ key: "pmax", label: `≤ ₦${priceMax}`, clear: () => setPriceMax("") });
-  if (specMin || specMax) {
+  if (q) activeChips.push({ key: "q", label: `“${q}”`, clear: () => resetQ("") });
+  // Radius is the single biggest determinant of the result set and had no chip
+  // at all — a 5km search looked identical to a 100km one. Shown once it
+  // differs from the default so the default doesn't sit there as noise.
+  if (radiusKm !== DEFAULT_RADIUS_KM) {
+    activeChips.push({
+      key: "radius",
+      label: `Within ${radiusKm} km`,
+      clear: () => setRadiusKm(DEFAULT_RADIUS_KM),
+    });
+  }
+  if (priceMin) {
+    activeChips.push({ key: "pmin", label: `≥ ₦${priceMin}`, clear: () => resetPriceMin("") });
+  }
+  if (priceMax) {
+    activeChips.push({ key: "pmax", label: `≤ ₦${priceMax}`, clear: () => resetPriceMax("") });
+  }
+  // Guarded on classFilter to match what is actually sent: search-params drops
+  // ★ bounds without a class (the server 400s them), so an unguarded chip
+  // advertised a filter that wasn't being applied.
+  if (classFilter && (specMin || specMax)) {
     activeChips.push({
       key: "spec",
       // Names the actual field ("Operating weight 10–30 tonnes") instead of "★".
       label: starFieldChipLabel(classFilter, specMin, specMax),
       clear: () => {
-        setSpecMin("");
-        setSpecMax("");
+        resetSpecMin("");
+        resetSpecMax("");
       },
     });
   }
@@ -101,13 +162,27 @@ export default function Search() {
       clear: () => setDateRange(null),
     });
   }
-  const clearAll = () => activeChips.forEach((c) => c.clear());
+
+  const clearAll = () => {
+    // Reset the drafts first (this also cancels their pending commits), then
+    // clear the store — including class, dates and radius, which have no draft.
+    resetQ("");
+    resetPriceMin("");
+    resetPriceMax("");
+    resetSpecMin("");
+    resetSpecMax("");
+    clearFilters();
+  };
 
   // A count, not a total: /search/list is keyset-paginated with no `count`
-  // field, so "24+" is the honest form while another page exists.
-  const summary = `${rows.length}${search.hasNextPage ? "+" : ""} ${
-    rows.length === 1 ? "asset" : "assets"
-  } · nearest first`;
+  // field, so "24+" is the honest form while another page exists. In location
+  // grouping the rows are yard cards, so the noun follows the grouping rather
+  // than calling every row an asset.
+  const noun = groupBy === "location" ? "yard" : "asset";
+  const countLabel = `${rows.length}${search.hasNextPage ? "+" : ""} ${
+    rows.length === 1 ? noun : `${noun}s`
+  }`;
+  const summary = `${countLabel} · nearest first`;
 
   const backToMap = () => {
     if (router.canGoBack()) router.back();
@@ -148,10 +223,13 @@ export default function Search() {
           <TextInput
             accessibilityLabel="Search assets"
             className="min-h-11 flex-1 rounded-full bg-surface-sunken px-4 font-sans text-body text-text-primary"
-            placeholder="Search assets, e.g. “30t excavator”"
+            // An example that actually returns results — "30t excavator"
+            // matched nothing in the catalogue, so the first query a new hirer
+            // tried came back empty and search looked broken on sight.
+            placeholder="Search assets, e.g. “22t excavator”"
             placeholderTextColor={tk["--text-tertiary"]}
-            value={q}
-            onChangeText={setQ}
+            value={qDraft}
+            onChangeText={onQChange}
             returnKeyType="search"
             autoFocus
           />
@@ -179,7 +257,7 @@ export default function Search() {
         </View>
 
         {/* Category + the summary line, reusing the map's compact chip row. */}
-        <FilterBar active={classFilter} onChange={setClassFilter} resultCount={null} countText={summary} />
+        <FilterBar active={classFilter} onChange={changeClass} resultCount={null} countText={summary} />
 
         {/* Two controls, not four pills: what's grouped, and where it's shown. */}
         <View className="flex-row items-center justify-between px-4">
@@ -297,7 +375,7 @@ export default function Search() {
       {filtersOpen ? (
         <FilterSheet
           assetClass={classFilter}
-          onAssetClass={setClassFilter}
+          onAssetClass={changeClass}
           radiusKm={radiusKm}
           onRadiusKm={setRadiusKm}
           dateRange={dateRange}
@@ -308,16 +386,17 @@ export default function Search() {
             setDatesOpen(true);
           }}
           onClearDates={() => setDateRange(null)}
-          priceMin={priceMin}
-          priceMax={priceMax}
-          onPriceMin={setPriceMin}
-          onPriceMax={setPriceMax}
-          specMin={specMin}
-          specMax={specMax}
-          onSpecMin={setSpecMin}
-          onSpecMax={setSpecMax}
+          priceMin={priceMinDraft}
+          priceMax={priceMaxDraft}
+          onPriceMin={onPriceMinChange}
+          onPriceMax={onPriceMaxChange}
+          specMin={specMinDraft}
+          specMax={specMaxDraft}
+          onSpecMin={onSpecMinChange}
+          onSpecMax={onSpecMaxChange}
           resultCount={rows.length}
           hasMore={search.hasNextPage ?? false}
+          resultNoun={noun}
           activeCount={activeChips.length}
           onClearAll={clearAll}
           onDismiss={() => setFiltersOpen(false)}
