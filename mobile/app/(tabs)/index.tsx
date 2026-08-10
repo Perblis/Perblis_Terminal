@@ -21,6 +21,7 @@ import {
 import { EmptyState } from "../../components/ui/empty-state";
 import { BodyText } from "../../components/ui/text";
 import { parseNairaInput } from "../../lib/naira";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
 import { useMapSearch } from "../../lib/queries";
 import { useThemeTokens } from "../../lib/theme";
 import type { Bbox } from "../../lib/search-params";
@@ -120,6 +121,12 @@ export default function MapTab() {
   const solos = search.data?.listings ?? [];
   const items = carouselItems(yards, solos);
   const total = search.data ? yards.reduce((n, y) => n + y.matching_count, 0) + solos.length : null;
+  // The viewport count takes the class-aware noun (D-029) over the union of
+  // what is actually in view; a mixed viewport falls back to "listings".
+  const viewportNoun = assetNoun([
+    ...yards.flatMap((y) => y.class_mix),
+    ...solos.map((l) => l.asset_class),
+  ]);
   const overCap = yards.length + solos.length > 200;
   const emptyViewport = search.data && yards.length === 0 && solos.length === 0;
 
@@ -211,7 +218,12 @@ export default function MapTab() {
           )}
         </Pressable>
         <View className="mt-2">
-          <FilterBar active={classFilter} onChange={setClassFilter} resultCount={total} />
+          <FilterBar
+            active={classFilter}
+            onChange={setClassFilter}
+            resultCount={total}
+            countText={total === null ? undefined : `${countNoun(total, viewportNoun)} in view`}
+          />
         </View>
         {overCap ? (
           <View className="mt-2 items-center">

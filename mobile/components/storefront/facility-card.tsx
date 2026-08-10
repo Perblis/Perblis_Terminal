@@ -17,6 +17,7 @@ import type { AssetNoun } from "../../lib/asset-noun";
 import { capabilityLine, coreSpecLine } from "../../lib/capabilities";
 import { resolveMediaUrl } from "../../lib/media";
 import type { Listing, StorefrontListing } from "../../lib/types";
+import { availabilityCaption } from "../map/pins";
 import { TierBadge } from "../search/listing-row";
 import { RemoteImage } from "../ui/remote-image";
 import { BodyText, Money, MonoText } from "../ui/text";
@@ -32,13 +33,17 @@ export function FacilityCard({
   noun,
 }: {
   listing: StorefrontListing;
-  /** The full listing once GET /listings/{id} resolves. Undefined before that,
-   *  past the fetch cap, or when the read failed — all render identically. */
+  /** Only used against an API predating D-030, when the storefront payload
+   *  carried no specs and the screen had to read each listing separately.
+   *  Undefined normally, past the fetch cap, or when that read failed — all
+   *  render identically. */
   spec?: Listing;
   noun: AssetNoun;
 }) {
-  const core = coreSpecLine(listing, spec);
-  const capabilities = capabilityLine(listing, spec);
+  const core = coreSpecLine(listing, spec?.specs);
+  const capabilities = capabilityLine(listing, spec?.specs);
+  const tier = listing.tier ?? spec?.tier;
+  const available = listing.available;
 
   return (
     <Pressable
@@ -69,20 +74,33 @@ export function FacilityCard({
             {core.name}
           </BodyText>
           {/* Per-facility trust, not the company's. `basic` renders nothing. */}
-          {spec ? <TierBadge tier={spec.tier} /> : null}
+          {tier ? <TierBadge tier={tier} /> : null}
         </View>
 
         {/* Core specification — what it is and how big. Figures in mono. */}
         <View className="flex-row items-center gap-1.5">
           {core.figure ? (
-            <MonoText className="text-mono text-text-secondary" numberOfLines={1}>
+            <MonoText className="shrink text-mono text-text-secondary" numberOfLines={1}>
               {core.spec}
             </MonoText>
           ) : (
-            <BodyText className="text-body-sm text-text-secondary" numberOfLines={1}>
+            <BodyText className="shrink text-body-sm text-text-secondary" numberOfLines={1}>
               {core.spec}
             </BodyText>
           )}
+          {/* Can I actually have it? The map and search rows have always said
+              so; the storefront could not until D-030 put `available` on the
+              payload. Colour PLUS label, never colour alone (02 §3). */}
+          {available !== undefined ? (
+            <>
+              <BodyText className="text-caption text-text-tertiary">·</BodyText>
+              <BodyText
+                className={`text-caption ${available ? "text-green-400" : "text-text-tertiary"}`}
+              >
+                {availabilityCaption({ available })}
+              </BodyText>
+            </>
+          ) : null}
         </View>
 
         {/* Capabilities, or the honest fallback until (or unless) specs land. */}

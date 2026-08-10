@@ -13,13 +13,14 @@ import { EmptyState } from "../components/ui/empty-state";
 import { Segmented } from "../components/ui/segmented";
 import { BodyText, DisplayText, MonoText } from "../components/ui/text";
 import { ASSET_CLASSES } from "../lib/asset-classes";
+import { assetNoun } from "../lib/asset-noun";
 import { parseNairaInput } from "../lib/naira";
 import { starFieldChipLabel } from "../lib/star-field";
 import { useDebouncedCommit } from "../lib/use-debounced-commit";
 import { useThemeTokens } from "../lib/theme";
 import { useListSearch, type ListRow } from "../lib/queries";
 import type { SearchFilters } from "../lib/search-params";
-import type { ListLocationYard } from "../lib/types";
+import type { AssetClass, ListLocationYard } from "../lib/types";
 import { DEFAULT_RADIUS_KM, useMapState } from "../stores/map-state";
 
 /**
@@ -178,9 +179,19 @@ export default function Search() {
   // field, so "24+" is the honest form while another page exists. In location
   // grouping the rows are yard cards, so the noun follows the grouping rather
   // than calling every row an asset.
-  const noun = groupBy === "location" ? "yard" : "asset";
+  // Yards are yards whatever they hold; assets take the class-aware noun
+  // (D-029), derived from the rows actually on screen — a page mixing a cold
+  // room and a tipper falls back to "listings".
+  const noun =
+    groupBy === "location"
+      ? { one: "yard", many: "yards", kind: "listing" as const }
+      : assetNoun(
+          rows.flatMap((r) =>
+            "asset_class" in r && r.asset_class ? [r.asset_class as AssetClass] : [],
+          ),
+        );
   const countLabel = `${rows.length}${search.hasNextPage ? "+" : ""} ${
-    rows.length === 1 ? noun : `${noun}s`
+    rows.length === 1 ? noun.one : noun.many
   }`;
   const summary = `${countLabel} · nearest first`;
 

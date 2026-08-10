@@ -13,6 +13,7 @@ from django.http import Http404
 from accounts.models import AccountLevel, User
 from core import media
 from core.money import display
+from hires.availability import availability_map
 from listings.enums import ListingStatus
 from listings.models import Listing
 from suppliers.models import SupplierProfile, Yard
@@ -41,9 +42,18 @@ def get_storefront(*, supplier_id) -> dict:
         raise Http404()
 
     profile = SupplierProfile.objects.filter(user=user).first()
+    # order_by is load-bearing, not tidiness: without it Postgres returns heap
+    # order, which changes after any UPDATE to a row — so the same storefront
+    # could list its assets differently on two consecutive reads. ids are
+    # UUIDv7, so ordering by id is creation order.
     live = list(
-        Listing.objects.filter(supplier=user, status=ListingStatus.LIVE).prefetch_related("photos")
+        Listing.objects.filter(supplier=user, status=ListingStatus.LIVE)
+        .order_by("id")
+        .prefetch_related("photos")
     )
+    # One grouped aggregate for the whole storefront (hires/availability.py),
+    # so this stays N+1-free however many assets a supplier lists.
+    free = availability_map(live)
     live_by_yard: dict = {}
     for listing in live:
         live_by_yard[listing.yard_id] = live_by_yard.get(listing.yard_id, 0) + 1
@@ -67,6 +77,15 @@ def get_storefront(*, supplier_id) -> dict:
             "daily_price_display": display(listing.daily_price),
             "cover_photo_url": _cover_url(listing),
             "yard_id": str(listing.yard_id) if listing.yard_id else None,
+            # Additive since 2026-08-10 (D-030). A storefront card has to answer
+            # "is this suitable, is it trustworthy, can I have it" without the
+            # hirer opening every asset, and none of that was on this payload:
+            # the app was reading GET /listings/{id} once per card to get it.
+            # `specs` is the same dict the listing detail returns — no fee
+            # fields exist on it, so D-014 is unaffected.
+            "specs": listing.specs,
+            "tier": listing.tier,
+            "available": free.get(listing.id, True),
         }
         for listing in live
     ]

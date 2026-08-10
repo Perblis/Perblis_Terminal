@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Dimensions, FlatList, Pressable, View, type ViewToken } from "react-native";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
 import { splitListingTitle } from "../../lib/listing-title";
 import { resolveMediaUrl } from "../../lib/media";
 import type { MapSoloListing, MapYard } from "../../lib/types";
@@ -294,6 +295,9 @@ function ListingCardBody({ listing }: { listing: MapSoloListing }) {
  * The three class glyphs are gone: a third taxonomy layer on a 54pt card.
  */
 function YardCardBody({ yard }: { yard: MapYard }) {
+  // A yard of cold rooms is a yard of facilities, not "assets" (D-029). The
+  // payload already says which classes are in it.
+  const noun = assetNoun(yard.class_mix);
   const initials = yard.supplier.name
     .split(/\s+/)
     .slice(0, 2)
@@ -325,7 +329,7 @@ function YardCardBody({ yard }: { yard: MapYard }) {
         </BodyText>
         <View className="flex-row items-baseline gap-1">
           <BodyText className="text-caption text-text-tertiary">
-            {yard.listing_count} assets ·
+            {countNoun(yard.listing_count, noun)} ·
           </BodyText>
           <BodyText className="text-caption text-green-400">{availableCount} available</BodyText>
         </View>
@@ -335,7 +339,7 @@ function YardCardBody({ yard }: { yard: MapYard }) {
           <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
         </View>
       </View>
-      <BodyText className="text-body-sm text-text-link">View assets ↑</BodyText>
+      <BodyText className="text-body-sm text-text-link">{`View ${noun.many} ↑`}</BodyText>
     </>
   );
 }

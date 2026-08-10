@@ -16,6 +16,7 @@ import { ScrollView, View } from "react-native";
 import type { ReactNode } from "react";
 
 import { ASSET_CLASSES } from "../../lib/asset-classes";
+import type { AssetNoun } from "../../lib/asset-noun";
 import { starField, starFieldTitle } from "../../lib/star-field";
 import type { AssetClass } from "../../lib/types";
 import type { DateRange } from "../../stores/map-state";
@@ -79,7 +80,9 @@ export function FilterSheet({
   hasMore: boolean;
   /** "asset" or "yard" — follows the screen's grouping, so location mode
    *  doesn't call a list of yard cards a list of assets. */
-  resultNoun: string;
+  /** Pluralisation cannot be an appended "s" — "facility" would become
+   *  "facilitys". The caller passes the resolved noun pair (D-029). */
+  resultNoun: AssetNoun;
   activeCount: number;
   onClearAll: () => void;
   onDismiss: () => void;
@@ -202,7 +205,7 @@ export function FilterSheet({
         <Button
           label="Show results"
           sublabel={`${resultCount}${hasMore ? "+" : ""} ${
-            resultCount === 1 ? resultNoun : `${resultNoun}s`
+            resultCount === 1 ? resultNoun.one : resultNoun.many
           }`}
           onPress={onDismiss}
         />

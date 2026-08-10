@@ -46,9 +46,11 @@ const STOREFRONT = {
   member_since: "2026-06-01",
   about: "Temperature-controlled storage for food, pharmaceutical and agro exporters.",
   yards: [YARD],
+  // Reverse id order on purpose — the screen must impose the order.
   live_listings: [AMBIENT, CHILLED, FROZEN],
 };
 
+/** What GET /storefronts/{id} now returns per listing (D-030). */
 const SPECS: Record<string, Record<string, unknown>> = {
   [FROZEN.id]: { floor_area: 800, temperature_range: "Frozen −18°C", temperature_monitoring: true, backup_power: true, dock_levellers: true, loading_bays: 3, power_supply: "Three-phase", truck_access: "Trailer-accessible" },
   [CHILLED.id]: { floor_area: 500, temperature_range: "Chilled 0–8°C", temperature_monitoring: true, backup_power: true, loading_bays: 2, power_supply: "Three-phase", truck_access: "Trailer-accessible" },
@@ -59,6 +61,16 @@ const SPECS: Record<string, Record<string, unknown>> = {
 const FEE_POISON = { service_fee: 3400000, payout_amount: 30600000, service_fee_display: "₦34,000" };
 
 let listingCalls: string[] = [];
+
+/** The storefront as the current API serves it: specs/tier/available inline. */
+function withPayloadSpecs(listings: Record<string, unknown>[]) {
+  return listings.map((l) => ({
+    ...l,
+    specs: SPECS[l.id as string] ?? {},
+    tier: "verified",
+    available: true,
+  }));
+}
 
 function mockApi(storefront: unknown = STOREFRONT, failing: string[] = []) {
   listingCalls = [];
@@ -85,7 +97,7 @@ function mockApi(storefront: unknown = STOREFRONT, failing: string[] = []) {
 }
 
 beforeEach(() => {
-  mockApi();
+  mockApi({ ...STOREFRONT, live_listings: withPayloadSpecs(STOREFRONT.live_listings) });
   useSession.setState({ me: null, hydrated: true });
 });
 
@@ -121,7 +133,32 @@ test("order is imposed by the client, because the API does not provide one", asy
   expect(chilled).toBeLessThan(ambient);
 });
 
-test("one spec read per facility, and no more", async () => {
+test("capabilities come off the storefront payload — no per-facility read at all", async () => {
+  const screen = await renderScreen(<Storefront />);
+  await screen.findByText("Temperature monitoring · Backup power · Dock levellers");
+  // D-030 put specs on the storefront payload, so the fan-out that used to cost
+  // one request per card must now cost nothing.
+  expect(listingCalls).toEqual([]);
+});
+
+test("availability and tier render from the payload, without waiting on a read", async () => {
+  mockApi({
+    ...STOREFRONT,
+    live_listings: withPayloadSpecs(STOREFRONT.live_listings).map((l, i) =>
+      i === 0 ? { ...l, available: false } : l,
+    ),
+  });
+  const screen = await renderScreen(<Storefront />);
+  await screen.findByText("Greenfield Cold Chain Ltd");
+  // Colour PLUS label — the caption is the signal, not the hue.
+  expect(screen.getByText("Currently on hire")).toBeTruthy();
+  expect(screen.getAllByText("Available now").length).toBe(2);
+  expect(listingCalls).toEqual([]);
+});
+
+test("an API older than D-030 still works — the fallback reads each facility", async () => {
+  // Production backend deploys are manual, so new JS can meet an old API.
+  mockApi(STOREFRONT);
   const screen = await renderScreen(<Storefront />);
   await screen.findByText("Temperature monitoring · Backup power · Dock levellers");
   expect(listingCalls.sort()).toEqual([FROZEN.id, CHILLED.id, AMBIENT.id].sort());
@@ -134,6 +171,7 @@ test("the fan-out is capped, and the facilities past the cap still render fully"
     title: `Cold Room ${i + 1} — ${100 + i} sqm`,
     daily_price_display: `₦${i + 1}0,000`,
   }));
+  // No specs on the payload → the fallback path, which is what the cap bounds.
   mockApi({ ...STOREFRONT, live_listings: many });
   const screen = await renderScreen(<Storefront />);
   await screen.findByText("Greenfield Cold Chain Ltd");

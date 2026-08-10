@@ -11,6 +11,7 @@ import Svg, { Path } from "react-native-svg";
 import { tokens } from "@terminal/tokens";
 
 import { resolveMediaUrl } from "../../lib/media";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
 import type { ListLocationYard } from "../../lib/types";
 import { BodyText, Money, MonoText } from "../ui/text";
 import { RemoteImage } from "../ui/remote-image";
@@ -39,7 +40,7 @@ export function YardRow({ yard, onPress }: { yard: ListLocationYard; onPress: ()
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Yard: ${yard.name}, ${yard.supplier.name}, ${yard.listing_count} assets, ${yard.distance_km} km away`}
+      accessibilityLabel={`Yard: ${yard.name}, ${yard.supplier.name}, ${countNoun(yard.listing_count, assetNoun(yard.class_mix))}, ${yard.distance_km} km away`}
       onPress={onPress}
       className="flex-row items-center gap-3 border-b border-border-default px-4 py-4 active:bg-surface-sunken"
     >
