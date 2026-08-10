@@ -1,5 +1,5 @@
 import { capabilities, capabilityLine, coreSpecLine, groupThousands, sharedCapabilities } from "./capabilities";
-import type { Listing, StorefrontListing } from "./types";
+import type { StorefrontListing } from "./types";
 
 // The three real Greenfield Cold Chain rows from backend/core/seed/market_data.py,
 // verbatim. If the seed changes, these tests should be updated from it — they
@@ -56,10 +56,6 @@ function storefrontListing(over: Partial<StorefrontListing> = {}): StorefrontLis
     yard_id: "yard-1",
     ...over,
   };
-}
-
-function listing(specs: Record<string, unknown>, over: Partial<Listing> = {}): Listing {
-  return { id: "l1", specs, tier: "basic", ...over } as Listing;
 }
 
 test("groups thousands without relying on Intl", () => {
@@ -129,7 +125,7 @@ test("a core figure is never repeated as a capability", () => {
   expect(capabilities("warehousing", { pallet_positions: 900 })).toEqual([]);
   const core = coreSpecLine(
     storefrontListing({ title: "Ambient Warehouse — beside the cold hub", asset_type: "Dry Warehouse" }),
-    listing(AMBIENT_SPECS),
+    AMBIENT_SPECS,
   );
   expect(core.spec).toBe("1,200 sqm · 900 pallet spaces");
 });
@@ -258,7 +254,7 @@ test("shared capabilities need at least two facilities, and every one resolved",
 test("the core line leads with the spec a hirer chooses on", () => {
   const core = coreSpecLine(
     storefrontListing({ title: "Ambient Warehouse 1,200 sqm — beside the cold hub", asset_type: "Dry Warehouse" }),
-    listing(AMBIENT_SPECS),
+    AMBIENT_SPECS,
   );
   expect(core.figure).toBe(true);
   expect(core.spec).toContain("900 pallet spaces");
@@ -267,7 +263,7 @@ test("the core line leads with the spec a hirer chooses on", () => {
 test("the core line never repeats a figure the title already shows", () => {
   // Title is "Frozen Store −18°C — 800 sqm…", so the name carries −18°C and
   // the core line must not say it twice.
-  const core = coreSpecLine(storefrontListing(), listing(FROZEN_SPECS));
+  const core = coreSpecLine(storefrontListing(), FROZEN_SPECS);
   expect(core.name).toBe("Frozen Store −18°C");
   expect(core.spec).toBe("800 sqm");
 });
@@ -279,7 +275,7 @@ test("without specs the core line falls back to the shipped title derivation", (
 
 test("the capability row is never empty, so a card's height never changes", () => {
   // Resolved: real capabilities.
-  expect(capabilityLine(storefrontListing(), listing(FROZEN_SPECS))).toBe(
+  expect(capabilityLine(storefrontListing(), FROZEN_SPECS)).toBe(
     "Temperature monitoring · Backup power · Dock levellers",
   );
   // Unresolved (past the cap, 404, offline): still says something true.

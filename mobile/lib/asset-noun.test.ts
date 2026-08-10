@@ -41,3 +41,21 @@ test("counts agree with their noun", () => {
   expect(countNoun(1, assetNoun(["warehousing"]))).toBe("1 facility");
   expect(countNoun(0, assetNoun(["plant_machinery"]))).toBe("0 assets");
 });
+
+test("a yard's class_mix drives the noun on the map surfaces", () => {
+  // A cold-chain yard reads as facilities; a plant yard as assets; a yard
+  // holding both falls back, because neither word is true of everything in it.
+  expect(countNoun(3, assetNoun(["warehousing"]))).toBe("3 facilities");
+  expect(countNoun(5, assetNoun(["plant_machinery", "trucks_haulage"]))).toBe("5 assets");
+  expect(countNoun(4, assetNoun(["terminals_yards", "trucks_haulage"]))).toBe("4 listings");
+});
+
+test("a single-class search page names its class, a mixed page does not", () => {
+  // S12 derives the noun from the rows actually on screen.
+  const coldRooms = ["warehousing", "warehousing", "warehousing"] as const;
+  expect(assetNoun(coldRooms).many).toBe("facilities");
+  const mixed = ["warehousing", "plant_machinery"] as const;
+  expect(assetNoun(mixed).many).toBe("listings");
+  // An empty page has nothing to name.
+  expect(assetNoun([]).many).toBe("listings");
+});

@@ -16,6 +16,7 @@ import Svg, { Path } from "react-native-svg";
 import { tokens } from "@terminal/tokens";
 
 import { ASSET_CLASSES, CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
 import { splitListingTitle } from "../../lib/listing-title";
 import { resolveMediaUrl } from "../../lib/media";
 import type { AssetClass, MapYard } from "../../lib/types";
@@ -64,6 +65,9 @@ function RowThumb({ photo, title }: { photo: string; title: string }) {
 /** Company identity block — the peek state, and the sheet header at every
  *  other stop. Answers: which bay, whose, how much is here, from what price. */
 function YardIdentity({ yard, collapsed }: { yard: MapYard; collapsed: boolean }) {
+  // A yard of cold rooms is a yard of facilities, not "assets" (D-029). The
+  // payload already says which classes are in it.
+  const noun = assetNoun(yard.class_mix);
   const availableCount = yard.listings.filter((l) => l.available).length;
   const initials = yard.supplier.name
     .split(/\s+/)
@@ -91,7 +95,7 @@ function YardIdentity({ yard, collapsed }: { yard: MapYard; collapsed: boolean }
         </BodyText>
         <View className="flex-row items-baseline gap-1">
           <BodyText className="text-caption text-text-tertiary">
-            {yard.listing_count} assets ·
+            {countNoun(yard.listing_count, noun)} ·
           </BodyText>
           {/* green = availability (02 §3). A `text-status-*` class would slip
               past the text primitives' colour guard and lose to the default. */}
@@ -107,7 +111,9 @@ function YardIdentity({ yard, collapsed }: { yard: MapYard; collapsed: boolean }
       </View>
       {/* The peek affordance: at 88pt this is the only thing telling the user
           there is more underneath. It disappears once the sheet is open. */}
-      {collapsed ? <BodyText className="text-body-sm text-text-link">View assets ↑</BodyText> : null}
+      {collapsed ? (
+        <BodyText className="text-body-sm text-text-link">{`View ${noun.many} ↑`}</BodyText>
+      ) : null}
     </View>
   );
 }

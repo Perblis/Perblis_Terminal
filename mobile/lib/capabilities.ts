@@ -21,7 +21,7 @@
 //      table, not in a one-line summary.
 import { listingCardSpec } from "./listing-spec";
 import { splitListingTitle } from "./listing-title";
-import type { AssetClass, Listing, StorefrontListing } from "./types";
+import type { AssetClass, StorefrontListing } from "./types";
 
 // --- rules ------------------------------------------------------------------
 
@@ -301,13 +301,17 @@ export type CoreSpec = {
 };
 
 /**
- * The card's first two lines. Falls back to the shipped title derivation
- * (lib/listing-spec.ts) whenever specs are absent, so a card past the fetch
- * cap — or one whose read 404'd — is structurally identical to a resolved one.
+ * The card's first two lines.
+ *
+ * Specs come off the storefront payload itself since D-030; `override` is the
+ * per-listing read the screen still performs for any listing that arrives
+ * without them (an API older than that decision). Falls back to the shipped
+ * title derivation (lib/listing-spec.ts) when there are no specs at all, so an
+ * unresolved card is structurally identical to a resolved one.
  */
-export function coreSpecLine(listing: StorefrontListing, spec?: Listing): CoreSpec {
+export function coreSpecLine(listing: StorefrontListing, override?: Record<string, unknown>): CoreSpec {
   const derived = listingCardSpec(listing);
-  const specs = spec?.specs;
+  const specs = listing.specs ?? override;
   if (!specs) return derived;
 
   const keys = CORE_BY_TYPE[listing.asset_type] ?? CORE_BY_CLASS[listing.asset_class] ?? [];
@@ -343,8 +347,8 @@ function fallbackLine(listing: StorefrontListing, core: string): string {
 }
 
 /** The card's capability row — never empty, so its height never changes. */
-export function capabilityLine(listing: StorefrontListing, spec?: Listing): string {
-  const found = capabilities(listing.asset_class, spec?.specs, 3);
+export function capabilityLine(listing: StorefrontListing, override?: Record<string, unknown>): string {
+  const found = capabilities(listing.asset_class, listing.specs ?? override, 3);
   if (found.length > 0) return found.join(" · ");
-  return fallbackLine(listing, coreSpecLine(listing, spec).spec);
+  return fallbackLine(listing, coreSpecLine(listing, override).spec);
 }

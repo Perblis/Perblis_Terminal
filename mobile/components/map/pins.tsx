@@ -37,6 +37,7 @@ import { View } from "react-native";
 import { tokens } from "@terminal/tokens";
 
 import { CLASS_BY_VALUE } from "../../lib/asset-classes";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
 import { compactNaira } from "../../lib/naira";
 import { useThemeTokens } from "../../lib/theme";
 import { CLASS_GLYPHS } from "../brand/class-glyphs";
@@ -146,7 +147,7 @@ export function YardPin({
     .join("");
   return (
     <View
-      accessibilityLabel={`Yard: ${yard.name}, ${count} listings${yard.price_from > 0 ? `, from ${yard.price_from_display} a day` : ""}${yard.supplier.badge ? ", verified supplier" : ""}`}
+      accessibilityLabel={`Yard: ${yard.name}, ${countNoun(count, assetNoun(yard.class_mix))}${yard.price_from > 0 ? `, from ${yard.price_from_display} a day` : ""}${yard.supplier.badge ? ", verified supplier" : ""}`}
       style={{ alignItems: "center", opacity: dimmed ? 0.4 : 1 }}
     >
       <View style={{ overflow: "hidden", ...plateFrame(selected) }}>

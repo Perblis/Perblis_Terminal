@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 import pytest
 from django.contrib.gis.geos import Point
 from django.utils import timezone
@@ -45,6 +47,26 @@ def _live_listing(supplier):
         point=Point(3.3792, 6.4433, srid=4326),
     )
     photos_service.attach_photo(user=supplier, listing_id=listing.id, r2_key="listings/a.jpg")
+    from listings import state
+
+    state.apply(listing, "publish")
+    return listing
+
+
+def _live_listing_extra(supplier, *, title):
+    """A second (third, tenth) Live listing for the same supplier — the profile
+    already exists, so this skips the SupplierProfileFactory call."""
+    listing, _ = listings_service.create_listing(
+        user=supplier,
+        asset_class="plant_machinery",
+        asset_type="Excavator",
+        title=title,
+        description=DESC,
+        specs=FULL_SPECS,
+        daily_price=8_000_000,
+        point=Point(3.3792, 6.4433, srid=4326),
+    )
+    photos_service.attach_photo(user=supplier, listing_id=listing.id, r2_key="listings/b.jpg")
     from listings import state
 
     state.apply(listing, "publish")
@@ -146,8 +168,71 @@ def test_storefront_public_shape(api, supplier, seeded):
     assert len(body["live_listings"]) == 1
     assert body["live_listings"][0]["id"] == str(listing.id)
     assert body["live_listings"][0]["daily_price_display"] == "₦80,000"
+    # Additive since D-030: a storefront card answers "suitable? trustworthy?
+    # can I have it?" without the hirer opening every asset. `specs` is the
+    # same dict GET /listings/{id} already serves anonymously.
+    row = body["live_listings"][0]
+    assert row["specs"] == FULL_SPECS
+    assert row["tier"] == "basic"
+    assert row["available"] is True
     # No fee fields leak (D-014).
     assert "service_fee" not in resp.text and "payout" not in resp.text
+
+
+def test_storefront_available_flips_under_a_live_hold(api, supplier, hirer, seeded):
+    """`available` is the same soft-hold question the map and list rows ask."""
+    from hires import state as hire_state
+    from hires.services import create_hire
+
+    listing = _live_listing(supplier)
+    free = _live_listing_extra(supplier, title="Second Machine")
+
+    today = timezone.localdate()
+    hire = create_hire(
+        user=hirer,
+        listing_id=listing.id,
+        start_date=today,
+        end_date=today + dt.timedelta(days=2),
+    )
+    hire_state.apply(hire, "accept", actor=supplier)
+
+    rows = {
+        r["id"]: r for r in api.get(f"/api/v1/storefronts/{supplier.id}").json()["live_listings"]
+    }
+    assert rows[str(listing.id)]["available"] is False
+    assert rows[str(free.id)]["available"] is True
+
+
+def test_storefront_listings_are_ordered_by_id_not_heap_order(api, supplier, seeded):
+    """Without an ORDER BY, Postgres returns heap order — which changes after
+    any UPDATE, so the same storefront could list its assets differently on two
+    consecutive reads. ids are UUIDv7, so id order is creation order."""
+    first = _live_listing(supplier)
+    second = _live_listing_extra(supplier, title="Second Machine")
+    third = _live_listing_extra(supplier, title="Third Machine")
+
+    # Touch the middle row: under heap order this is exactly what reshuffles it.
+    Listing.objects.filter(id=second.id).update(title="Second Machine (touched)")
+
+    body = api.get(f"/api/v1/storefronts/{supplier.id}").json()
+    assert [r["id"] for r in body["live_listings"]] == [
+        str(first.id),
+        str(second.id),
+        str(third.id),
+    ]
+
+
+def test_storefront_query_count_does_not_scale_with_listings(
+    api, supplier, seeded, django_assert_max_num_queries
+):
+    """Availability is one grouped aggregate for the whole storefront, so this
+    endpoint must cost the same for ten assets as for one."""
+    _live_listing(supplier)
+    for i in range(9):
+        _live_listing_extra(supplier, title=f"Machine {i}")
+
+    with django_assert_max_num_queries(12):
+        assert len(api.get(f"/api/v1/storefronts/{supplier.id}").json()["live_listings"]) == 10
 
 
 def test_storefront_404_for_suspended_supplier(api, supplier, seeded):

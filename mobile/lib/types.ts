@@ -395,6 +395,14 @@ export type StorefrontListing = {
   daily_price_display: string;
   cover_photo_url: string;
   yard_id: string | null;
+  /** Added by D-030 so a storefront card can state capabilities, trust and
+   *  availability without a read per card. **Optional on purpose**: production
+   *  backend deploys are manual and can lag `main`, so a device running new JS
+   *  against an older API must still render — the screen falls back to reading
+   *  GET /listings/{id} only for the listings that arrive without `specs`. */
+  specs?: Record<string, unknown>;
+  tier?: ListingTier;
+  available?: boolean;
 };
 
 export type Storefront = {

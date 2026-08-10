@@ -139,7 +139,20 @@ export default function Storefront() {
     () => [...(data?.live_listings ?? [])].sort((a, b) => a.id.localeCompare(b.id)),
     [data?.live_listings],
   );
-  const specIds = useMemo(() => facilities.slice(0, FACILITY_SPEC_CAP).map((l) => l.id), [facilities]);
+  // Specs ride the storefront payload since D-030, so this normally fetches
+  // nothing. It stays as a self-disabling fallback: against an API older than
+  // that decision (production deploys are manual and can lag `main`) the
+  // listings arrive without `specs` and are read individually, exactly as
+  // before. Once the payload carries them the id list is empty and the hook
+  // issues zero requests.
+  const specIds = useMemo(
+    () =>
+      facilities
+        .filter((l) => l.specs === undefined)
+        .slice(0, FACILITY_SPEC_CAP)
+        .map((l) => l.id),
+    [facilities],
+  );
   const { byId, settled } = useFacilitySpecs(specIds);
 
   if (isLoading) {
@@ -177,12 +190,14 @@ export default function Storefront() {
   const allInSoleYard =
     soleYard !== null && facilities.length > 0 && facilities.every((l) => l.yard_id === soleYard.id);
 
-  // Storefront-wide capabilities, stated only when they are true of everything
-  // on the page — and only once every read has settled, so the line never
-  // rewrites itself as specs trickle in.
+  // Storefront-wide capabilities, stated only when they are true of EVERY
+  // facility on the page — so it needs specs for all of them, whether they came
+  // on the payload or from the fallback read, and it waits for `settled` so the
+  // line can never rewrite itself as late specs arrive.
+  const specsFor = (l: StorefrontListing) => l.specs ?? byId.get(l.id)?.specs;
   const shared =
-    settled && allInSoleYard && facilities.length === specIds.length
-      ? sharedCapabilities(facilities.map((l) => ({ asset_class: l.asset_class, specs: byId.get(l.id)?.specs })))
+    settled && allInSoleYard && facilities.every((l) => specsFor(l) !== undefined)
+      ? sharedCapabilities(facilities.map((l) => ({ asset_class: l.asset_class, specs: specsFor(l) })))
       : [];
 
   const message = () => {
