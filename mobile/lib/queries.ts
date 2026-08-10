@@ -5,6 +5,7 @@ import {
   keepPreviousData,
   useInfiniteQuery,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -127,6 +128,46 @@ export function useStorefront(supplierId: string | null) {
     queryKey: keys.storefront(supplierId ?? "none"),
     queryFn: () => apiFetch<Storefront>(`/storefronts/${supplierId}`),
     enabled: supplierId !== null,
+  });
+}
+
+/** How many facilities deep S13 reads specs. The whole demo catalogue has a
+ *  median of 4 Live listings per storefront and a maximum of 10, so this is a
+ *  guard against a future outlier rather than a limit anyone meets today —
+ *  and a card past it is indistinguishable from one inside it, because the
+ *  capability row falls back to data the storefront payload already carries. */
+export const FACILITY_SPEC_CAP = 8;
+
+/**
+ * S13: the specs behind the facility cards.
+ *
+ * GET /storefronts/{id} carries no `specs`, `tier` or photo array, so a card
+ * cannot say "backup power, temperature monitored" from that payload alone.
+ * GET /listings/{id} is AllowAny for a Live listing and carries all of it, so
+ * the storefront reads it directly — no backend or contract change.
+ *
+ * Deliberately one named hook rather than a hook inside each card: it shares
+ * `keys.listing(id)` with S6, so opening a facility paints from cache instead
+ * of showing its skeleton, and it gives the screen a single settled flag.
+ */
+export function useFacilitySpecs(ids: string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: keys.listing(id),
+      queryFn: () => apiFetch<Listing>(`/listings/${id}`),
+      // Per-observer, so S6 keeps its own 30s default over the same cache
+      // entry. Without this the app's AppState-driven refetchOnWindowFocus
+      // (components/shell/query-provider.tsx) refetches every facility on
+      // each foreground.
+      staleTime: 5 * 60 * 1000,
+      // A paused or removed listing 404s through get_listing_for_view; there
+      // is nothing to retry, and its card renders fine without specs.
+      retry: false,
+    })),
+    combine: (results) => ({
+      byId: new Map(results.flatMap((r) => (r.data ? ([[r.data.id, r.data]] as const) : []))),
+      settled: results.every((r) => !r.isPending),
+    }),
   });
 }
 

@@ -1,24 +1,28 @@
 import { tokens } from "@terminal/tokens";
 import { router, useLocalSearchParams } from "expo-router";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View, type ColorValue } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { StaticMiniMap } from "../../components/map/terminal-map";
+import { FacilityCard } from "../../components/storefront/facility-card";
 import { EmptyState } from "../../components/ui/empty-state";
 import { RemoteImage } from "../../components/ui/remote-image";
-import { BodyText, DisplayText, Money, MonoText } from "../../components/ui/text";
+import { BodyText, DisplayText, MonoText } from "../../components/ui/text";
+import { assetNoun, countNoun } from "../../lib/asset-noun";
+import { sharedCapabilities } from "../../lib/capabilities";
 import { guardIntent } from "../../lib/guest-intent";
-import { listingCardSpec } from "../../lib/listing-spec";
 import { resolveMediaUrl } from "../../lib/media";
-import { useCreateEnquiry, useStorefront } from "../../lib/queries";
+import { FACILITY_SPEC_CAP, useCreateEnquiry, useFacilitySpecs, useStorefront } from "../../lib/queries";
 import { useThemeTokens } from "../../lib/theme";
 import type { StorefrontListing, StorefrontYard } from "../../lib/types";
 import { useMapState } from "../../stores/map-state";
 import { useSession } from "../../stores/session";
 
 function CornerMarks() {
-  // M4 registration marks on the cover (01 §2).
+  // M4 registration marks — sanctioned on hero imagery only, and the
+  // storefront cover is named as one (01 §2).
   const arm = "M1 13 V1 H13";
   return (
     <View className="absolute inset-2" pointerEvents="none">
@@ -48,8 +52,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 /** Account-level verification, inline in the header meta line. Colour PLUS
- *  label (02 §3) — the tick alone would be decoration. The stroke reads the
- *  ramp token rather than the literal hex the old badge carried. */
+ *  label (02 §3) — the tick alone would be decoration. */
 function VerifiedMark() {
   return (
     <View className="flex-row items-center gap-1">
@@ -77,8 +80,7 @@ function PinGlyph({ color }: { color: ColorValue }) {
   );
 }
 
-/** The header's answer to "how much of a supplier is this" — "3 listings ·
- *  1 location · Verified". Figures in mono, the rest quiet; dots are drawn
+/** "3 facilities · 1 location · Verified" — figures in mono, dots drawn
  *  between segments rather than baked into each label. */
 function MetaLine({ children }: { children: ReactNode[] }) {
   const parts = children.filter(Boolean);
@@ -94,81 +96,31 @@ function MetaLine({ children }: { children: ReactNode[] }) {
   );
 }
 
-/** A counted fact: mono figure, quiet noun ("3 listings"). */
-function CountFact({ n, one, many }: { n: number; one: string; many: string }) {
+/** A counted fact: mono figure, quiet noun. */
+function CountFact({ text }: { text: string }) {
+  const [figure, ...rest] = text.split(" ");
   return (
     <View className="flex-row items-center gap-1">
-      <MonoText className="text-mono-sm text-text-secondary">{n}</MonoText>
-      <BodyText className="text-caption text-text-tertiary">{n === 1 ? one : many}</BodyText>
+      <MonoText className="text-mono-sm text-text-secondary">{figure}</MonoText>
+      <BodyText className="text-caption text-text-tertiary">{rest.join(" ")}</BodyText>
     </View>
   );
 }
 
 /**
- * One asset, two-up. What a hirer scans, in order: the picture, what it is, the
- * one spec that separates it from the next machine, the day rate.
+ * S13 Storefront — a hirer's route into a supplier's facilities.
  *
- * De-boxed (07 §11): the photo's own edge is the card's edge, so there is no
- * border and no second surface inside the page — the storefront used to nest a
- * bordered card inside a bordered section inside a bordered plate.
- */
-function ListingCard({ listing }: { listing: StorefrontListing }) {
-  const { name, spec, figure } = listingCardSpec(listing);
-  const SpecText = figure ? MonoText : BodyText;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${name}, ${spec}, ${listing.daily_price_display} a day`}
-      onPress={() => router.push(`/listing/${listing.id}` as never)}
-      className="mb-5 w-[48.5%] active:opacity-80"
-    >
-      {listing.cover_photo_url ? (
-        <RemoteImage
-          uri={resolveMediaUrl(listing.cover_photo_url)}
-          style={{ width: "100%", height: 112, borderRadius: 8 }}
-          recyclingKey={listing.id}
-        />
-      ) : (
-        <View className="h-28 items-center justify-center rounded-lg bg-surface-sunken">
-          <MonoText className="text-caption text-text-tertiary">—</MonoText>
-        </View>
-      )}
-      <View className="gap-0.5 pt-2">
-        <BodyText className="text-body-sm font-sans-medium" numberOfLines={1}>
-          {name}
-        </BodyText>
-        {/* The spec, not the class: "8 m³" beats "Plant & Machinery", which is
-            identical on every card of a single-class storefront. */}
-        <SpecText
-          className={`${figure ? "text-mono-sm" : "text-caption"} text-text-secondary`}
-          numberOfLines={1}
-        >
-          {spec}
-        </SpecText>
-        <View className="flex-row items-baseline gap-1 pt-0.5">
-          <Money display={listing.daily_price_display} />
-          <BodyText className="text-caption text-text-tertiary">/ day</BodyText>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
-/**
- * S13 Storefront — a supplier's shop, not their company record.
+ * 2026-08-10, second pass. The first pass put inventory above the company
+ * biography; it still could not answer "which of these is right for me",
+ * because every card said only what the thing was called, roughly how big it
+ * was, and what it cost. Three cold rooms looked interchangeable.
  *
- * 2026-08-10 information-architecture pass. It read as a profile page: an
- * identity plate carrying a three-cell "3 listings / 1 class / 1 yard" counter
- * (two of those three are constants on a small storefront), then About, then a
- * horizontal rail of bordered Yard cards, and only then — below three boxed
- * sections — the actual inventory. A hirer arriving from a pin had to scroll
- * past the company's biography to reach the machines.
- *
- * Inverted: the first viewport answers who, where, what and roughly how much.
- * About moves below the assets, the standalone Yards rail collapses into the
- * header when there is one location, and the stat row states marketplace facts
- * instead of counting taxonomy. Presentation only — the same reads, the same
- * enquiry mutation, the same Lexicon.
+ * This pass makes the facilities the product and the company the trust layer:
+ * facilities → capabilities → trust → supplier → location. Cards carry the
+ * specs a hirer actually chooses on (temperature, floor area, backup power,
+ * dock levellers, per-facility tier), read from GET /listings/{id} — the
+ * storefront payload has none of it, and this is a presentation pass, so the
+ * app reads the public per-listing endpoint rather than changing a contract.
  */
 export default function Storefront() {
   const insets = useSafeAreaInsets();
@@ -178,6 +130,17 @@ export default function Storefront() {
   const createEnquiry = useCreateEnquiry();
   const requestFocus = useMapState((s) => s.requestFocus);
   const theme = useThemeTokens();
+
+  // GET /storefronts/{id} runs no ORDER BY and Listing declares no Meta
+  // ordering, so live_listings arrives in Postgres heap order and can change
+  // between two reads of the same storefront. ids are UUIDv7, so sorting them
+  // lexicographically is creation order — stable, and free.
+  const facilities: StorefrontListing[] = useMemo(
+    () => [...(data?.live_listings ?? [])].sort((a, b) => a.id.localeCompare(b.id)),
+    [data?.live_listings],
+  );
+  const specIds = useMemo(() => facilities.slice(0, FACILITY_SPEC_CAP).map((l) => l.id), [facilities]);
+  const { byId, settled } = useFacilitySpecs(specIds);
 
   if (isLoading) {
     return (
@@ -200,13 +163,27 @@ export default function Storefront() {
     );
   }
 
-  const cover = data.live_listings.find((l) => l.cover_photo_url)?.cover_photo_url ?? "";
+  const cover = facilities.find((l) => l.cover_photo_url)?.cover_photo_url ?? "";
   const memberSince = new Date(data.member_since).toLocaleDateString("en-GB", {
     month: "short",
     year: "numeric",
   });
   const yards: StorefrontYard[] = data.yards;
   const soleYard = yards.length === 1 ? yards[0] : null;
+  const noun = assetNoun(facilities.map((l) => l.asset_class));
+
+  // The subline may only name a yard when every facility is actually in it:
+  // yard_id is nullable and the payload includes yards with no live listings.
+  const allInSoleYard =
+    soleYard !== null && facilities.length > 0 && facilities.every((l) => l.yard_id === soleYard.id);
+
+  // Storefront-wide capabilities, stated only when they are true of everything
+  // on the page — and only once every read has settled, so the line never
+  // rewrites itself as specs trickle in.
+  const shared =
+    settled && allInSoleYard && facilities.length === specIds.length
+      ? sharedCapabilities(facilities.map((l) => ({ asset_class: l.asset_class, specs: byId.get(l.id)?.specs })))
+      : [];
 
   const message = () => {
     const gate = guardIntent(me !== null, `/supplier/${id}`);
@@ -231,11 +208,11 @@ export default function Storefront() {
   return (
     <View className="flex-1 bg-surface-page">
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
-        {/* Cover — 160dp, down from 208. It sets the trade, it does not need a
-            third of the first screen to do it. */}
-        <View className="h-40 bg-surface-chrome">
+        {/* Cover — 150dp. It establishes the trade; the facilities below do the
+            selling, and every dp here is a dp they lose. */}
+        <View className="h-[150px] bg-surface-chrome">
           {cover ? (
-            <RemoteImage uri={resolveMediaUrl(cover)} style={{ width: "100%", height: 160 }} />
+            <RemoteImage uri={resolveMediaUrl(cover)} style={{ width: "100%", height: 150 }} />
           ) : (
             <View className="flex-1 items-center justify-center">
               <MonoText className="text-body text-text-brand-on-inverse">{data.business_name}</MonoText>
@@ -253,8 +230,8 @@ export default function Storefront() {
           </Pressable>
         </View>
 
-        {/* Identity — logo, name, and the three facts that matter. No plate, no
-            border: it sits on the page ground directly under the cover. */}
+        {/* Supplier identity — compact, borderless, and above all short: it is
+            context for the facilities, not the subject of the page. */}
         <View className="gap-2.5 px-4 pt-3.5">
           <View className="flex-row items-center gap-3">
             <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-surface-chrome">
@@ -271,17 +248,16 @@ export default function Storefront() {
                 {data.business_name}
               </DisplayText>
               <MetaLine>
-                <CountFact n={data.live_listings.length} one="listing" many="listings" />
+                <CountFact text={countNoun(facilities.length, noun)} />
                 {yards.length > 0 ? (
-                  <CountFact n={yards.length} one="location" many="locations" />
+                  <CountFact text={`${yards.length} ${yards.length === 1 ? "location" : "locations"}`} />
                 ) : null}
                 {data.verification_badge ? <VerifiedMark /> : null}
               </MetaLine>
             </View>
           </View>
 
-          {/* Where they are. One yard is a line in the header, not a card in a
-              rail — a single-item horizontal scroller was pure ceremony. */}
+          {/* Where they are — the page's only tap-through to the map. */}
           {soleYard ? (
             <Pressable
               accessibilityRole="button"
@@ -291,8 +267,6 @@ export default function Storefront() {
               className="flex-row items-center gap-1.5 active:opacity-70"
             >
               <PinGlyph color={theme["--text-tertiary"]} />
-              {/* Shrinks rather than pushing the link off the row — a long yard
-                  name must never cost the hirer the map affordance. */}
               <BodyText className="shrink text-body-sm text-text-secondary" numberOfLines={1}>
                 {soleYard.name}
               </BodyText>
@@ -301,8 +275,8 @@ export default function Storefront() {
           ) : null}
         </View>
 
-        {/* Two or more locations still need their own row, but as pills rather
-            than 176dp bordered cards. */}
+        {/* Several locations still need their own row, but as pills rather than
+            176dp bordered cards. */}
         {yards.length > 1 ? (
           <View className="mt-3.5 gap-2">
             <View className="px-4">
@@ -314,7 +288,7 @@ export default function Storefront() {
                   <Pressable
                     key={yard.id}
                     accessibilityRole="button"
-                    accessibilityLabel={`View ${yard.name} on the map, ${yard.listing_count} asset${yard.listing_count === 1 ? "" : "s"}`}
+                    accessibilityLabel={`View ${yard.name} on the map, ${yard.listing_count} ${yard.listing_count === 1 ? noun.one : noun.many}`}
                     onPress={() => openYardOnMap(yard)}
                     hitSlop={{ top: 8, bottom: 8 }}
                     className="h-9 flex-row items-center gap-1.5 rounded-full bg-surface-sunken px-3.5 active:bg-surface-card"
@@ -324,9 +298,6 @@ export default function Storefront() {
                       {yard.name}
                     </BodyText>
                     <MonoText className="text-mono-sm text-text-tertiary">{yard.listing_count}</MonoText>
-                    <BodyText className="text-caption text-text-tertiary">
-                      {yard.listing_count === 1 ? "asset" : "assets"}
-                    </BodyText>
                   </Pressable>
                 ))}
               </View>
@@ -334,27 +305,45 @@ export default function Storefront() {
           </View>
         ) : null}
 
-        {/* Available to hire — the reason the page exists, so it comes first.
-            "Inventory" was warehouse vocabulary for a stock list; this says
-            what a hirer can actually do with it. */}
-        <View className="mt-5 gap-3 px-4">
-          <SectionLabel>AVAILABLE TO HIRE</SectionLabel>
-          {data.live_listings.length > 0 ? (
-            <View className="flex-row flex-wrap justify-between">
-              {data.live_listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </View>
+        {/* The facilities — the reason the page exists. */}
+        <View className="mt-5 px-4">
+          <View className="gap-0.5 pb-3">
+            <SectionLabel>AVAILABLE TO HIRE</SectionLabel>
+            {facilities.length > 0 ? (
+              <BodyText className="text-caption text-text-tertiary">
+                {countNoun(facilities.length, noun)}
+                {allInSoleYard ? ` · ${soleYard.name}` : ""}
+              </BodyText>
+            ) : null}
+          </View>
+
+          {facilities.length > 0 ? (
+            facilities.map((listing) => (
+              <FacilityCard key={listing.id} listing={listing} spec={byId.get(listing.id)} noun={noun} />
+            ))
           ) : (
-            <EmptyState title="No live listings" body="This company has nothing listed right now." compact />
+            <EmptyState
+              title={`No live ${noun.many}`}
+              body="This company has nothing listed right now."
+              compact
+            />
           )}
+
+          {/* What holds true across every facility here — stated once instead
+              of repeated on each card. */}
+          {shared.length >= 3 ? (
+            <View className="gap-1 border-t border-border-default pt-4">
+              <SectionLabel>{`ACROSS ALL ${noun.many.toUpperCase()}`}</SectionLabel>
+              <BodyText className="text-body-sm leading-5 text-text-secondary">
+                {shared.slice(0, 5).join(" · ")}
+              </BodyText>
+            </View>
+          ) : null}
         </View>
 
-        {/* About — kept, demoted. A rule rather than a box: it is a footnote to
-            the inventory, not a panel competing with it. */}
-        <View className="mx-4 mt-1 gap-2 border-t border-border-default pt-5">
-          {/* No prose ⇒ no heading: an ABOUT label over nothing but a join date
-              is a section pretending to be one. */}
+        {/* About — kept, demoted. A rule rather than a box: a footnote to the
+            facilities, not a panel competing with them. */}
+        <View className="mx-4 mt-5 gap-2 border-t border-border-default pt-5">
           {data.about ? (
             <>
               <SectionLabel>ABOUT</SectionLabel>
@@ -363,13 +352,30 @@ export default function Storefront() {
           ) : null}
           <BodyText className="text-caption text-text-tertiary">Member since {memberSince}</BodyText>
         </View>
+
+        {/* Where, in context. Informational only — the header line above owns
+            the tap-through, so there is one map affordance, not two. */}
+        {soleYard ? (
+          <View className="mx-4 mt-5 gap-2 border-t border-border-default pt-5">
+            <SectionLabel>LOCATION</SectionLabel>
+            <BodyText className="text-body-sm text-text-secondary">{soleYard.name}</BodyText>
+            <View className="overflow-hidden rounded-lg">
+              <StaticMiniMap
+                lng={soleYard.point.coordinates[0]}
+                lat={soleYard.point.coordinates[1]}
+                height={150}
+              />
+            </View>
+            <BodyText className="text-caption text-text-tertiary">
+              Approximate area shown. The exact address unlocks when your hire is confirmed.
+            </BodyText>
+          </View>
+        ) : null}
       </ScrollView>
 
-      {/* Sticky enquiry CTA (guest → auth sheet preserving intent).
-          Deliberately not the full-width primary slab it was: on a storefront
-          the assets are the call to action and this is the way to ask a
-          question, so it is a 48dp self-sized pill — still brand-filled, still
-          ≥48dp (FSD §12), a third of the ink. */}
+      {/* Sticky enquiry CTA (guest → auth sheet preserving intent). The
+          facilities are the call to action; this is how you ask a question, so
+          it stays a 48dp self-sized pill rather than a full-width slab. */}
       <View
         className="absolute inset-x-0 bottom-0 items-center border-t border-border-default bg-surface-card px-4 pt-2.5"
         style={{ paddingBottom: insets.bottom + 10 }}
