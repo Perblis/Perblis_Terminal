@@ -2,6 +2,15 @@
 
 **Status:** binding for Wave 8. Additive to [wave-8.md](wave-8.md), which stays normative for scope, slices, and the exit criterion. Where this document is silent, the design-system chapters (`docs/v2/design-system/`) and `ux/02` govern. Captured from a founder elicitation session (20 questions, 5 batches) run before slice 8A, per the founder's "vision session first" call.
 
+**Exit criterion:** this document has none of its own. Wave 8's single exit criterion lives
+in [wave-8.md](wave-8.md) ("Exit criterion (founder demo)") and is unchanged here.
+
+**Requirements informed:** **F-021** (hirer mobile app surface) as specified in the
+canonical FSD §10.1, plus **F-011** (map discovery and pin hierarchy), within the technical
+constraints of **T-016** (app architecture and the offline posture) and **T-010** (search
+and map aggregation). Presentation only (D-022, D-023) — no contract, schema or behaviour
+impact.
+
 ## North star
 
 - **Benchmark: consumer-app polish + map-product identity.** The app should feel as warm and approachable as best-in-class consumer apps (Airbnb/Uber energy) *and* wear the map as its brand — great map-first products (Citymapper, Flighty) are the reference. The industrial Heavy Duty edge survives in accents, not in density.

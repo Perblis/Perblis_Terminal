@@ -1,0 +1,12 @@
+{
+  "canonical_branch": "main",
+  "canonical_worktree": "/root/projects/Perblis_Terminal",
+  "created_at": "2026-08-17T11:30:45+00:00",
+  "enabled": true,
+  "hooks_enabled": true,
+  "hooks_installed_at": "2026-08-17T11:51:43+00:00",
+  "project_slug": "perblis-terminal",
+  "repository_id": "8dda5150f8f99ff44b3e",
+  "schema_version": 2,
+  "suite_version": "2.0.0"
+}

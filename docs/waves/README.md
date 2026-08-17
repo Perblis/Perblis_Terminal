@@ -40,4 +40,9 @@ Waves 7 and 8 may interleave with Waves 5–6 once Wave 4's OpenAPI contracts ar
 
 ## Status legend
 
-⏸ gated · 🟡 approved & in progress · ✅ exit criterion demonstrated, founder signed off
+⏸ gated · 🟡 approved & in progress · ✅ done & signed off
+
+"✅ done & signed off" means the exit criterion was demonstrated **and** the founder signed
+the wave off. This file is the **sole authority** for wave status — `AGENTS.md`,
+`CLAUDE.md`, `README.md`, `Implementations.md` and the TSD link here rather than copying
+the table, so there is only ever one place to update.
