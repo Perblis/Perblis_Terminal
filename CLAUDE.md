@@ -17,161 +17,24 @@ Before non-trivial work in this repo:
 This repository may add **stricter** requirements below, but may not weaken the VPS baseline.
 <!-- /vps-governance-stub -->
 
-# CLAUDE.md
+# Claude Code Project Entry Point
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**Read [AGENTS.md](AGENTS.md) first.** It is the canonical, platform-neutral session guide
+for this repository: the session-start protocol, the document-authority table, the
+architecture invariants, the commands, wave gating, the Definition of Done and the handoff
+protocol all live there. This file exists only so Claude Code lands in the right place; it
+deliberately holds no rules of its own, because a second copy drifts from the first.
 
-## Read this first
+The three things worth repeating here, because they are the ones most often assumed wrong:
 
-**`design.md` (repo root) is the canonical engineering guide and overrides anything summarized here.** Read it before writing any code. This file is a fast map to that material, not a replacement.
+- **`docs/waves/README.md` is the only authority for wave status.** Never start the next
+  wave without explicit founder approval.
+- **Merging to `main` deploys nothing** (D-027). Production ships only when someone runs
+  `infra/vps/deploy.sh` on the VPS.
+- **`DECISIONS.md` (repo root) is binding.** Do not re-litigate a ratified decision in
+  code or review; surface a genuine conflict as a new decision entry.
 
-Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plant & Machinery, Trucks & Haulage, Warehousing, Terminals & Container Yards, Land & Staging). Suppliers list assets at Yards; Hirers discover them on the Map and pay through Terminal (Paystack, collect-only). The product is the **transaction record**.
-
-## Current state of the repo
-
-**Waves 0–6 are complete, merged, and founder-signed-off; the backend is deployed (self-hosted VPS, D-027 — deployed manually via `infra/vps/deploy.sh`, never automatically on merge). Wave 4 (Hires & Money) SIGNED-OFF (2026-06-21): fee engine, hire state-machine + availability, request/accept/decline/cancel with D-014, §7.6 refunds, sweeps/handovers/disputes, payouts/reconciliation/notifications (PR #27), Paystack behind a pluggable gateway (D-018, PR #30) + callback wiring (PR #31). Wave 5 (Messaging) SIGNED-OFF (2026-06-21, PR #35): conversations, write-time contact masking, contact-unlock-after-Confirmed, Ably realtime (keyless-degraded). Wave 6 (Ops Console) SIGNED-OFF (2026-06-22, PR #37): django-otp TOTP admin 2FA, founder dashboard, verification/payout/reports/hires/users queues, dispute resolution, suspension cascade, weekly digest + reconciliation history — 476 tests green, OpenAPI unchanged (admin-only); deploy-only carry-overs (enrol TOTP device, `OPS_DIGEST_RECIPIENT`, Railway cron for `run_daily_reconciliation` + `run_weekly_digest`, `ABLY_API_KEY`) confirmed addressed by founder. **Wave 7 (Supplier Portal) BUILT and MERGED to `main` (founder go 2026-07-03): slices 7-0→7E via PR #38, plus founder-driven fix PRs #39/#40 (BFF media-upload proxy, additive `DELETE /api/v1/listings/{id}/photos/{photo_id}` — OpenAPI regenerated, frozen contracts untouched, yards/location UX) and #42 (photo display via BFF public-media proxy, yards managed from Assets, nav logout) — P1–P12 all built, BFF auth, vitest + Playwright smoke green (CI e2e job); still pending: founder direction check, prod-demo exit criterion, and sign-off (Wave 7 surfaces freeze at sign-off). Portal deploy moved to the VPS with everything else on 2026-08-07 (D-027); the old Cloudflare Workers Builds Git integration is **dead but still wired to GitHub**, posting a permanently-failing `Workers Builds: terminal-portal` check on every commit — disconnect it in the Cloudflare dashboard (it cannot be removed from this repo; nothing in `.github/workflows/` creates it).** Deploy-only carry-overs open: Paystack dashboard webhook URL (`/api/v1/payments/webhook`); `LOCATIONIQ_KEY` in prod (R2 CORS is no longer required — portal media goes through the BFF proxy). This snapshot can lag — always reconcile against `Implementations.md` and the code itself (see Session start protocol).
-
-- `backend/` — `core` (BaseModel UUIDv7, `money`, permissions, cursor pagination, error envelope, `/healthz`+`/readyz`, heartbeat task, `manage.py deploy` advisory-locked migrate+seed) and `accounts` — **Wave 1 fully built**: register, **independent phone (SMS) + email (Resend) OTP verification** (both required for login), JWT login/refresh/logout (rotating + blacklist + `tv` session-invalidation claim), no-enumeration password reset, `GET/PATCH/DELETE me`, supplier activation, identity/business verification docs (private R2 + Ops admin review queue), soft-delete + NDPR purge.
-- `backend/` — **Wave 2 fully built** (`suppliers` + `listings`): supplier profiles (Fernet-encrypted bank #), yards (PostGIS pins, delete-guard, 100m inference), 36 spec templates, listings CRUD + spec validation/version stamp, publish gates via `listings/state.py` (the only status writer), photos (≤10, cover, reorder), duplicate, reports, public storefronts (suspended→404), `core/media` presign pipeline. Migrations: accounts `0001`–`0005`, suppliers `0001`–`0002`, listings `0001`–`0005`. **Frozen OpenAPI at `backend/openapi/schema.yml`** (Wave 2 + Wave 3 contracts breaking-change-locked).
-- `backend/` — **Wave 3 fully built** (`search`, read-only, no new models/migrations): `GET /api/v1/search/map` (server-side yard aggregation — ≥2 Live listings ⇒ yard pin with authoritative `listing_count`/`matching_count`/`class_mix`/`price_from` + embedded summaries; else solo pins; zero-match yards persist dimmed), `GET /api/v1/search/list` (`group_by=asset` with `more_at_yard` | `location` interleaved; keyset cursor pagination, stable under inserts), `GET /api/v1/geocode` (LocationIQ server-side, 24h cache, key never leaves server). PostGIS bbox/radius/distance + ★-spec range filters; P95 ~170ms on 500 listings, N+1-free. The `available` flag became real in Wave 4 (the availability engine).
-- `backend/` — **Wave 5 fully built** (`messaging` + `core/realtime.py`): two-party conversations (enquiry: listing-level or storefront "general"; hire: auto-created at acceptance — the Wave 4C hookup, idempotent + backfill command), **server-side contact masking at write time** (NG phones + emails → `body_masked`; original retained for Ops; hire convs unmask once the hire has *ever* reached Confirmed, enquiries masked forever), unread counters (per-conversation + aggregate), participants-only access (**404 not 403**), and **Ably realtime** via `core/realtime.py` (hand-rolled httpx REST publish + HMAC-signed TokenRequest scoped to the caller's own `conv:`/`user:` channels; **keyless-degraded** to 15s polling — Postgres is the message of record, Ably is fan-out only). Hire-status changes are published to `user:{id}` from `hires/state.py`. Migration: messaging `0001`. Contracts (`conversations/*`, `messages/read`, `realtime/token`) frozen at sign-off. Only `ops` remains empty (Wave 6).
-- **Admin:** the Django admin is themed as the **"Terminal Ops Console"** (Heavy Duty CSS via WhiteNoise + manifest static storage), live in prod. This is **visual-only** — the functional Ops Console (queues, dashboards, 2FA, disputes) remains **Wave 6**.
-- `packages/tokens/` — token build pipeline (WCAG contrast gate + emitted artifacts). `portal/` — Next.js hello-world proving the token pipeline. CI (`backend.yml`, `portal.yml`) green on `main`.
-- **Deploy (D-027, superseded Railway + Cloudflare Workers on 2026-08-07):** production is the founder's **VPS** — api + worker + PostGIS + the Supplier Portal run as one Docker Compose project (`infra/vps/docker-compose.prod.yml`) behind the host nginx ingress. API `https://terminal-api.lab.perblis.com`, portal `https://terminal.lab.perblis.com`; loopback `127.0.0.1:8100` (api) and `:8101` (portal). **There is NO auto-deploy — merging to `main` ships nothing.** Deployment is one idempotent manual step, run as root on the VPS:
-  ```bash
-  /opt/terminal/repo/infra/vps/deploy.sh     # fetch+reset /opt/terminal/repo to origin/main, build, migrate, roll, health-check
-  ```
-  It operates on the dedicated production checkout at `/opt/terminal/repo` (never the dev worktree) with secrets in `/opt/terminal/.env`, and installs `/etc/cron.d/terminal` (hire sweeps, reconciliation, digest, purges, nightly `pg_dump`). Full runbook: `DEPLOY.md`. **Always check `git -C /opt/terminal/repo log -1` before deploying** — prod routinely lags `main` by several merges, so a deploy ships everything in between, not just your change. Static is baked at `docker build` (collectstatic + WhiteNoise manifest in the image). Prod **must** have `TERMII_API_KEY` set (phone OTP fails loudly); **`LOCATIONIQ_KEY` is not yet set in prod** so `/api/v1/geocode` returns empty until it is. **Termii sender approval is still pending** (real SMS 502 → Ops admin channel-verify is the interim onboarding path). **`ABLY_API_KEY` is not yet set in prod** — messaging works fully via 15s polling; set it to enable live realtime fan-out. The Supplier Portal is served from the same VPS stack (D-027), not Cloudflare Workers.
-- **Decisions since the specs:** D-017 switched the MVP payment provider to Bachs.io; **D-018 switched it back to Paystack (collect-only) and made the provider pluggable** behind `payments.gateway` (`PAYMENT_PROVIDER=paystack|bachs`; Paystack default). The Bachs adapter is retained behind the gateway.
-
-## Session start protocol (do this first, every session)
-
-Before acting on a task, build context and locate yourself in the build — do not assume the snapshot above is current:
-
-1. **Read `Implementations.md`** (repo root) — the running agent progress log. Its newest entries are the fast truth of what was just done, deployed, or left blocked, so any instance can take over mid-stream.
-2. **Read `design.md`**, then the document-authority docs (below) for your task area.
-3. **Determine the precise wave status from code, not just docs.** Check backend apps (which have models/migrations), `/api/v1/` routes, tests, and `docs/waves/`. If `docs/waves/README.md`'s status column disagrees with the code or `Implementations.md`, trust the code — then reconcile the docs.
-4. **Identify the next wave and confirm it's founder-approved** before building it (wave gating is binding — design.md §7). Finishing one wave never authorizes the next.
-
-## Tracking progress (`Implementations.md`)
-
-`Implementations.md` (repo root) is the append-only handoff log. **Keep it current**: append an entry for every meaningful change — feature, fix, decision, deploy, or blocker — so the next instance can resume without re-deriving context. Newest entries at the bottom. Entry format:
-
-```
-## YYYY-MM-DD HH:MM - <short title>
-- tag: FEATURE | FIX | CHORE | DECISION | DEPLOY
-- area: <files / services touched>
-- summary: <what changed>
-- reason: <why>
-- change_ref: <prior related entry>   # optional
-- notes: <follow-ups, blockers, the next step>
-```
-
-## Handoff protocol (when the founder says "prepare for handoff")
-
-When the founder asks to **"prepare for handoff"** (or "hand off", "ready for the next instance", etc.), run this checklist so a fresh instance can resume cold — then open a **docs-only draft PR** with the result. Do not start the next wave; this is documentation only.
-
-1. **Sync to latest `main`** (`git fetch` + work from a fresh branch off `origin/main`) so the snapshot reflects everything merged — including PRs merged from other instances/tools.
-2. **Reconcile docs to the code that actually shipped.** If the just-finished work changed any wave-frozen contract or schema, update the cited specs (`docs/v2/06_FSD_v2.md`, `docs/v2/07_TSD.md`) and **regenerate + commit the OpenAPI** (`backend/openapi/schema.yml`). Surface genuine spec conflicts as a `DECISIONS.md` entry rather than improvising.
-3. **`Implementations.md`** — refresh the **Current status** block (what's built/deployed, what's pending, the founder-approved **next wave** with a "read `docs/waves/wave-N.md` first" pointer, plus carry-over gotchas: frozen contracts, required prod env vars, local test-DB setup) and **append a log entry** in the standard format.
-4. **`CLAUDE.md`** — update the **"Current state of the repo"** snapshot (waves done/deployed, next wave).
-5. **`docs/waves/README.md`** — update the **status column** (✅ done · 🟡 approved & in progress · ⏸ gated).
-6. **Record known non-blocking follow-ups** (small bugs, copy nits, deferred items) in `Implementations.md` so they aren't lost.
-7. **Commit on a `docs/...` branch → push → open a draft PR.** Keep it docs-only (no behavior change). Verify the new-instance reading path resolves: Implementations.md → design.md → the next wave file → its FSD/TSD sections.
-
-## Document authority (where truth lives)
-
-Read order for any task: `design.md` → `docs/waves/README.md` → the wave file → the FSD/TSD sections it cites → companion `docs/v2/` docs.
-
-| Document | Authoritative for |
-|---|---|
-| `docs/v2/06_FSD_v2.md` | WHAT the system does — behaviour, rules, states, journeys |
-| `docs/v2/07_TSD.md` | HOW — stack, schema, services, API contracts, waves |
-| `docs/v2/DECISIONS.md` | Founder decisions D-001…D-016. **Binding — never re-litigate in code.** |
-| `docs/v2/02_System_Lexicon.md` | Every approved name (UI, API, DB) |
-| `docs/v2/05_Asset_Spec_Schemas.md` | Spec templates per asset class (seed data source) |
-| `docs/v2/08_Design_System.md` + `docs/v2/design-system/` | Visual/UX language ("Heavy Duty"); chapters win over the summary |
-| `docs/v2/ux/` | Journeys, flows, screen-by-screen specs |
-| `docs/legacy-v1/`, Policy Bible, FSD v1 | Historical input only — **FSD v2 wins all conflicts** |
-
-PDF mirrors live in `docs/v2/pdf/`. `scripts/md2pdf.py` regenerates them.
-
-## Stack (fixed by D-009…D-013 — do not substitute)
-
-- **Backend:** Django 6.0.x + DRF 3.17 + simplejwt + drf-spectacular + rest_framework_gis · PostgreSQL 17 + PostGIS 3.5 · **django-tasks** (DB-broker tasks — no Redis, no Celery) · self-hosted VPS via Docker Compose (D-027; Railway superseded). Settings via django-environ (`settings/{base,dev,prod,test}.py`). Tooling: `uv`, `ruff` (lint+format), `pytest` + factory-boy + freezegun + hypothesis.
-- **Supplier Portal (`portal/`):** Next.js 15 App Router, containerised on the VPS (D-027; the Cloudflare Workers/@opennextjs target is superseded), Tailwind + bespoke token-driven components (D-019/D-020 — shadcn/ui superseded), TanStack Query, BFF cookie auth, `pnpm`.
-- **Hirer app (`mobile/`):** Expo RN + TypeScript + expo-router, NativeWind, SecureStore, TanStack Query + Zustand, `pnpm`.
-- **Maps:** MapLibre GL + OpenFreeMap tiles + LocationIQ geocoding (via backend proxy). **Never embed Mapbox or Google Maps SDKs.**
-- **Services:** Paystack (collect-only) · Ably (realtime) · Termii (OTP) · Resend (email) · Cloudflare R2 (media) · Sentry.
-- **Budget guardrail:** total infra ≤ $25/month. Do not add paid services/tiers without founder approval.
-
-## Commands
-
-```bash
-# backend
-docker compose up -d                       # postgis + mailpit
-cd backend && uv sync                      # or pip install -e .
-./manage.py migrate && ./manage.py seed_spec_templates && ./manage.py runserver
-./manage.py db_worker                      # django-tasks worker (separate shell)
-pytest -x                                  # tests
-pytest --cov                               # with coverage gates (85% hires/payments, 70% overall)
-pytest path/to/test_file.py::test_name     # single test
-ruff check . && ruff format .              # lint + format
-
-# portal
-cd portal && pnpm i && pnpm dev            # http://localhost:3000
-
-# mobile
-cd mobile && pnpm i && npx expo start      # Expo Go / dev client
-
-# tokens
-cd packages/tokens && pnpm build           # regenerates tailwind.tokens.js + tokens.ts
-```
-
-Dev keys absent ⇒ OTP prints to console, email lands in Mailpit (http://localhost:8025), Ably falls back to polling. Paystack is always test-mode outside prod.
-
-## Architecture invariants (the load-bearing rules)
-
-These are non-negotiable and cut across many files — violating them silently breaks the product model. Full list and rationale in `design.md §2` and `§9`.
-
-- **Lexicon everywhere.** Supplier/Hirer (never owner/renter), Hire (never booking), Yard, Live, On Hire, Service Fee — in code identifiers, API fields, DB columns, comments, and UI copy alike. New code should never contain `renter`, `booking`, or `owner`.
-- **Money is integer kobo, always.** `BigIntegerField`, `core.money` helpers — no floats, no Decimals in domain logic, never store naira. UI shows whole naira.
-- **Financial fields lock at acceptance.** `hire_value`, `service_fee`, `payout_amount`, `fee_basis` never mutate after the accept transition. Corrections are Refund records + Ops adjustments, never edits.
-- **D-014: hirers never see the fee.** `service_fee`/`payout_amount` must not appear in any hirer-facing serializer, screen, email, or receipt. Use role-shaped serializers, tested.
-- **All status changes go through the state machine.** `hires/state.py::apply()` is the only path that changes a hire's status; every transition writes an append-only `HireEvent`. No ORM `.status =` assignments elsewhere.
-- **Webhooks are load-bearing.** Paystack handlers verify HMAC, dedup by `event_id`, return 200 fast, process in tasks, verify-before-transition. Never trust client redirects to mark a hire paid.
-- **Capacity-consuming writes** (`accept`, payment success) take `SELECT FOR UPDATE` on the listing row, re-check availability, then write — in one transaction. Side-effects via `transaction.on_commit`.
-- **Views don't mutate; services do.** Business logic lives in `services.py` / `fees.py` / `state.py` / `availability.py`, pure where possible and unit-tested. No business logic in signals, serializers, or views.
-- **Simulate integrations, never simulate trust.** Missing dev keys ⇒ log/console fallback; never auto-verify users or auto-pay hires in any environment.
-
-Backend apps (per TSD): `core accounts suppliers listings search hires payments messaging ops`.
-
-## API & contract conventions
-
-- Routes under `/api/v1/`, cursor pagination, error envelope `{"error":{"code","message","fields?"}}` with stable codes (`availability_conflict`, `verification_required`, `basic_cap_exceeded`, `payment_window_expired`…).
-- **Contract-first:** a module's drf-spectacular schema is published and reviewed before its portal/app wave consumes it. Regenerate and commit OpenAPI when contracts change. Breaking a wave-frozen contract requires founder sign-off.
-- TypeScript: strict mode, eslint + prettier, zod schemas mirror DRF validation, TanStack Query for all server state.
-- Design: colors/type/spacing come only from `packages/tokens` (no literal hex/px in components); money renders in IBM Plex Mono.
-
-## Wave gating (binding)
-
-Work proceeds in **Waves 0–9** (`docs/waves/`, TSD §10). **Never start the next wave without explicit founder approval** — finishing one wave does not authorize the next. Build each wave as ordered vertical slices (see below); demonstrate the exit criterion at wave end. If a wave reveals a spec conflict, **stop and surface it** for a `DECISIONS.md` entry rather than improvising. Each wave file is the complete build brief for that wave.
-
-### Slicing within a wave
-
-A **wave** is the founder-gated unit of value with one demonstrable exit criterion; a **slice** is a vertical increment inside it that ships one real capability end-to-end (model → service → API → tests). Plan and build every wave as an ordered set of slices:
-
-- **Each slice stands alone:** it clears the full **Definition of Done** (below) on its own — lexicon-clean, money/state-machine tested with coverage gates held, OpenAPI regenerated if contracts changed (frozen contracts untouched), reversible migration, `.env.example` exhaustive — and the suite is green before the next slice begins.
-- **Land slices as clear, separately-committed vertical slices** on the wave's branch, each building on the last; append an `Implementations.md` entry per slice.
-- **Wave-frozen contracts freeze only at wave end**, so a later slice may still evolve an earlier slice's not-yet-frozen surface.
-- The slice loop never authorizes the next **wave** — that still needs explicit founder approval.
-
-Worked example — Wave 2 (Supply) shipped as: media+profile → yards → spec-templates+seed → listings CRUD → publish/photos/state-machine → reports/storefronts.
-
-## Definition of Done (every PR)
-
-See `design.md §6` for the full checklist. Key gates: FSD behaviour + its Acceptance checks implemented with lexicon-clean naming; money/state-machine paths have explicit tests and coverage gates hold; OpenAPI regenerated if contracts changed (frozen contracts untouched); no D-014 leaks, no locked-field mutations, no state writes outside the machine; migrations reversible; `.env.example` kept exhaustive.
-
-## Git
-
-Trunk-based: feature branches → PR → CI green → merge to `main`. **Merging does not deploy** (D-027 — see the Deploy bullet above); production ships only when someone runs `infra/vps/deploy.sh` on the VPS. Conventional-ish commit subjects, e.g. `hires: enforce payment-window guard`.
+Claude Code-specific: project hooks under `.claude/settings.json` enforce active governance
+gates when `.governance/config.json` enables them. Hook success never grants permission for
+a gated wave, a destructive Git operation, a deployment, or stage closure — the founder
+must still authorize those explicitly.

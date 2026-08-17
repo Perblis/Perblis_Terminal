@@ -2,6 +2,14 @@
 
 **Source:** Founder shaping session, 2026-07-03 (48-question elicitation), plus the plan-approval decisions of the same day. This brief is *additive* to [wave-7.md](wave-7.md) — the wave file and the design-system chapters remain normative; where this brief expresses a preference inside their allowed range, this brief wins. **The formal founder go for Wave 7 was given 2026-07-03** with approval of the build plan (which also approved the 5 additive backend endpoints and ratified the D-020 headless allowlist).
 
+**Exit criterion:** this brief has none of its own. Wave 7's single exit criterion lives in
+[wave-7.md](wave-7.md) ("Exit criterion (founder demo)") and is unchanged by this document.
+
+**Requirements informed:** **F-022** (Supplier Portal surface) as specified in the canonical
+FSD §10.2, within the technical constraints of **T-015** (portal architecture and BFF auth)
+and **T-011** (API conventions and frozen contracts). Everything here is presentation
+(D-019, D-020, D-021) — no contract, schema or behaviour impact.
+
 ## The bar (what "done" feels like)
 
 The portal must read as **premium & trustworthy** and **unmistakably industrial** in the first 10 seconds. North stars: **Linear** (precision, motion restraint), **Stripe Dashboard** (money UI, tables), **Mercury** (editorial confidence). Polish budget is spread evenly: first-run wow AND daily-driver screens.

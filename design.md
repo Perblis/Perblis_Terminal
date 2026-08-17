@@ -7,13 +7,16 @@ Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plan
 
 ## 1. Document authority (where truth lives)
 
-Read order for any task: this file → the FSD section for your module → the TSD section for your module → the relevant `ux/` or `design-system/` chapter.
+Read order for any task: `AGENTS.md` → this file → the FSD section for your module → the TSD section for your module → the relevant `ux/` or `design-system/` chapter.
+
+Each concern below has exactly **one** authority. Where two documents disagree, the one named here wins and the other is a defect to fix — never a judgement call to make in code.
 
 | Document | Authoritative for |
 |---|---|
-| `docs/v2/06_FSD_v2.md` (PDF: `docs/v2/pdf/`) | WHAT the system does — behaviour, rules, states, journeys |
-| `docs/v2/07_TSD.md` (PDF: `docs/v2/pdf/`) | HOW — stack, schema, services, API contracts, waves |
-| `docs/v2/DECISIONS.md` | Founder decisions D-001…D-016. **Binding. Never re-litigate in code.** |
+| `docs/perblis-terminal-FSD.md` (PDF: `docs/v2/pdf/`) | WHAT the system does — behaviour, rules, states, journeys |
+| `docs/perblis-terminal-TSD.md` (PDF: `docs/v2/pdf/`) | HOW — stack, schema, services, API contracts |
+| `DECISIONS.md` (repo root) | Founder decisions D-001…D-031. **Binding. Never re-litigate in code.** |
+| `docs/waves/README.md` | Wave status and approval evidence — the **only** place status is tracked |
 | `docs/v2/02_System_Lexicon.md` | Every name in the system (UI, API, DB). |
 | `docs/v2/05_Asset_Spec_Schemas.md` | Spec templates per asset class/type (seed data source) |
 | `docs/v2/08_Design_System.md` + `docs/v2/design-system/` | All visual/UX language ("Heavy Duty"). Chapters win over summary. |
@@ -72,7 +75,7 @@ docker-compose.yml  dev: postgis + mailpit
 
 ## 7. Build process — wave gating (binding)
 
-Work proceeds in **Waves 0–9** (TSD §10). **Never start the next wave without explicit founder approval** — this is a standing instruction, not a preference. Within a wave, ship vertical slices; at wave end, demonstrate the exit criterion. If a wave reveals a spec conflict, stop and surface it (the founder updates DECISIONS.md) rather than improvising.
+Work proceeds in **Waves 0–9**, indexed and status-tracked in [docs/waves/README.md](docs/waves/README.md) — the single authority for what is approved, in progress or done. **Never start the next wave without explicit founder approval** — this is a standing instruction, not a preference. Within a wave, ship vertical slices; at wave end, demonstrate the exit criterion. If a wave reveals a spec conflict, stop and surface it (the founder updates `DECISIONS.md`) rather than improvising.
 
 ## 8. Commands (dev quickstart)
 

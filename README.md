@@ -26,11 +26,11 @@ DEPLOY.md         Production bring-up runbook (Railway · Workers · R2)
 
 | If you are… | Read first |
 |---|---|
-| A coding agent | [design.md](design.md) — engineering guide, commandments, conventions, wave gating |
+| A coding agent | [AGENTS.md](AGENTS.md) — cold-start map and session protocol, then [design.md](design.md) |
 | Picking up a build wave | [docs/waves/README.md](docs/waves/README.md) → the wave file |
-| Reviewing product behaviour | [docs/v2/06_FSD_v2.md](docs/v2/06_FSD_v2.md) ([PDF](docs/v2/pdf/Terminal_FSD_v2.1.pdf)) |
-| Reviewing the technical design | [docs/v2/07_TSD.md](docs/v2/07_TSD.md) ([PDF](docs/v2/pdf/Terminal_TSD_v2.1.pdf)) |
-| Checking a founder decision | [docs/v2/DECISIONS.md](docs/v2/DECISIONS.md) (D-001…D-016, binding) |
+| Reviewing product behaviour | [docs/perblis-terminal-FSD.md](docs/perblis-terminal-FSD.md) ([PDF](docs/v2/pdf/Terminal_FSD_v2.1.pdf)) |
+| Reviewing the technical design | [docs/perblis-terminal-TSD.md](docs/perblis-terminal-TSD.md) ([PDF](docs/v2/pdf/Terminal_TSD_v2.1.pdf)) |
+| Checking a founder decision | [DECISIONS.md](DECISIONS.md) (D-001…D-031, binding) |
 
 ## Prerequisites
 
@@ -111,16 +111,28 @@ GitHub Actions, path-filtered:
   completeness, migrations-in-sync, pytest against a PostGIS service container, coverage gates.
 - **`.github/workflows/portal.yml`** — eslint, `tsc`, and the Next.js build (tokens built first).
 
-Trunk-based: feature branch → PR → CI green → merge to `main` (auto-deploys backend + portal).
+Trunk-based: feature branch → PR → CI green → merge to `main`. **Merging does not deploy**
+(D-027) — see below.
 
 ## Deployment
 
-Production is Railway (api + worker + PostgreSQL 17 / PostGIS 3.5), Cloudflare
-Workers (portal), and Cloudflare R2 (media), with total fixed infra ≤ $25/month.
+Production is the founder's **VPS** (D-027): api, worker, PostgreSQL 17 / PostGIS 3.5 and
+the Supplier Portal run as one Docker Compose project behind the host nginx ingress, with
+Cloudflare R2 for media and total fixed infra ≤ $25/month.
+
+**There is no auto-deploy.** Production ships only when someone runs, as root on the VPS:
+
+```bash
+/opt/terminal/repo/infra/vps/deploy.sh
+```
+
+It fetches and resets the production checkout to `origin/main`, builds, migrates, rolls
+and health-checks. Production routinely lags `main` by several merges, so check
+`git -C /opt/terminal/repo log -1` first — a deploy ships everything in between.
 See **[DEPLOY.md](DEPLOY.md)** for the step-by-step bring-up.
 
 ## Build waves
 
-Work proceeds in gated **Waves 0–9** (`docs/waves/`, TSD §10). **No wave starts
-without explicit founder approval** — finishing one wave does not authorize the
-next. See `design.md §7`.
+Work proceeds in gated **Waves 0–9**. **No wave starts without explicit founder approval**
+— finishing one wave does not authorize the next. Current status lives in exactly one
+place: **[docs/waves/README.md](docs/waves/README.md)**. See `design.md §7` for the rules.

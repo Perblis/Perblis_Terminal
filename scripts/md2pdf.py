@@ -32,8 +32,10 @@ def render(md_path: Path, pdf_path: Path, title: str) -> None:
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    render(ROOT / "docs/v2/06_FSD_v2.md", OUT / "Terminal_FSD_v2.1.pdf",
+    # Canonical specs moved to docs/ under D-031; docs/v2/06_FSD_v2.md and
+    # docs/v2/07_TSD.md are now pointers and must not be rendered.
+    render(ROOT / "docs/perblis-terminal-FSD.md", OUT / "Terminal_FSD_v2.1.pdf",
            "Terminal - Functional Specification Document v2.1")
-    render(ROOT / "docs/v2/07_TSD.md", OUT / "Terminal_TSD_v2.1.pdf",
+    render(ROOT / "docs/perblis-terminal-TSD.md", OUT / "Terminal_TSD_v2.1.pdf",
            "Terminal - Technical Specification Document v2.1")
     sys.exit(0)
