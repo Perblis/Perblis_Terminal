@@ -1,7 +1,7 @@
 # Visible Trust Foundation — implementation plan
 
-Status: founder direction recorded in D-032; implementation not started  
-Date: 2026-08-20  
+Status: founder direction recorded in D-032; implementation not started
+Date: 2026-08-20
 Scope: make existing transaction mechanics understandable at the moments when a Hirer or Supplier decides whether to stay on Terminal
 
 ## 1. Outcome
