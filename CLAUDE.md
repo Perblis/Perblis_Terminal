@@ -49,9 +49,10 @@ Terminal is a map-first B2B marketplace for hiring heavy assets in Nigeria (Plan
 Before acting on a task, build context and locate yourself in the build — do not assume the snapshot above is current:
 
 1. **Read `Implementations.md`** (repo root) — the running agent progress log. Its newest entries are the fast truth of what was just done, deployed, or left blocked, so any instance can take over mid-stream.
-2. **Read `design.md`**, then the document-authority docs (below) for your task area.
-3. **Determine the precise wave status from code, not just docs.** Check backend apps (which have models/migrations), `/api/v1/` routes, tests, and `docs/waves/`. If `docs/waves/README.md`'s status column disagrees with the code or `Implementations.md`, trust the code — then reconcile the docs.
-4. **Identify the next wave and confirm it's founder-approved** before building it (wave gating is binding — design.md §7). Finishing one wave never authorizes the next.
+2. **Read `TODO.md`** (repo root) — the canonical, deduplicated backlog. It separates pre-beta and pre-launch blockers from improvements and founder-gated roadmap work. Do not rebuild a shadow TODO list in another file.
+3. **Read `design.md`**, then the document-authority docs (below) for your task area.
+4. **Determine the precise wave status from code, not just docs.** Check backend apps (which have models/migrations), `/api/v1/` routes, tests, and `docs/waves/`. If `docs/waves/README.md`'s status column disagrees with the code or `Implementations.md`, trust the code — then reconcile the docs.
+5. **Identify the next wave and confirm it's founder-approved** before building it (wave gating is binding — design.md §7). Finishing one wave never authorizes the next.
 
 ## Tracking progress (`Implementations.md`)
 
@@ -76,8 +77,8 @@ When the founder asks to **"prepare for handoff"** (or "hand off", "ready for th
 3. **`Implementations.md`** — refresh the **Current status** block (what's built/deployed, what's pending, the founder-approved **next wave** with a "read `docs/waves/wave-N.md` first" pointer, plus carry-over gotchas: frozen contracts, required prod env vars, local test-DB setup) and **append a log entry** in the standard format.
 4. **`CLAUDE.md`** — update the **"Current state of the repo"** snapshot (waves done/deployed, next wave).
 5. **`docs/waves/README.md`** — update the **status column** (✅ done · 🟡 approved & in progress · ⏸ gated).
-6. **Record known non-blocking follow-ups** (small bugs, copy nits, deferred items) in `Implementations.md` so they aren't lost.
-7. **Commit on a `docs/...` branch → push → open a draft PR.** Keep it docs-only (no behavior change). Verify the new-instance reading path resolves: Implementations.md → design.md → the next wave file → its FSD/TSD sections.
+6. **Reconcile `TODO.md`** — add newly discovered work, close items with evidence, and remove duplicate/superseded entries. `Implementations.md` records what happened; `TODO.md` records what remains.
+7. **Commit on a `docs/...` branch → push → open a draft PR.** Keep it docs-only (no behavior change). Verify the new-instance reading path resolves: Implementations.md → TODO.md → design.md → the next wave file → its FSD/TSD sections.
 
 ## Document authority (where truth lives)
 
