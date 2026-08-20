@@ -1,7 +1,7 @@
 # Terminal — canonical TODO
 
-Last reconciled: 2026-08-20  
-Owner: Founder unless another owner is named  
+Last reconciled: 2026-08-20
+Owner: Founder unless another owner is named
 Scope: active defects, launch gates, operational carry-overs, approved follow-ups, and explicitly deferred roadmap
 
 This is the single backlog for the repository. It supersedes
